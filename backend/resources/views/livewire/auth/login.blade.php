@@ -38,7 +38,7 @@
                     <!-- Password -->
                     <div>
                         <div class="mb-2 flex items-center justify-between">
-                            <label for="password" class="block text-sm font-medium text-[#1c1c1c]">
+                            <label for="password" class="block text-sm font-medium text-[#1c1c1c] ">
                                 Password
                             </label>
 
@@ -95,5 +95,8 @@
                 </p>
             @endif
         </div>
+    </div>
+    <div class="flex">
+        <img src="/images/eyeglass.jpg" alt="eyeglass image"/>
     </div>
 </x-layouts::auth>
