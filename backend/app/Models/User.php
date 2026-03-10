@@ -2,34 +2,29 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
+        'role',
         'email',
+        'phone',
+        'avatar_url',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'two_factor_secret',
@@ -37,22 +32,35 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
+            'role' => UserRole::class,
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === UserRole::Staff;
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === UserRole::Customer;
+    }
+
+    public function isAdminOrStaff(): bool
+    {
+        return $this->isAdmin() || $this->isStaff();
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)
