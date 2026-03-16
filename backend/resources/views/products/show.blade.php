@@ -1,5 +1,5 @@
 <x-layouts::app :title="$product->name">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl text-[#111827]">
+    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <flux:heading size="xl">
@@ -116,6 +116,18 @@
                         <div class="mt-4 rounded-lg bg-indigo-50 p-3 text-xs text-indigo-800">
                             {{ __('This product supports AR preview.') }}
                         </div>
+                    @endif
+                </div>
+                <div class="flex items-center justify-end">
+                    @if(auth()->user()?->isAdmin())
+                        <flux:button
+                            variant="primary"
+                            icon="pencil-square"
+                            href="{{ route('products.edit', $product) }}"
+                            wire:navigate
+                        >
+                            {{ __('Edit') }}
+                        </flux:button>
                     @endif
                 </div>
             </div>

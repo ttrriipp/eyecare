@@ -1,11 +1,11 @@
 <x-layouts::app :title="__('Products')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl text-[#111827]">
+    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <flux:heading size="xl" class="!text-[#111827]">
+                <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Products') }}
                 </flux:heading>
-                <flux:text class="!text-[#111827]">
+                <flux:text class="text-zinc-600 dark:text-zinc-300">
                     {{ __('Browse and manage products in your optical inventory.') }}
                 </flux:text>
             </div>
