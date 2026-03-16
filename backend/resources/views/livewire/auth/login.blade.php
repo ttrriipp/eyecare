@@ -1,12 +1,30 @@
 <x-layouts::auth>
-    <div class="w-full rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.05)] md:p-10">
+    <style>
+        .eyecare-login input {
+            color: #111827 !important; /* dark text */
+        }
+
+        .eyecare-login input::placeholder {
+            color: #9ca3af; /* soft gray placeholder */
+        }
+
+        /* Override browser autofill so field + text stay consistent */
+        .eyecare-login input:-webkit-autofill,
+        .eyecare-login input:-webkit-autofill:hover,
+        .eyecare-login input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #111827 !important;
+            box-shadow: 0 0 0px 1000px #d1d5db inset;
+            -webkit-box-shadow: 0 0 0px 1000px #d1d5db inset;
+        }
+    </style>
+    <div class="eyecare-login w-full rounded-2xl bg-white p-10 shadow-[0_20px_60px_rgba(0,0,0,0.12)] md:p-12">
         <div class="flex flex-col justify-center gap-5">
             <header class="space-y-2">
                 <p class="text-5xl font-bold tracking-tight text-[#1c1c1c] font-[Lexend] text-center">
                     EYECARE
                 </p>
                 <h1 class="text-xl font-semibold italic font-[Afacad] text-center tracking-tight text-zinc-700 white:text-zinc-50">
-                    When elegance meets<br class="hidden sm:block"> convenience
+                    "When elegance meets convenience"
                 </h1>
             </header>
 
@@ -19,7 +37,7 @@
                 <div class="space-y-4">
                     <!-- Email Address -->
                     <div>
-                        <label for="email" class="mb-2 block text-sm font-medium text-[#1c1c1c]">
+                        <label for="email" class="mb-2 block text-sm font-semibold tracking-wide text-[#1c1c1c]">
                             Username
                         </label>
                         <flux:input
@@ -38,7 +56,7 @@
                     <!-- Password -->
                     <div>
                         <div class="mb-2 flex items-center justify-between">
-                            <label for="password" class="block text-sm font-medium text-[#1c1c1c] ">
+                            <label for="password" class="block text-sm font-semibold tracking-wide text-[#1c1c1c] ">
                                 Password
                             </label>
 
@@ -86,17 +104,7 @@
                 </div>
             </form>
 
-            @if (Route::has('register'))
-                <p class="mt-2 text-xs text-zinc-900">
-                    Don't have an account?
-                    <flux:link class="font-medium text-zinc-800 underline underline-offset-4 hover:text-zinc-900 dark:text-zinc-500" :href="route('register')" wire:navigate>
-                        Sign up
-                    </flux:link>
-                </p>
-            @endif
+            {{-- Register link intentionally hidden on login UI; route and functionality remain available elsewhere --}}
         </div>
-    </div>
-    <div class="flex">
-        <img src="/images/eyeglass.jpg" alt="eyeglass image"/>
     </div>
 </x-layouts::auth>

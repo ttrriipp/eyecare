@@ -1,31 +1,64 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
+        <style>
+            /* Force sidebar label text to black */
+            [data-flux-sidebar] *,
+            [data-flux-sidebar-nav] * {
+                color: #111827 !important;
+            }
+        </style>
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-[#A9D7FF]">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-white text-[#111827]">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+            <flux:sidebar.nav class="!text-[#111827]">
+                <flux:sidebar.group :heading="__('Platform')" class="grid !text-[#111827]">
+                    <flux:sidebar.item
+                        icon="home"
+                        :href="route('dashboard')"
+                        :current="request()->routeIs('dashboard')"
+                        wire:navigate
+                        class="!text-[#111827]"
+                    >
                         {{ __('Dashboard') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item
+                        icon="layout-grid"
+                        :href="route('products.index')"
+                        :current="request()->routeIs('products.*')"
+                        wire:navigate
+                        class="!text-[#111827]"
+                    >
+                        {{ __('Products') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+            <flux:sidebar.nav class="!text-[#111827]">
+                <flux:sidebar.item
+                    icon="folder-git-2"
+                    href="https://github.com/laravel/livewire-starter-kit"
+                    target="_blank"
+                    class="!text-[#111827]"
+                >
                     {{ __('Repository') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+                <flux:sidebar.item
+                    icon="book-open-text"
+                    href="https://laravel.com/docs/starter-kits#livewire"
+                    target="_blank"
+                    class="!text-[#111827]"
+                >
                     {{ __('Documentation') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
