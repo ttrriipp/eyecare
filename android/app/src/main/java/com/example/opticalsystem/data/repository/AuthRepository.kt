@@ -6,6 +6,7 @@ import com.example.opticalsystem.data.model.RegisterRequest
 import com.example.opticalsystem.data.model.User
 import com.example.opticalsystem.util.Resource
 import com.example.opticalsystem.util.TokenManager
+import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +23,7 @@ class AuthRepository @Inject constructor(
                 tokenManager.saveToken(body.token)
                 Resource.Success(body.user)
             } else {
-                Resource.Error(response.errorBody()?.string() ?: "Login failed")
+                Resource.Error(parseError(response.code(), response.errorBody()?.string(), "Login failed"))
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Network error")
@@ -45,7 +46,7 @@ class AuthRepository @Inject constructor(
                 tokenManager.saveToken(body.token)
                 Resource.Success(body.user)
             } else {
-                Resource.Error(response.errorBody()?.string() ?: "Registration failed")
+                Resource.Error(parseError(response.code(), response.errorBody()?.string(), "Registration failed"))
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Network error")
@@ -65,5 +66,18 @@ class AuthRepository @Inject constructor(
 
     suspend fun isLoggedIn(): Boolean {
         return tokenManager.isLoggedIn()
+    }
+
+    private fun parseError(code: Int, rawBody: String?, fallback: String): String {
+        val body = rawBody?.trim().orEmpty()
+        if (body.isNotEmpty()) {
+            // Laravel commonly returns { "message": "..." } (and sometimes nested errors)
+            runCatching {
+                val json = JSONObject(body)
+                val message = json.optString("message").trim()
+                if (message.isNotEmpty()) return message
+            }
+        }
+        return if (code >= 500) "Server error ($code). Check backend logs." else fallback
     }
 }

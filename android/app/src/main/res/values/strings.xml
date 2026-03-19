@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">EyeCare</string>
+
+    <string name="login_title">Login</string>
+    <string name="login_subtitle">Welcome back</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="login_tagline">When elegance meets convenience</string>
+
+    <!-- Backend root serving /public assets (logo). Example: http://10.0.2.2:8000/ -->
+    <string name="backend_root_url">http://192.168.254.100:8000/</string>
+    <!-- Relative path inside backend public folder -->
+    <string name="login_logo_public_path">images/logo-no-bg.png</string>
 </resources>

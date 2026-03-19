@@ -72,6 +72,9 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // Images
+    implementation(libs.glide)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

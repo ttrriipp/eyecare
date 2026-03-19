@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.opticalsystem.R
 import com.example.opticalsystem.databinding.FragmentLoginBinding
 import com.example.opticalsystem.util.Resource
@@ -32,6 +34,16 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val backendRootUrl = getString(R.string.backend_root_url)
+        val logoPath = getString(R.string.login_logo_public_path)
+        val logoUrl = backendRootUrl.trimEnd('/') + "/" + logoPath.trimStart('/')
+        Glide.with(this)
+            .load(logoUrl)
+            .placeholder(R.drawable.login_logo)
+            .error(R.drawable.login_logo)
+            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .into(binding.ivLogo)
 
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
