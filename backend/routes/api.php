@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,9 @@ Route::prefix('v1')->group(function () {
             Route::post('products/{product}/images', [ProductController::class, 'storeImage']);
             Route::delete('products/{product}/images/{image}', [ProductController::class, 'destroyImage']);
 
+            // Inventory management
+            Route::put('inventory/{product}', [InventoryController::class, 'update']);
+
             // Category management
             Route::post('product-categories', [ProductCategoryController::class, 'store']);
             Route::put('product-categories/{category}', [ProductCategoryController::class, 'update']);
@@ -41,7 +45,9 @@ Route::prefix('v1')->group(function () {
 
         // Admin + Staff routes
         Route::middleware('role:admin,staff')->group(function () {
-            //
+            // Inventory view
+            Route::get('inventory', [InventoryController::class, 'index']);
+            Route::get('inventory/{product}', [InventoryController::class, 'show']);
         });
 
         // Customer-only routes
