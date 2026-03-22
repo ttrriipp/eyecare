@@ -33,6 +33,17 @@
                     >
                         {{ __('Products') }}
                     </flux:sidebar.item>
+
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <flux:sidebar.item
+                            icon="package"
+                            :href="route('inventory.index')"
+                            :current="request()->routeIs('inventory.*')"
+                            wire:navigate
+                        >
+                            {{ __('Inventory') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

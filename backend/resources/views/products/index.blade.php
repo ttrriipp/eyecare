@@ -1,32 +1,41 @@
 <x-layouts::app :title="__('Products')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
-        <div class="flex items-center justify-between gap-4">
+        @if(session('status'))
+            <div
+                class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-100"
+                role="status"
+            >
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Products') }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-300">
+                <flux:text class="text-zinc-600 dark:text-zinc-400">
                     {{ __('Browse and manage products in your optical inventory.') }}
                 </flux:text>
             </div>
 
-            <div class="flex items-center gap-2">
-                @if(auth()->user()?->isAdmin())
-                    <flux:button variant="outline" icon="adjustments-horizontal">
-                        {{ __('Filters') }}
-                    </flux:button>
-                @endif
-            </div>
+            @if(auth()->user()?->isAdmin())
+                <flux:button variant="primary" icon="plus" :href="route('products.create')" wire:navigate>
+                    {{ __('Add product') }}
+                </flux:button>
+            @endif
         </div>
 
-        <div class="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-[0_18px_45px_rgba(0,0,0,0.12)]">
+        <div
+            class="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+        >
             <form
                 method="GET"
                 action="{{ route('products.index') }}"
                 class="flex flex-col gap-4 md:flex-row md:items-end"
             >
-                <div class="flex-1">
-                    <label for="search" class="mb-1 block text-sm font-medium text-[#111827]">
+                <div class="min-w-0 flex-1">
+                    <label for="search" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {{ __('Search') }}
                     </label>
                     <flux:input
@@ -35,17 +44,17 @@
                         :label="false"
                         placeholder="{{ __('Search by name, brand, or SKU') }}"
                         value="{{ $filters['search'] ?? '' }}"
-                        class="border border-neutral-300 [&>input]:!text-[#111827]"
                     />
                 </div>
 
                 <div class="w-full md:w-56">
-                    <label class="mb-1 block text-sm font-medium text-[#111827]">
+                    <label for="category_id" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {{ __('Category') }}
                     </label>
                     <select
+                        id="category_id"
                         name="category_id"
-                        class="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                     >
                         <option value="">{{ __('All') }}</option>
                         @foreach($categories as $category)
@@ -56,15 +65,15 @@
                     </select>
                 </div>
 
-                <div class="flex items-center gap-4 md:ml-auto">
+                <div class="flex flex-wrap items-center gap-4 md:ml-auto">
                     @if(auth()->user()?->isAdmin())
-                        <label class="flex items-center gap-2 text-sm text-neutral-700">
+                        <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                             <input
                                 type="checkbox"
                                 name="include_inactive"
                                 value="1"
                                 @checked(($filters['include_inactive'] ?? false))
-                                class="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500"
+                                class="h-4 w-4 rounded border-zinc-400 text-sky-600 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950"
                             >
                             <span>{{ __('Include inactive') }}</span>
                         </label>
@@ -74,19 +83,19 @@
                         <flux:button type="submit" variant="primary">
                             {{ __('Apply') }}
                         </flux:button>
-                        <a href="{{ route('products.index') }}">
-                            <flux:button type="button" variant="ghost">
-                                {{ __('Reset') }}
-                            </flux:button>
-                        </a>
+                        <flux:button :href="route('products.index')" variant="ghost" wire:navigate>
+                            {{ __('Reset') }}
+                        </flux:button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
+        <div
+            class="flex-1 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+        >
             @if($products->isEmpty())
-                <div class="py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                <div class="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
                     {{ __('No products found. Try adjusting your filters.') }}
                 </div>
             @else
@@ -94,12 +103,12 @@
                     @foreach($products as $product)
                         <a
                             href="{{ route('products.show', $product) }}"
-                            class="group flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_16px_40px_rgba(0,0,0,0.14)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(0,0,0,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            class="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-lg dark:hover:shadow-zinc-950/50"
                         >
                             @php
                                 $imageUrl = $product->images->first()->image_url ?? null;
                             @endphp
-                            <div class="aspect-[4/3] w-full bg-neutral-100 transition group-hover:opacity-95">
+                            <div class="aspect-[4/3] w-full bg-zinc-100 transition group-hover:opacity-95 dark:bg-zinc-800">
                                 @if($imageUrl)
                                     <img
                                         src="{{ $imageUrl }}"
@@ -107,17 +116,19 @@
                                         class="h-full w-full object-cover"
                                     >
                                 @else
-                                    <x-placeholder-pattern class="h-full w-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+                                    <x-placeholder-pattern class="h-full w-full stroke-gray-900/20 dark:stroke-zinc-100/20" />
                                 @endif
                             </div>
 
                             <div class="flex flex-1 flex-col gap-2 p-4">
                                 <div class="flex items-start justify-between gap-2">
                                     <div>
-                                        <div class="text-sm font-semibold text-neutral-900 line-clamp-2 group-hover:text-indigo-600">
+                                        <div
+                                            class="line-clamp-2 text-sm font-semibold text-zinc-900 group-hover:text-sky-600 dark:text-zinc-100 dark:group-hover:text-sky-400"
+                                        >
                                             {{ $product->name }}
                                         </div>
-                                        <div class="mt-0.5 text-xs text-neutral-500">
+                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">
                                             {{ $product->brand ?? '—' }}
                                             @if($product->sku)
                                                 <span class="mx-1">•</span>
@@ -126,28 +137,32 @@
                                         </div>
                                     </div>
 
-                                    <div class="text-right text-sm font-semibold text-neutral-900">
+                                    <div class="text-right text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
                                         {{ number_format((float) ($product->price ?? 0), 2) }}
                                     </div>
                                 </div>
 
-                                <div class="mt-1 text-xs text-neutral-500">
+                                <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
                                     {{ $product->category?->name ?? __('Uncategorized') }}
                                 </div>
 
                                 <div class="mt-2 flex items-center justify-between">
                                     @if($product->is_active ?? true)
-                                        <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800">
+                                        <span
+                                            class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200"
+                                        >
                                             {{ __('Active') }}
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
+                                        <span
+                                            class="inline-flex items-center rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                                        >
                                             {{ __('Inactive') }}
                                         </span>
                                     @endif
 
                                     @if($product->ar_model_url)
-                                        <span class="text-[11px] font-medium text-indigo-600">
+                                        <span class="text-[11px] font-medium text-sky-600 dark:text-sky-400">
                                             {{ __('AR available') }}
                                         </span>
                                     @endif
@@ -157,11 +172,10 @@
                     @endforeach
                 </div>
 
-                <div class="mt-4 border-t border-neutral-200 pt-3 text-sm">
+                <div class="mt-4 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-700">
                     {{ $products->withQueryString()->links() }}
                 </div>
             @endif
         </div>
     </div>
 </x-layouts::app>
-

@@ -1,17 +1,17 @@
-<x-layouts::app :title="__('Edit :name', ['name' => $product->name])">
+<x-layouts::app :title="__('New product')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
-                    {{ __('Edit product') }}
+                    {{ __('Add product') }}
                 </flux:heading>
                 <flux:text class="text-zinc-600 dark:text-zinc-400">
-                    {{ __('Update product details and images for the catalog and Android app.') }}
+                    {{ __('Create a catalog item for the shop and mobile app.') }}
                 </flux:text>
             </div>
 
-            <flux:button variant="ghost" icon="arrow-left" :href="route('products.show', $product)" wire:navigate>
-                {{ __('Back to product') }}
+            <flux:button variant="ghost" icon="arrow-left" :href="route('products.index')" wire:navigate>
+                {{ __('Back to products') }}
             </flux:button>
         </div>
 
@@ -19,13 +19,12 @@
             <div class="space-y-4 lg:col-span-2">
                 <form
                     method="POST"
-                    action="{{ route('products.update', $product) }}"
+                    action="{{ route('products.store') }}"
                     enctype="multipart/form-data"
+                    id="product-create-form"
                     class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
-                    id="product-form"
                 >
                     @csrf
-                    @method('PUT')
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-1.5">
@@ -36,7 +35,7 @@
                                 id="name"
                                 name="name"
                                 :label="false"
-                                value="{{ old('name', $product->name) }}"
+                                value="{{ old('name') }}"
                                 required
                             />
                             @error('name')
@@ -52,7 +51,7 @@
                                 id="brand"
                                 name="brand"
                                 :label="false"
-                                value="{{ old('brand', $product->brand) }}"
+                                value="{{ old('brand') }}"
                             />
                             @error('brand')
                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -67,7 +66,7 @@
                                 id="sku"
                                 name="sku"
                                 :label="false"
-                                value="{{ old('sku', $product->sku) }}"
+                                value="{{ old('sku') }}"
                                 required
                             />
                             @error('sku')
@@ -86,7 +85,7 @@
                                 step="0.01"
                                 min="0"
                                 :label="false"
-                                value="{{ old('price', $product->price) }}"
+                                value="{{ old('price') }}"
                                 required
                             />
                             @error('price')
@@ -94,18 +93,19 @@
                             @enderror
                         </div>
 
-                        <div class="space-y-1.5">
+                        <div class="space-y-1.5 md:col-span-2">
                             <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                 {{ __('Category') }}
                             </label>
                             <select
                                 id="category_id"
                                 name="category_id"
+                                required
                                 class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                             >
-                                <option value="">{{ __('Uncategorized') }}</option>
+                                <option value="" disabled @selected(! old('category_id'))>{{ __('Select a category') }}</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>
+                                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
@@ -128,7 +128,7 @@
                                         type="checkbox"
                                         name="is_active"
                                         value="1"
-                                        @checked(filter_var(old('is_active', $product->is_active ? '1' : '0'), FILTER_VALIDATE_BOOLEAN))
+                                        @checked(filter_var(old('is_active', '1'), FILTER_VALIDATE_BOOLEAN))
                                         class="mt-0.5 size-4 shrink-0 cursor-pointer rounded border border-zinc-400 bg-white accent-sky-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-zinc-500 dark:bg-zinc-900 dark:accent-sky-500 dark:focus:ring-offset-zinc-900"
                                     >
                                     <span>{{ __('Active (visible to customers)') }}</span>
@@ -147,7 +147,7 @@
                                 id="lens_type"
                                 name="lens_type"
                                 :label="false"
-                                value="{{ old('lens_type', $product->lens_type) }}"
+                                value="{{ old('lens_type') }}"
                             />
                             @error('lens_type')
                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -162,14 +162,14 @@
                                 id="frame_material"
                                 name="frame_material"
                                 :label="false"
-                                value="{{ old('frame_material', $product->frame_material) }}"
+                                value="{{ old('frame_material') }}"
                             />
                             @error('frame_material')
                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="md:col-span-2 space-y-1.5">
+                        <div class="space-y-1.5 md:col-span-2">
                             <label for="ar_model_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                 {{ __('AR model URL (optional)') }}
                             </label>
@@ -177,7 +177,7 @@
                                 id="ar_model_url"
                                 name="ar_model_url"
                                 :label="false"
-                                value="{{ old('ar_model_url', $product->ar_model_url) }}"
+                                value="{{ old('ar_model_url') }}"
                             />
                             @error('ar_model_url')
                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -194,41 +194,21 @@
                             name="description"
                             rows="4"
                             class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600"
-                        >{{ old('description', $product->description) }}</textarea>
+                        >{{ old('description') }}</textarea>
                         @error('description')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <flux:button :href="route('products.index')" variant="ghost" wire:navigate>
+                            {{ __('Cancel') }}
+                        </flux:button>
                         <flux:button type="submit" variant="primary">
-                            {{ __('Save changes') }}
+                            {{ __('Create product') }}
                         </flux:button>
                     </div>
                 </form>
-
-                <div
-                    class="rounded-xl border border-red-200 bg-red-50/80 p-6 dark:border-red-900/60 dark:bg-red-950/30"
-                >
-                    <h2 class="text-sm font-semibold text-red-900 dark:text-red-200">
-                        {{ __('Danger zone') }}
-                    </h2>
-                    <p class="mt-1 text-sm text-red-800/90 dark:text-red-300/90">
-                        {{ __('Removing a product hides it from the catalog. This can be undone from the database if needed.') }}
-                    </p>
-                    <form
-                        method="POST"
-                        action="{{ route('products.destroy', $product) }}"
-                        class="mt-4"
-                        onsubmit="return confirm(@json(__('Remove this product from the catalog?')))"
-                    >
-                        @csrf
-                        @method('DELETE')
-                        <flux:button type="submit" variant="danger" icon="trash">
-                            {{ __('Remove product') }}
-                        </flux:button>
-                    </form>
-                </div>
             </div>
 
             <div class="space-y-4">
@@ -239,65 +219,42 @@
                         {{ __('Primary image') }}
                     </h2>
 
-                    @php
-                        $primaryImage = $product->images->first();
-                    @endphp
-
                     <div
                         class="aspect-[4/3] w-full overflow-hidden rounded-lg border border-dashed border-zinc-300 bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800/50"
                     >
                         <img
                             id="image-preview"
-                            src="{{ $primaryImage?->image_url }}"
-                            alt="{{ $product->name }}"
-                            class="h-full w-full object-cover @if(! $primaryImage) hidden @endif"
+                            src=""
+                            alt=""
+                            class="hidden h-full w-full object-cover"
                         >
-                        @unless($primaryImage)
-                            <div
-                                id="image-placeholder"
-                                class="flex h-full w-full items-center justify-center px-4 text-center text-xs text-zinc-500 dark:text-zinc-500"
-                            >
-                                {{ __('No image yet. Upload one below.') }}
-                            </div>
-                        @endunless
+                        <div
+                            id="image-placeholder"
+                            class="flex h-full w-full items-center justify-center px-4 text-center text-xs text-zinc-500 dark:text-zinc-500"
+                        >
+                            {{ __('Optional — upload a photo for the catalog.') }}
+                        </div>
                     </div>
 
-                    <div class="mt-4 space-y-3">
-                        <div class="space-y-1.5">
-                            <label for="image" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Upload new image') }}
-                            </label>
-                            <input
-                                id="image"
-                                name="image"
-                                type="file"
-                                accept="image/*"
-                                form="product-form"
-                                class="block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-sky-800 hover:file:bg-sky-100 dark:text-zinc-300 dark:file:bg-sky-950 dark:file:text-sky-200 dark:hover:file:bg-sky-900/80"
-                                onchange="window.productImagePreview && window.productImagePreview(event)"
-                            >
-                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                                {{ __('JPG or PNG, up to 4 MB.') }}
-                            </p>
-                            @error('image')
-                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        @if($primaryImage)
-                            <div class="flex items-center justify-between gap-3">
-                                <label class="inline-flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
-                                    <input
-                                        type="checkbox"
-                                        name="remove_image"
-                                        value="1"
-                                        form="product-form"
-                                        class="h-4 w-4 rounded border-zinc-400 text-red-600 focus:ring-red-500 dark:border-zinc-600 dark:bg-zinc-950"
-                                    >
-                                    <span>{{ __('Remove current image') }}</span>
-                                </label>
-                            </div>
-                        @endif
+                    <div class="mt-4 space-y-1.5">
+                        <label for="image" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Image file') }}
+                        </label>
+                        <input
+                            id="image"
+                            name="image"
+                            type="file"
+                            accept="image/*"
+                            form="product-create-form"
+                            class="block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-sky-800 hover:file:bg-sky-100 dark:text-zinc-300 dark:file:bg-sky-950 dark:file:text-sky-200 dark:hover:file:bg-sky-900/80"
+                            onchange="window.productImagePreview && window.productImagePreview(event)"
+                        >
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('JPG or PNG, up to 4 MB.') }}
+                        </p>
+                        @error('image')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </div>
