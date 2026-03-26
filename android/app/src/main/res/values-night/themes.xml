@@ -3,5 +3,7 @@
     <style name="Base.Theme.OpticalSystem" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Used by Material components for focus/activated states -->
+        <item name="colorControlActivated">@color/login_primary</item>
     </style>
 </resources>

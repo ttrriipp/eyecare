@@ -213,6 +213,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginTop="10dp"
+                android:indeterminateTint="@color/login_primary"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="@id/btnRegister"
                 app:layout_constraintStart_toStartOf="@id/btnRegister"

@@ -20,9 +20,10 @@
     <color name="bottom_nav_inactive">#9EAAB8</color>
 
     <!-- Login screen -->
-    <color name="login_primary">#3D6EA1</color>
-    <color name="login_primary_dark">#2F5E8C</color>
-    <color name="login_link">#3D6EA1</color>
+    <!-- Matches web accent (Tailwind sky-600: #0284C7) -->
+    <color name="login_primary">#0284C7</color>
+    <color name="login_primary_dark">#0369A1</color>
+    <color name="login_link">#0284C7</color>
     <color name="login_hint">#7A8A9A</color>
     <color name="login_surface">#FFFFFFFF</color>
     <color name="login_outline">#D7DDE4</color>
