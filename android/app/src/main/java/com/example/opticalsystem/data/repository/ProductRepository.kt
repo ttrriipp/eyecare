@@ -1,5 +1,5 @@
 package com.example.opticalsystem.data.repository
-
+import android.util.Log
 import com.example.opticalsystem.data.api.ProductApi
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductCategory
@@ -11,6 +11,19 @@ import javax.inject.Singleton
 class ProductRepository @Inject constructor(
     private val productApi: ProductApi,
 ) {
+    companion object {
+        private const val TAG = "ProductRepository"
+    }
+
+    private fun networkError(e: Exception, fallback: String): String {
+        val msg = e.message?.trim()
+        return if (!msg.isNullOrEmpty()) {
+            "Network error (${e.javaClass.simpleName}): $msg"
+        } else {
+            "Network error (${e.javaClass.simpleName})"
+        }.ifBlank { fallback }
+    }
+
     suspend fun getProducts(
         page: Int = 1,
         perPage: Int = 15,
@@ -32,7 +45,8 @@ class ProductRepository @Inject constructor(
                 Resource.Error(response.errorBody()?.string() ?: "Failed to load products")
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Network error")
+            Log.e(TAG, "getProducts failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
         }
     }
 
@@ -45,7 +59,8 @@ class ProductRepository @Inject constructor(
                 Resource.Error(response.errorBody()?.string() ?: "Product not found")
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Network error")
+            Log.e(TAG, "getProduct failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
         }
     }
 
@@ -58,7 +73,8 @@ class ProductRepository @Inject constructor(
                 Resource.Error(response.errorBody()?.string() ?: "Failed to load categories")
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Network error")
+            Log.e(TAG, "getCategories failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
         }
     }
 }

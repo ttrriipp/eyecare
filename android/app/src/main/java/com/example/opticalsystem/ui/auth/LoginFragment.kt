@@ -1,10 +1,13 @@
 package com.example.opticalsystem.ui.auth
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -35,6 +38,17 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val padding20 = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            20f,
+            resources.displayMetrics,
+        ).toInt()
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            v.setPadding(padding20, padding20, padding20, padding20 + navBars.bottom)
+            insets
+        }
+
         val backendRootUrl = getString(R.string.backend_root_url)
         val logoPath = getString(R.string.login_logo_public_path)
         val logoUrl = backendRootUrl.trimEnd('/') + "/" + logoPath.trimStart('/')
@@ -57,6 +71,10 @@ class LoginFragment : Fragment() {
             viewModel.login(email, password)
         }
 
+        binding.tvSignUp.setOnClickListener {
+            findNavController().navigate(R.id.action_login_to_register)
+        }
+
         viewModel.loginResult.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is Resource.Loading -> {
@@ -66,7 +84,7 @@ class LoginFragment : Fragment() {
                 is Resource.Success -> {
                     binding.btnLogin.isEnabled = true
                     binding.progressBar.visibility = View.GONE
-                    findNavController().navigate(R.id.action_login_to_productList)
+                    findNavController().navigate(R.id.action_login_to_main)
                 }
                 is Resource.Error -> {
                     binding.btnLogin.isEnabled = true

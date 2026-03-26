@@ -21,8 +21,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // For emulator use 10.0.2.2; for physical device use your PC's local IP
-    // harvey: 192.168.254.100
-    private const val BASE_URL = "http://192.168.254.100:8000/api/v1/"
+    // harvey: 192.168.254.101
+    private const val BASE_URL = "http://192.168.254.101:8000/api/v1/"
 
     @Provides
     @Singleton

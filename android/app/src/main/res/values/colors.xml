@@ -3,6 +3,23 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <!-- App-wide primary palette -->
+    <color name="primary">#3D6EA1</color>
+    <color name="primary_dark">#2F5E8C</color>
+    <color name="primary_light">#5B8FBF</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="background">#F5F7FA</color>
+    <color name="text_primary">#1F2A37</color>
+    <color name="text_secondary">#7A8A9A</color>
+    <color name="divider">#E5E9EF</color>
+
+    <!-- Bottom Navigation -->
+    <color name="bottom_nav_bg">#FFFFFFFF</color>
+    <color name="bottom_nav_active">#3D6EA1</color>
+    <color name="bottom_nav_inactive">#9EAAB8</color>
+
+    <!-- Login screen -->
     <color name="login_primary">#3D6EA1</color>
     <color name="login_primary_dark">#2F5E8C</color>
     <color name="login_link">#3D6EA1</color>

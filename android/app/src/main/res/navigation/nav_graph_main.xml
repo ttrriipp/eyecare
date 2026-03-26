@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph_main"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.opticalsystem.ui.home.HomeFragment"
+        android:label="Home" />
+
+    <fragment
+        android:id="@+id/nav_explore"
+        android:name="com.example.opticalsystem.ui.products.ProductListFragment"
+        android:label="Explore" />
+
+    <fragment
+        android:id="@+id/nav_schedule"
+        android:name="com.example.opticalsystem.ui.appointments.AppointmentsFragment"
+        android:label="Schedule" />
+
+    <fragment
+        android:id="@+id/nav_orders"
+        android:name="com.example.opticalsystem.ui.orders.OrdersFragment"
+        android:label="Orders" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.opticalsystem.ui.profile.ProfileFragment"
+        android:label="Profile" />
+
+</navigation>

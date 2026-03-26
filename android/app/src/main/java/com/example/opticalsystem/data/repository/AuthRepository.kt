@@ -1,5 +1,5 @@
 package com.example.opticalsystem.data.repository
-
+import android.util.Log
 import com.example.opticalsystem.data.api.AuthApi
 import com.example.opticalsystem.data.model.LoginRequest
 import com.example.opticalsystem.data.model.RegisterRequest
@@ -15,6 +15,19 @@ class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val tokenManager: TokenManager,
 ) {
+    companion object {
+        private const val TAG = "AuthRepository"
+    }
+
+    private fun networkError(e: Exception, fallback: String): String {
+        val msg = e.message?.trim()
+        return if (!msg.isNullOrEmpty()) {
+            "Network error (${e.javaClass.simpleName}): $msg"
+        } else {
+            "Network error (${e.javaClass.simpleName})"
+        }.ifBlank { fallback }
+    }
+
     suspend fun login(email: String, password: String): Resource<User> {
         return try {
             val response = authApi.login(LoginRequest(email, password))
@@ -26,7 +39,8 @@ class AuthRepository @Inject constructor(
                 Resource.Error(parseError(response.code(), response.errorBody()?.string(), "Login failed"))
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Network error")
+            Log.e(TAG, "login failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
         }
     }
 
@@ -49,7 +63,8 @@ class AuthRepository @Inject constructor(
                 Resource.Error(parseError(response.code(), response.errorBody()?.string(), "Registration failed"))
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Network error")
+            Log.e(TAG, "register failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
         }
     }
 
@@ -66,6 +81,20 @@ class AuthRepository @Inject constructor(
 
     suspend fun isLoggedIn(): Boolean {
         return tokenManager.isLoggedIn()
+    }
+
+    suspend fun getProfile(): Resource<User> {
+        return try {
+            val response = authApi.profile()
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!.user)
+            } else {
+                Resource.Error(parseError(response.code(), response.errorBody()?.string(), "Failed to load profile"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "profile failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
+        }
     }
 
     private fun parseError(code: Int, rawBody: String?, fallback: String): String {

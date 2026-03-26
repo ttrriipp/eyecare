@@ -11,6 +11,28 @@
     <string name="sign_up">Sign Up</string>
     <string name="login_tagline">When elegance meets convenience</string>
 
+    <!-- Registration -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join us today</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone">Phone (optional)</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="register">Create Account</string>
+    <string name="have_account">Already have an account?</string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_schedule">Schedule</string>
+    <string name="nav_orders">Orders</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_messages">Messages</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Welcome back,</string>
+    <string name="home_subtitle">What would you like to do today?</string>
+
     <!-- Backend root serving /public assets (logo). Example: http://10.0.2.2:8000/ -->
     <string name="backend_root_url">http://192.168.254.100:8000/</string>
     <!-- Relative path inside backend public folder -->
