@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\InventoryController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,12 @@ Route::prefix('v1')->group(function () {
         Route::get('products', [ProductController::class, 'index']);
         Route::get('products/{product}', [ProductController::class, 'show']);
         Route::get('product-categories', [ProductCategoryController::class, 'index']);
+
+        // Orders (all authenticated users, scoped by role in controller)
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::post('orders', [OrderController::class, 'store']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
 
         // Admin-only routes
         Route::middleware('role:admin')->group(function () {
@@ -48,6 +55,9 @@ Route::prefix('v1')->group(function () {
             // Inventory view
             Route::get('inventory', [InventoryController::class, 'index']);
             Route::get('inventory/{product}', [InventoryController::class, 'show']);
+
+            // Order status management
+            Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']);
         });
 
         // Customer-only routes
@@ -56,3 +66,4 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
