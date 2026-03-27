@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
@@ -32,6 +33,10 @@ Route::prefix('v1')->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
 
+        // Bills (all authenticated users, scoped by role in controller)
+        Route::get('bills', [BillingController::class, 'index']);
+        Route::get('bills/{bill}', [BillingController::class, 'show']);
+
         // Admin-only routes
         Route::middleware('role:admin')->group(function () {
             // Product management
@@ -48,6 +53,10 @@ Route::prefix('v1')->group(function () {
             Route::post('product-categories', [ProductCategoryController::class, 'store']);
             Route::put('product-categories/{category}', [ProductCategoryController::class, 'update']);
             Route::delete('product-categories/{category}', [ProductCategoryController::class, 'destroy']);
+
+            // Bill void and refund (admin only)
+            Route::put('bills/{bill}/void', [BillingController::class, 'void']);
+            Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
         });
 
         // Admin + Staff routes
@@ -58,6 +67,9 @@ Route::prefix('v1')->group(function () {
 
             // Order status management
             Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']);
+
+            // Bill payment
+            Route::put('bills/{bill}/pay', [BillingController::class, 'markAsPaid']);
         });
 
         // Customer-only routes
@@ -66,4 +78,5 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
 

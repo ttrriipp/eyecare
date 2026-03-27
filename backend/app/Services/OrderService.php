@@ -12,6 +12,9 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
+    public function __construct(
+        private readonly BillingService $billingService,
+    ) {}
     /**
      * List orders with filters and pagination.
      * Staff/admin see all orders; customers see only their own.
@@ -95,7 +98,10 @@ class OrderService
 
             $order->update(['total_amount' => $totalAmount]);
 
-            return $order->load(['items.product', 'user']);
+            // Auto-generate bill for the order
+            $this->billingService->createForOrder($order);
+
+            return $order->load(['items.product', 'user', 'bill']);
         });
     }
 
@@ -128,7 +134,10 @@ class OrderService
 
         $order->update(['status' => OrderStatus::Cancelled]);
 
-        return $order->fresh(['items.product', 'user']);
+        // Auto-void unpaid bill or auto-refund paid bill
+        $this->billingService->handleOrderCancellation($order);
+
+        return $order->fresh(['items.product', 'user', 'bill']);
     }
 
     /**

@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Models\Bill;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -22,42 +24,50 @@ class OrderSeeder extends Seeder
         }
 
         $orders = [
-            // Completed order
+            // Completed order (bill paid)
             [
                 'user_id' => $customer->id,
                 'status' => OrderStatus::Completed,
                 'notes' => 'First test order – completed.',
+                'bill_status' => PaymentStatus::Paid,
+                'payment_method' => 'cash',
                 'items' => [
                     ['product_index' => 0, 'quantity' => 1],
                     ['product_index' => 1, 'quantity' => 2],
                 ],
             ],
-            // Pending order
+            // Pending order (bill unpaid)
             [
                 'user_id' => $customer->id,
                 'status' => OrderStatus::Pending,
                 'notes' => null,
+                'bill_status' => PaymentStatus::Unpaid,
+                'payment_method' => null,
                 'items' => [
                     ['product_index' => 2, 'quantity' => 1],
                 ],
             ],
-            // Confirmed order
+            // Confirmed order (bill unpaid)
             [
                 'user_id' => $customer->id,
                 'status' => OrderStatus::Confirmed,
                 'notes' => 'Rush order please.',
+                'bill_status' => PaymentStatus::Unpaid,
+                'payment_method' => null,
                 'items' => [
                     ['product_index' => 0, 'quantity' => 1],
                     ['product_index' => 3, 'quantity' => 1],
                 ],
             ],
-            // Walk-in order (ready for pickup)
+            // Walk-in order (ready for pickup, bill paid)
             [
                 'user_id' => null,
                 'walk_in_name' => 'Maria Santos',
                 'walk_in_phone' => '09171234567',
                 'status' => OrderStatus::ReadyForPickup,
                 'notes' => 'Walk-in customer.',
+                'bill_status' => PaymentStatus::Paid,
+                'payment_method' => 'GCash',
                 'items' => [
                     ['product_index' => 4, 'quantity' => 1],
                 ],
@@ -65,6 +75,7 @@ class OrderSeeder extends Seeder
         ];
 
         $orderNumber = 1;
+        $invoiceNumber = 1;
 
         foreach ($orders as $orderData) {
             $totalAmount = 0;
@@ -97,7 +108,19 @@ class OrderSeeder extends Seeder
                 $order->items()->create($item);
             }
 
+            // Create bill for the order
+            Bill::create([
+                'order_id' => $order->id,
+                'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad($invoiceNumber, 5, '0', STR_PAD_LEFT),
+                'amount' => $totalAmount,
+                'payment_status' => $orderData['bill_status'],
+                'payment_method' => $orderData['payment_method'],
+                'paid_at' => $orderData['bill_status'] === PaymentStatus::Paid ? now() : null,
+            ]);
+
             $orderNumber++;
+            $invoiceNumber++;
         }
     }
 }
+
