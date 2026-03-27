@@ -23,6 +23,14 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
 
+        <action
+            android:id="@+id/action_nav_explore_to_cart"
+            app:destination="@id/cartFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
     </fragment>
 
     <fragment
@@ -50,6 +58,19 @@
             app:argType="integer"
             android:defaultValue="-1" />
 
+        <action
+            android:id="@+id/action_productDetail_to_cart"
+            app:destination="@id/cartFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
     </fragment>
+
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.example.opticalsystem.ui.cart.CartFragment"
+        android:label="Cart" />
 
 </navigation>

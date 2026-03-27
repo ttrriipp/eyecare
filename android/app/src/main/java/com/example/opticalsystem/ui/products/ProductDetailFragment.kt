@@ -8,18 +8,22 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductImage
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
+import com.example.opticalsystem.ui.cart.CartViewModel
 import com.example.opticalsystem.util.Resource
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProductDetailFragment : Fragment() {
@@ -28,6 +32,7 @@ class ProductDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ProductDetailViewModel by viewModels()
+    private val cartViewModel: CartViewModel by viewModels()
     private var currentProduct: Product? = null
 
     override fun onCreateView(
@@ -50,6 +55,10 @@ class ProductDetailFragment : Fragment() {
 
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
 
+        binding.btnCart.setOnClickListener {
+            findNavController().navigate(R.id.action_productDetail_to_cart)
+        }
+
         binding.btnWishlist.setOnClickListener {
             Toast.makeText(requireContext(), "Saved to wishlist", Toast.LENGTH_SHORT).show()
         }
@@ -62,6 +71,7 @@ class ProductDetailFragment : Fragment() {
             Toast.makeText(requireContext(), getString(R.string.coming_soon), Toast.LENGTH_SHORT).show()
         }
 
+        observeCartBadge()
         viewModel.loadProduct(productId)
 
         viewModel.product.observe(viewLifecycleOwner) { result ->
@@ -81,6 +91,15 @@ class ProductDetailFragment : Fragment() {
 
         viewModel.cartMessage.observe(viewLifecycleOwner) { message ->
             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun observeCartBadge() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            cartViewModel.itemCount.collectLatest { count ->
+                binding.cartBadge.isVisible = count > 0
+                binding.tvCartBadge.text = if (count > 99) "99+" else count.toString()
+            }
         }
     }
 

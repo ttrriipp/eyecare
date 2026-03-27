@@ -66,4 +66,24 @@
     <string name="spec_sku">SKU</string>
     <string name="spec_na">N/A</string>
     <string name="coming_soon">Coming soon</string>
+
+    <!-- Cart -->
+    <string name="nav_cart">Cart</string>
+    <string name="cart_title">My Cart</string>
+    <string name="cart_empty_title">Your cart is empty</string>
+    <string name="cart_empty_subtitle">Browse the Explore page and add items to get started.</string>
+    <string name="cart_item_count_format">%d item(s)</string>
+    <string name="cart_subtotal">Subtotal</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_proceed">Proceed to Checkout</string>
+    <string name="cart_clear">Clear Cart</string>
+    <string name="cart_removed_format">%s removed</string>
+    <string name="cart_cleared">Cart cleared</string>
+    <string name="cart_quantity_label">Qty: %d</string>
+    <string name="cart_remove_item_title">Remove item</string>
+    <string name="cart_remove_item_message">Remove %1$s from your cart?</string>
+    <string name="cart_clear_message">Remove all items from your cart?</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_cancel">Cancel</string>
 </resources>
