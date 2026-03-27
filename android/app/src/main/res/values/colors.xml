@@ -28,4 +28,11 @@
     <color name="login_surface">#FFFFFFFF</color>
     <color name="login_outline">#D7DDE4</color>
     <color name="login_title">#1F2A37</color>
+
+    <!-- Product UI -->
+    <color name="star_color">#F59E0B</color>
+    <color name="ar_badge_bg">#3D6EA1</color>
+    <color name="spec_row_alt">#F8F9FA</color>
+    <color name="price_color">#3D6EA1</color>
+    <color name="category_label_color">#3D6EA1</color>
 </resources>

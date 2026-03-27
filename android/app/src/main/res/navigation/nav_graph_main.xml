@@ -13,7 +13,17 @@
     <fragment
         android:id="@+id/nav_explore"
         android:name="com.example.opticalsystem.ui.products.ProductListFragment"
-        android:label="Explore" />
+        android:label="Explore">
+
+        <action
+            android:id="@+id/action_nav_explore_to_productDetail"
+            app:destination="@id/productDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_schedule"
@@ -29,5 +39,17 @@
         android:id="@+id/nav_profile"
         android:name="com.example.opticalsystem.ui.profile.ProfileFragment"
         android:label="Profile" />
+
+    <fragment
+        android:id="@+id/productDetailFragment"
+        android:name="com.example.opticalsystem.ui.products.ProductDetailFragment"
+        android:label="Product Detail">
+
+        <argument
+            android:name="productId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+    </fragment>
 
 </navigation>

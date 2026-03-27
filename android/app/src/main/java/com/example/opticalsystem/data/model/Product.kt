@@ -19,6 +19,11 @@ data class Product(
     @SerializedName("is_active")
     val isActive: Boolean,
     val images: List<ProductImage>?,
+    // Added in Phase F (Feedbacks) — null until review API is implemented
+    @SerializedName("average_rating")
+    val averageRating: Float?,
+    @SerializedName("reviews_count")
+    val reviewsCount: Int?,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")

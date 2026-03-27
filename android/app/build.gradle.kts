@@ -75,6 +75,9 @@ dependencies {
     // Images
     implementation(libs.glide)
 
+    // ViewPager2 (image carousel)
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

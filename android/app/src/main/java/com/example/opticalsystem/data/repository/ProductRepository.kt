@@ -30,7 +30,9 @@ class ProductRepository @Inject constructor(
         categoryId: Int? = null,
         brand: String? = null,
         search: String? = null,
-    ): Resource<List<Product>> {
+        sortBy: String? = null,
+        sortDir: String? = null,
+    ): Resource<Pair<List<Product>, Int>> {
         return try {
             val response = productApi.getProducts(
                 page = page,
@@ -38,9 +40,13 @@ class ProductRepository @Inject constructor(
                 categoryId = categoryId,
                 brand = brand,
                 search = search,
+                sortBy = sortBy,
+                sortDir = sortDir,
             )
             if (response.isSuccessful && response.body() != null) {
-                Resource.Success(response.body()!!.data)
+                val body = response.body()!!
+                val total = body.meta?.total ?: body.data.size
+                Resource.Success(Pair(body.data, total))
             } else {
                 Resource.Error(response.errorBody()?.string() ?: "Failed to load products")
             }
