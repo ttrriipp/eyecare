@@ -71,7 +71,7 @@ class ProductListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Ensure Explore reflects latest backend updates when returning from details.
+        // Ensure Shop list reflects latest backend updates when returning from details.
         viewModel.refreshProducts()
     }
 

@@ -23,11 +23,12 @@
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>
-    <string name="nav_explore">Explore</string>
-    <string name="nav_schedule">Schedule</string>
-    <string name="nav_orders">Orders</string>
+    <string name="nav_shop">Shop</string>
+    <string name="nav_book">Book</string>
+    <string name="nav_chat">Chat</string>
     <string name="nav_profile">Profile</string>
-    <string name="nav_messages">Messages</string>
+    <string name="nav_orders">Orders</string>
+    <string name="nav_messages">Chat</string>
 
     <!-- Home -->
     <string name="home_greeting">Welcome back,</string>
@@ -38,8 +39,7 @@
     <!-- Relative path inside backend public folder -->
     <string name="login_logo_public_path">images/logo-no-bg.png</string>
 
-    <!-- Explore / Product List -->
-    <string name="explore_title">Explore</string>
+    <!-- Shop / Product List -->
     <string name="products_count_format">%d products available</string>
     <string name="search_hint">Search frames, lenses, accessories…</string>
     <string name="category_all">All</string>
@@ -71,7 +71,7 @@
     <string name="nav_cart">Cart</string>
     <string name="cart_title">My Cart</string>
     <string name="cart_empty_title">Your cart is empty</string>
-    <string name="cart_empty_subtitle">Browse the Explore page and add items to get started.</string>
+    <string name="cart_empty_subtitle">Browse the Shop page and add items to get started.</string>
     <string name="cart_item_count_format">%d item(s)</string>
     <string name="cart_subtotal">Subtotal</string>
     <string name="cart_total">Total</string>

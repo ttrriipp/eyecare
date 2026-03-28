@@ -13,7 +13,7 @@
     <fragment
         android:id="@+id/nav_explore"
         android:name="com.example.opticalsystem.ui.products.ProductListFragment"
-        android:label="Explore">
+        android:label="Shop">
 
         <action
             android:id="@+id/action_nav_explore_to_productDetail"
@@ -40,8 +40,8 @@
 
     <fragment
         android:id="@+id/nav_orders"
-        android:name="com.example.opticalsystem.ui.orders.OrdersFragment"
-        android:label="Orders" />
+        android:name="com.example.opticalsystem.ui.messages.MessagesFragment"
+        android:label="Chat" />
 
     <fragment
         android:id="@+id/nav_profile"
