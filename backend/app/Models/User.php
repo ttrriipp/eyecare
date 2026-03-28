@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)

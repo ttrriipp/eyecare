@@ -55,6 +55,11 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

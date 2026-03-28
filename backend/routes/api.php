@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
+use App\Http\Controllers\Api\V1\FeedbackController;
 use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
@@ -37,6 +38,11 @@ Route::prefix('v1')->group(function () {
         Route::get('bills', [BillingController::class, 'index']);
         Route::get('bills/{bill}', [BillingController::class, 'show']);
 
+        // Feedbacks (product reviews)
+        Route::get('products/{product}/feedbacks', [FeedbackController::class, 'index']);
+        Route::post('products/{product}/feedbacks', [FeedbackController::class, 'store']);
+        Route::put('feedbacks/{feedback}', [FeedbackController::class, 'update']);
+
         // Admin-only routes
         Route::middleware('role:admin')->group(function () {
             // Product management
@@ -57,6 +63,9 @@ Route::prefix('v1')->group(function () {
             // Bill void and refund (admin only)
             Route::put('bills/{bill}/void', [BillingController::class, 'void']);
             Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
+
+            // Feedback moderation (admin only)
+            Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
         });
 
         // Admin + Staff routes
