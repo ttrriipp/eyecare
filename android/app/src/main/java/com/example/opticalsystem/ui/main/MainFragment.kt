@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -38,13 +37,6 @@ class MainFragment : Fragment() {
         val navController = navHostFragment.navController
 
         binding.bottomNav.setupWithNavController(navController)
-
-        binding.bottomNav.getOrCreateBadge(R.id.nav_orders).apply {
-            backgroundColor = ContextCompat.getColor(requireContext(), R.color.nav_badge_background)
-            badgeTextColor = ContextCompat.getColor(requireContext(), R.color.white)
-            number = 2
-            isVisible = true
-        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { v, insets ->
             val navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())

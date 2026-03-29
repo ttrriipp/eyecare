@@ -32,7 +32,8 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
-    fun addToCart(product: Product) {
+    fun addToCart(product: Product, quantity: Int) {
+        val q = quantity.coerceIn(1, 99)
         viewModelScope.launch {
             cartManager.addToCart(
                 CartItem(
@@ -41,9 +42,14 @@ class ProductDetailViewModel @Inject constructor(
                     productBrand = product.brand,
                     productPrice = product.price,
                     productImageUrl = product.images?.firstOrNull()?.imageUrl,
+                    quantity = q,
                 ),
             )
-            _cartMessage.value = "${product.name} added to cart"
+            _cartMessage.value = if (q == 1) {
+                "${product.name} added to cart"
+            } else {
+                "$q × ${product.name} added to cart"
+            }
         }
     }
 }

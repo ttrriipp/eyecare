@@ -37,4 +37,26 @@
     <color name="spec_row_alt">#F8F9FA</color>
     <color name="price_color">#3D6EA1</color>
     <color name="category_label_color">#3D6EA1</color>
+
+    <!-- Order Status Colors -->
+    <color name="status_pending">#F59E0B</color>
+    <color name="status_pending_bg">#1AF59E0B</color>
+    <color name="status_confirmed">#3B82F6</color>
+    <color name="status_confirmed_bg">#1A3B82F6</color>
+    <color name="status_ready">#14B8A6</color>
+    <color name="status_ready_bg">#1A14B8A6</color>
+    <color name="status_completed">#22C55E</color>
+    <color name="status_completed_bg">#1A22C55E</color>
+    <color name="status_cancelled">#EF4444</color>
+    <color name="status_cancelled_bg">#1AEF4444</color>
+
+    <!-- Payment Status Colors -->
+    <color name="payment_unpaid">#F59E0B</color>
+    <color name="payment_unpaid_bg">#1AF59E0B</color>
+    <color name="payment_paid">#22C55E</color>
+    <color name="payment_paid_bg">#1A22C55E</color>
+    <color name="payment_refunded">#F97316</color>
+    <color name="payment_refunded_bg">#1AF97316</color>
+    <color name="payment_voided">#9CA3AF</color>
+    <color name="payment_voided_bg">#1A9CA3AF</color>
 </resources>

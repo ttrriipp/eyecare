@@ -46,7 +46,25 @@
     <fragment
         android:id="@+id/nav_profile"
         android:name="com.example.opticalsystem.ui.profile.ProfileFragment"
-        android:label="Profile" />
+        android:label="Profile">
+
+        <action
+            android:id="@+id/action_profile_to_orders"
+            app:destination="@id/ordersFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_profile_to_bills"
+            app:destination="@id/billsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/productDetailFragment"
@@ -71,6 +89,107 @@
     <fragment
         android:id="@+id/cartFragment"
         android:name="com.example.opticalsystem.ui.cart.CartFragment"
-        android:label="Cart" />
+        android:label="Cart">
+
+        <action
+            android:id="@+id/action_cart_to_checkout"
+            app:destination="@id/checkoutFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <!-- Checkout -->
+    <fragment
+        android:id="@+id/checkoutFragment"
+        android:name="com.example.opticalsystem.ui.checkout.CheckoutFragment"
+        android:label="Checkout">
+
+        <action
+            android:id="@+id/action_checkout_to_orderDetail"
+            app:destination="@id/orderDetailFragment"
+            app:popUpTo="@id/nav_explore"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <!-- Orders List (from Profile) -->
+    <fragment
+        android:id="@+id/ordersFragment"
+        android:name="com.example.opticalsystem.ui.orders.OrdersFragment"
+        android:label="My Orders">
+
+        <action
+            android:id="@+id/action_orders_to_orderDetail"
+            app:destination="@id/orderDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <!-- Order Detail -->
+    <fragment
+        android:id="@+id/orderDetailFragment"
+        android:name="com.example.opticalsystem.ui.orders.OrderDetailFragment"
+        android:label="Order Details">
+
+        <argument
+            android:name="orderId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_orderDetail_to_billDetail"
+            app:destination="@id/billDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <!-- Bills List (from Profile) -->
+    <fragment
+        android:id="@+id/billsFragment"
+        android:name="com.example.opticalsystem.ui.bills.BillsFragment"
+        android:label="My Bills">
+
+        <action
+            android:id="@+id/action_bills_to_billDetail"
+            app:destination="@id/billDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <!-- Bill Detail -->
+    <fragment
+        android:id="@+id/billDetailFragment"
+        android:name="com.example.opticalsystem.ui.bills.BillDetailFragment"
+        android:label="Bill Details">
+
+        <argument
+            android:name="billId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_billDetail_to_orderDetail"
+            app:destination="@id/orderDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
 
 </navigation>

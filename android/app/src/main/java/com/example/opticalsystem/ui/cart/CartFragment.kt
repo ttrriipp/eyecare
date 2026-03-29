@@ -67,7 +67,7 @@ class CartFragment : Fragment() {
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
 
         binding.btnCheckout.setOnClickListener {
-            Toast.makeText(requireContext(), getString(R.string.coming_soon), Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_cart_to_checkout)
         }
 
         binding.tvClearCart.setOnClickListener {

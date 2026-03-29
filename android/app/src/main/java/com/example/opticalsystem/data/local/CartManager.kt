@@ -35,7 +35,10 @@ class CartManager @Inject constructor(
             val existingIndex = current.indexOfFirst { it.productId == item.productId }
             val updated = if (existingIndex >= 0) {
                 current.toMutableList().also {
-                    it[existingIndex] = it[existingIndex].copy(quantity = it[existingIndex].quantity + 1)
+                    val existing = it[existingIndex]
+                    it[existingIndex] = existing.copy(
+                        quantity = existing.quantity + item.quantity,
+                    )
                 }
             } else {
                 current + item

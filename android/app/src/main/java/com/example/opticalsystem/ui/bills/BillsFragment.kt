@@ -1,4 +1,4 @@
-package com.example.opticalsystem.ui.orders
+package com.example.opticalsystem.ui.bills
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,25 +12,25 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
-import com.example.opticalsystem.databinding.FragmentOrdersBinding
+import com.example.opticalsystem.databinding.FragmentBillsBinding
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class OrdersFragment : Fragment() {
+class BillsFragment : Fragment() {
 
-    private var _binding: FragmentOrdersBinding? = null
+    private var _binding: FragmentBillsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OrdersViewModel by viewModels()
-    private lateinit var orderAdapter: OrderAdapter
+    private val viewModel: BillsViewModel by viewModels()
+    private lateinit var billAdapter: BillAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentOrdersBinding.inflate(inflater, container, false)
+        _binding = FragmentBillsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -40,30 +40,29 @@ class OrdersFragment : Fragment() {
         setupRecyclerView()
         setupChipFilters()
         setupListeners()
-        observeOrders()
+        observeBills()
     }
 
     private fun setupRecyclerView() {
-        orderAdapter = OrderAdapter { order ->
+        billAdapter = BillAdapter { bill ->
             findNavController().navigate(
-                R.id.action_orders_to_orderDetail,
-                bundleOf("orderId" to order.id),
+                R.id.action_bills_to_billDetail,
+                bundleOf("billId" to bill.id),
             )
         }
-        binding.rvOrders.apply {
+        binding.rvBills.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = orderAdapter
+            adapter = billAdapter
         }
     }
 
     private fun setupChipFilters() {
         binding.chipGroupStatus.setOnCheckedStateChangeListener { _, checkedIds ->
             val status = when {
-                checkedIds.contains(R.id.chipPending) -> "pending"
-                checkedIds.contains(R.id.chipConfirmed) -> "confirmed"
-                checkedIds.contains(R.id.chipReady) -> "ready"
-                checkedIds.contains(R.id.chipCompleted) -> "completed"
-                checkedIds.contains(R.id.chipCancelled) -> "cancelled"
+                checkedIds.contains(R.id.chipUnpaid) -> "unpaid"
+                checkedIds.contains(R.id.chipPaid) -> "paid"
+                checkedIds.contains(R.id.chipRefunded) -> "refunded"
+                checkedIds.contains(R.id.chipVoided) -> "voided"
                 else -> null
             }
             viewModel.filterByStatus(status)
@@ -75,8 +74,8 @@ class OrdersFragment : Fragment() {
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
     }
 
-    private fun observeOrders() {
-        viewModel.orders.observe(viewLifecycleOwner) { result ->
+    private fun observeBills() {
+        viewModel.bills.observe(viewLifecycleOwner) { result ->
             binding.swipeRefresh.isRefreshing = false
             when (result) {
                 is Resource.Loading -> {
@@ -86,11 +85,11 @@ class OrdersFragment : Fragment() {
                 }
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
-                    val orders = result.data
-                    val isEmpty = orders.isEmpty()
+                    val bills = result.data
+                    val isEmpty = bills.isEmpty()
                     binding.layoutEmpty.isVisible = isEmpty
                     binding.swipeRefresh.isVisible = !isEmpty
-                    orderAdapter.submitList(orders)
+                    billAdapter.submitList(bills)
                 }
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false

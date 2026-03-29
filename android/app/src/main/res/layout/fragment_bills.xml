@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="@string/orders_title"
+            android:text="@string/bills_title"
             android:textColor="@color/on_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -67,50 +67,43 @@
                 android:id="@+id/chipAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/order_status_all"
+                android:text="@string/bill_status_all"
                 android:checked="true"
                 style="@style/Widget.Material3.Chip.Filter" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipPending"
+                android:id="@+id/chipUnpaid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/order_status_pending"
+                android:text="@string/bill_status_unpaid"
                 style="@style/Widget.Material3.Chip.Filter" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipConfirmed"
+                android:id="@+id/chipPaid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/order_status_confirmed"
+                android:text="@string/bill_status_paid"
                 style="@style/Widget.Material3.Chip.Filter" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipReady"
+                android:id="@+id/chipRefunded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/order_status_ready"
+                android:text="@string/bill_status_refunded"
                 style="@style/Widget.Material3.Chip.Filter" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipCompleted"
+                android:id="@+id/chipVoided"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/order_status_completed"
-                style="@style/Widget.Material3.Chip.Filter" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipCancelled"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/order_status_cancelled"
+                android:text="@string/bill_status_voided"
                 style="@style/Widget.Material3.Chip.Filter" />
 
         </com.google.android.material.chip.ChipGroup>
 
     </HorizontalScrollView>
 
-    <!-- ─── Order List ─── -->
+    <!-- ─── Bills List ─── -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="0dp"
@@ -121,7 +114,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvOrders"
+            android:id="@+id/rvBills"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
@@ -147,7 +140,7 @@
         <ImageView
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:contentDescription="No orders"
+            android:contentDescription="No bills"
             android:src="@drawable/ic_orders_24"
             android:tint="@color/divider" />
 
@@ -155,7 +148,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/orders_empty_title"
+            android:text="@string/bills_empty_title"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -165,7 +158,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="@string/orders_empty_subtitle"
+            android:text="@string/bills_empty_subtitle"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 

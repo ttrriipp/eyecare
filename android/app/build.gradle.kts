@@ -78,6 +78,9 @@ dependencies {
     // ViewPager2 (image carousel)
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
+    // SwipeRefreshLayout (pull to refresh)
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -35,6 +35,15 @@ class ProductDetailFragment : Fragment() {
     private val cartViewModel: CartViewModel by viewModels()
     private var currentProduct: Product? = null
 
+    private var quantity: Int = 1
+    private var loadedProductId: Int = -1
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_PRODUCT_ID, loadedProductId)
+        outState.putInt(STATE_QTY, quantity)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -63,13 +72,29 @@ class ProductDetailFragment : Fragment() {
             Toast.makeText(requireContext(), "Saved to wishlist", Toast.LENGTH_SHORT).show()
         }
 
-        binding.btnAddToCart.setOnClickListener {
-            currentProduct?.let { viewModel.addToCart(it) }
+        savedInstanceState?.let {
+            loadedProductId = it.getInt(STATE_PRODUCT_ID, -1)
+            quantity = it.getInt(STATE_QTY, 1).coerceIn(1, MAX_QTY)
         }
 
-        binding.btnOrderNow.setOnClickListener {
-            Toast.makeText(requireContext(), getString(R.string.coming_soon), Toast.LENGTH_SHORT).show()
+        binding.btnDecreaseQty.setOnClickListener {
+            if (quantity > 1) {
+                quantity--
+                updateQuantityUi()
+            }
         }
+        binding.btnIncreaseQty.setOnClickListener {
+            if (quantity < MAX_QTY) {
+                quantity++
+                updateQuantityUi()
+            }
+        }
+
+        binding.btnAddToCart.setOnClickListener {
+            currentProduct?.let { viewModel.addToCart(it, quantity) }
+        }
+
+        updateQuantityUi()
 
         observeCartBadge()
         viewModel.loadProduct(productId)
@@ -79,8 +104,15 @@ class ProductDetailFragment : Fragment() {
                 is Resource.Loading -> showLoading(true)
                 is Resource.Success -> {
                     showLoading(false)
-                    currentProduct = result.data
-                    bindProduct(result.data)
+                    val product = result.data
+                    val previousId = loadedProductId
+                    loadedProductId = product.id
+                    if (previousId != -1 && previousId != product.id) {
+                        quantity = 1
+                    }
+                    currentProduct = product
+                    bindProduct(product)
+                    updateQuantityUi()
                 }
                 is Resource.Error -> {
                     showLoading(false)
@@ -107,7 +139,15 @@ class ProductDetailFragment : Fragment() {
         binding.progressBar.isVisible = loading
         binding.scrollContent.isVisible = !loading
         binding.btnAddToCart.isEnabled = !loading
-        binding.btnOrderNow.isEnabled = !loading
+        binding.btnDecreaseQty.isEnabled = !loading && quantity > 1
+        binding.btnIncreaseQty.isEnabled = !loading && quantity < MAX_QTY
+    }
+
+    private fun updateQuantityUi() {
+        binding.tvProductQty.text = quantity.toString()
+        val loading = binding.progressBar.isVisible
+        binding.btnDecreaseQty.isEnabled = !loading && quantity > 1
+        binding.btnIncreaseQty.isEnabled = !loading && quantity < MAX_QTY
     }
 
     private fun bindProduct(product: Product) {
@@ -224,5 +264,11 @@ class ProductDetailFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val MAX_QTY = 99
+        private const val STATE_QTY = "product_detail_qty"
+        private const val STATE_PRODUCT_ID = "product_detail_product_id"
     }
 }

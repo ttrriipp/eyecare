@@ -59,7 +59,8 @@
     <string name="product_detail_title">Product Detail</string>
     <string name="ar_try_on">● AR Try-On</string>
     <string name="add_to_cart">Add to Cart</string>
-    <string name="order_now">Order Now</string>
+    <string name="cd_decrease_quantity">Decrease quantity</string>
+    <string name="cd_increase_quantity">Increase quantity</string>
     <string name="specifications">Specifications</string>
     <string name="spec_frame">Frame</string>
     <string name="spec_lens">Lens</string>
@@ -86,4 +87,61 @@
     <string name="action_remove">Remove</string>
     <string name="action_clear">Clear</string>
     <string name="action_cancel">Cancel</string>
+
+    <!-- Checkout -->
+    <string name="checkout_title">Checkout</string>
+    <string name="checkout_order_summary">Order Summary</string>
+    <string name="checkout_notes_hint">Add notes (optional)</string>
+    <string name="checkout_place_order">Place Order</string>
+    <string name="checkout_placing_order">Placing Order…</string>
+    <string name="checkout_success_title">Order Placed!</string>
+    <string name="checkout_success_message">Your order %1$s has been placed successfully.</string>
+    <string name="checkout_items_format">%d item(s)</string>
+
+    <!-- Orders -->
+    <string name="orders_title">My Orders</string>
+    <string name="orders_empty_title">No orders yet</string>
+    <string name="orders_empty_subtitle">Your order history will appear here.</string>
+    <string name="order_number_format">Order #%1$s</string>
+    <string name="order_items_count_format">%d item(s)</string>
+    <string name="order_cancel_title">Cancel Order</string>
+    <string name="order_cancel_message">Are you sure you want to cancel order #%1$s?</string>
+    <string name="order_cancel_button">Cancel Order</string>
+    <string name="order_cancelled_success">Order cancelled successfully.</string>
+    <string name="order_view_bill">View Bill</string>
+    <string name="order_status_all">All</string>
+    <string name="order_status_pending">Pending</string>
+    <string name="order_status_confirmed">Confirmed</string>
+    <string name="order_status_ready">Ready</string>
+    <string name="order_status_completed">Completed</string>
+    <string name="order_status_cancelled">Cancelled</string>
+    <string name="order_detail_title">Order Details</string>
+    <string name="order_detail_status">Status</string>
+    <string name="order_detail_date">Date</string>
+    <string name="order_detail_items">Items</string>
+    <string name="order_detail_notes">Notes</string>
+    <string name="order_detail_total">Total</string>
+    <string name="order_item_qty_format">×%d</string>
+
+    <!-- Bills -->
+    <string name="bills_title">My Bills</string>
+    <string name="bills_empty_title">No bills yet</string>
+    <string name="bills_empty_subtitle">Your billing history will appear here.</string>
+    <string name="bill_detail_title">Bill Details</string>
+    <string name="bill_invoice_number">Invoice Number</string>
+    <string name="bill_amount">Amount</string>
+    <string name="bill_payment_status">Payment Status</string>
+    <string name="bill_payment_method">Payment Method</string>
+    <string name="bill_paid_at">Paid At</string>
+    <string name="bill_linked_order">Linked Order</string>
+    <string name="bill_status_all">All</string>
+    <string name="bill_status_unpaid">Unpaid</string>
+    <string name="bill_status_paid">Paid</string>
+    <string name="bill_status_refunded">Refunded</string>
+    <string name="bill_status_voided">Voided</string>
+    <string name="bill_not_paid">Not yet paid</string>
+
+    <!-- Profile Menu -->
+    <string name="profile_my_orders">My Orders</string>
+    <string name="profile_my_bills">My Bills</string>
 </resources>

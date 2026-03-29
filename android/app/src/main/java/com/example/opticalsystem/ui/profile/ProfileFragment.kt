@@ -34,6 +34,23 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupMenuButtons()
+        setupLogout()
+        observeProfile()
+        viewModel.loadProfile()
+    }
+
+    private fun setupMenuButtons() {
+        binding.btnMyOrders.setOnClickListener {
+            findNavController().navigate(R.id.action_profile_to_orders)
+        }
+
+        binding.btnMyBills.setOnClickListener {
+            findNavController().navigate(R.id.action_profile_to_bills)
+        }
+    }
+
+    private fun setupLogout() {
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
         }
@@ -42,9 +59,6 @@ class ProfileFragment : Fragment() {
             when (result) {
                 is Resource.Loading -> binding.btnLogout.isEnabled = false
                 is Resource.Success -> {
-                    // Navigate to login using the parent (activity-level) NavController.
-                    // ParentFragment is MainFragment, whose parent's NavController is the
-                    // activity-level one that owns nav_graph.xml.
                     val parentNavController = requireParentFragment()
                         .requireParentFragment()
                         .findNavController()
@@ -60,6 +74,23 @@ class ProfileFragment : Fragment() {
                     binding.btnLogout.isEnabled = true
                     Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                 }
+            }
+        }
+    }
+
+    private fun observeProfile() {
+        viewModel.profile.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Resource.Success -> {
+                    val user = result.data
+                    binding.tvUserName.text = user.name
+                    binding.tvUserEmail.text = user.email
+                }
+                is Resource.Error -> {
+                    binding.tvUserName.text = "User"
+                    binding.tvUserEmail.text = ""
+                }
+                is Resource.Loading -> {}
             }
         }
     }
