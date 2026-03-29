@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreStaffOrderRequest;
+use App\Http\Requests\UpdateWebOrderStatusRequest;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -115,5 +116,32 @@ class OrderController extends Controller
                 'number' => $order->order_number,
                 'customer' => $customerLabel,
             ]));
+    }
+
+    /**
+     * Update lifecycle status (staff/admin) or cancel when allowed (customer or staff).
+     * Cancelled uses OrderService::cancel() so bills are voided/refunded per plan.
+     */
+    public function updateStatus(UpdateWebOrderStatusRequest $request, Order $order): RedirectResponse
+    {
+        $user = $request->user();
+        if ($user->isCustomer() && (int) $order->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        $newStatus = OrderStatus::from($request->validated('status'));
+
+        if ($newStatus === OrderStatus::Cancelled) {
+            $order = $this->orderService->cancel($order, $user);
+        } else {
+            if (! $user->isAdminOrStaff()) {
+                abort(403);
+            }
+            $order = $this->orderService->updateStatus($order, $newStatus);
+        }
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('status', __('Order status is now :status.', ['status' => $order->status->label()]));
     }
 }

@@ -1,5 +1,22 @@
+@php
+    $nextStatuses = collect(\App\Enums\OrderStatus::cases())->filter(
+        fn (\App\Enums\OrderStatus $st) => $order->status->canTransitionTo($st),
+    );
+    $canCustomerCancel = auth()->user()?->isCustomer()
+        && $order->canBeCancelledBy(auth()->user());
+@endphp
+
 <x-layouts::app :title="__('Order :num', ['num' => $order->order_number])">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
+        @if(session('status'))
+            <div
+                class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-100"
+                role="status"
+            >
+                {{ session('status') }}
+            </div>
+        @endif
+
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <flux:button variant="ghost" size="sm" icon="arrow-left" :href="route('orders.index')" wire:navigate>
@@ -8,7 +25,15 @@
                 <flux:heading size="xl" class="mt-2 text-zinc-900 dark:text-zinc-50">
                     {{ $order->order_number }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-400">
+                <x-app-breadcrumbs
+                    class="mt-1.5"
+                    :items="[
+                        ['label' => __('Home'), 'href' => route('dashboard')],
+                        ['label' => __('Orders'), 'href' => route('orders.index')],
+                        ['label' => $order->order_number],
+                    ]"
+                />
+                <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
                     {{ __('Placed') }}
                     <time datetime="{{ $order->created_at->toIso8601String() }}">
                         {{ $order->created_at->format('M j, Y g:i A') }}
@@ -36,6 +61,70 @@
                 </div>
             </div>
         </div>
+
+        @if(auth()->user()?->isAdminOrStaff() && $nextStatuses->isNotEmpty())
+            <div
+                class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <flux:heading size="lg" class="mb-2 text-zinc-900 dark:text-zinc-50">
+                    {{ __('Update status') }}
+                </flux:heading>
+                <flux:text class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('Move this order through pickup: Pending → Confirmed → Ready for Pickup → Completed. Cancel voids or refunds the bill when applicable.') }}
+                </flux:text>
+                <form method="POST" action="{{ route('orders.status.update', $order) }}" class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                    @csrf
+                    @method('PUT')
+                    <div class="min-w-0 flex-1 sm:max-w-xs">
+                        <label for="order-status" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('New status') }}
+                        </label>
+                        <select
+                            id="order-status"
+                            name="status"
+                            required
+                            class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                        >
+                            @foreach($nextStatuses as $st)
+                                <option value="{{ $st->value }}">{{ $st->label() }}</option>
+                            @endforeach
+                        </select>
+                        @error('status')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <flux:button type="submit" variant="primary">
+                        {{ __('Apply') }}
+                    </flux:button>
+                </form>
+            </div>
+        @elseif($canCustomerCancel)
+            <div
+                class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <flux:heading size="lg" class="mb-2 text-zinc-900 dark:text-zinc-50">
+                    {{ __('Cancel order') }}
+                </flux:heading>
+                <flux:text class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('You can cancel before the order is ready for pickup.') }}
+                </flux:text>
+                <form method="POST" action="{{ route('orders.status.update', $order) }}" class="inline">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status" value="{{ \App\Enums\OrderStatus::Cancelled->value }}">
+                    <flux:button
+                        type="submit"
+                        variant="danger"
+                        onclick="return confirm(@json(__('Cancel this order? Your bill will be voided if unpaid or refunded if already paid.')))"
+                    >
+                        {{ __('Cancel my order') }}
+                    </flux:button>
+                </form>
+                @error('status')
+                    <p class="mt-2 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+        @endif
 
         <div class="grid gap-6 lg:grid-cols-2">
             <div

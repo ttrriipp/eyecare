@@ -34,7 +34,7 @@
                     class="mt-1.5"
                     :items="[
                         ['label' => __('Home'), 'href' => route('dashboard')],
-                        ['label' => __('Ordering'), 'href' => route('orders.index')],
+                        ['label' => __('Orders'), 'href' => route('orders.index')],
                         ['label' => __('Create order')],
                     ]"
                 />

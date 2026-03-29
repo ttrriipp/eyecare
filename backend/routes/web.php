@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -33,6 +34,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('orders.create');
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store');
+
+    Route::get('orders/billing', [BillingController::class, 'index'])
+        ->name('orders.billing.index');
+    Route::get('orders/billing/{bill}', [BillingController::class, 'show'])
+        ->name('orders.billing.show');
+    Route::put('orders/billing/{bill}/pay', [BillingController::class, 'pay'])
+        ->name('orders.billing.pay');
+    Route::put('orders/billing/{bill}/void', [BillingController::class, 'void'])
+        ->name('orders.billing.void');
+    Route::put('orders/billing/{bill}/refund', [BillingController::class, 'refund'])
+        ->name('orders.billing.refund');
+
+    Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])
+        ->name('orders.status.update');
     Route::get('orders/{order}', [OrderController::class, 'show'])
         ->name('orders.show');
 

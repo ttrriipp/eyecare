@@ -37,11 +37,22 @@
                     <flux:sidebar.item
                         icon="clipboard-document-list"
                         :href="route('orders.index')"
-                        :current="request()->routeIs('orders.*')"
+                        :current="request()->routeIs('orders.index', 'orders.create', 'orders.show')"
                         wire:navigate
                     >
-                        {{ __('Ordering') }}
+                        {{ __('Orders') }}
                     </flux:sidebar.item>
+
+                    <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
+                        <flux:sidebar.item
+                            icon="banknotes"
+                            :href="route('orders.billing.index')"
+                            :current="request()->routeIs('orders.billing.*')"
+                            wire:navigate
+                        >
+                            {{ __('Billing') }}
+                        </flux:sidebar.item>
+                    </div>
 
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item

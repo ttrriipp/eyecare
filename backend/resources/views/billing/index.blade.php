@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Orders')">
+<x-layouts::app :title="__('Billing')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         @if(session('status'))
             <div
@@ -12,21 +12,17 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
-                    {{ __('Orders') }}
+                    {{ __('Billing') }}
                 </flux:heading>
                 <x-app-breadcrumbs
                     class="mt-1.5"
                     :items="[
                         ['label' => __('Home'), 'href' => route('dashboard')],
-                        ['label' => __('Orders')],
+                        ['label' => __('Orders'), 'href' => route('orders.index')],
+                        ['label' => __('Billing')],
                     ]"
                 />
             </div>
-            @if(auth()->user()?->isAdminOrStaff())
-                <flux:button variant="primary" icon="plus" :href="route('orders.create')" wire:navigate>
-                    {{ __('Create order') }}
-                </flux:button>
-            @endif
         </div>
 
         <div
@@ -34,36 +30,36 @@
         >
             <form
                 method="GET"
-                action="{{ route('orders.index') }}"
+                action="{{ route('orders.billing.index') }}"
                 class="flex flex-col gap-4 xl:flex-row xl:flex-wrap xl:items-end"
             >
                 <div class="min-w-0 flex-1">
-                    <label for="orders-search" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    <label for="billing-search" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {{ __('Search') }}
                     </label>
                     <flux:input
-                        id="orders-search"
+                        id="billing-search"
                         name="search"
                         :label="false"
-                        placeholder="{{ __('Order #, customer name, phone, email…') }}"
+                        placeholder="{{ __('Invoice #, order #…') }}"
                         value="{{ $filters['search'] ?? '' }}"
                     />
                 </div>
 
                 <div class="w-full sm:w-56">
-                    <label for="orders-status" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {{ __('Status') }}
+                    <label for="billing-status" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Payment') }}
                     </label>
                     <select
-                        id="orders-status"
-                        name="status"
+                        id="billing-status"
+                        name="payment_status"
                         class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                     >
-                        <option value="">{{ __('All statuses') }}</option>
+                        <option value="">{{ __('All') }}</option>
                         @foreach($statuses as $status)
                             <option
                                 value="{{ $status->value }}"
-                                @selected(($filters['status'] ?? '') === $status->value)
+                                @selected(($filters['payment_status'] ?? '') === $status->value)
                             >
                                 {{ $status->label() }}
                             </option>
@@ -73,11 +69,11 @@
 
                 <div class="grid w-full gap-4 sm:grid-cols-2 lg:w-auto lg:min-w-[12rem]">
                     <div>
-                        <label for="orders-from" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <label for="billing-from" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             {{ __('From') }}
                         </label>
                         <flux:input
-                            id="orders-from"
+                            id="billing-from"
                             type="date"
                             name="date_from"
                             :label="false"
@@ -85,11 +81,11 @@
                         />
                     </div>
                     <div>
-                        <label for="orders-to" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <label for="billing-to" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             {{ __('To') }}
                         </label>
                         <flux:input
-                            id="orders-to"
+                            id="billing-to"
                             type="date"
                             name="date_to"
                             :label="false"
@@ -102,7 +98,7 @@
                     <flux:button type="submit" variant="primary">
                         {{ __('Apply') }}
                     </flux:button>
-                    <flux:button :href="route('orders.index')" variant="ghost" wire:navigate>
+                    <flux:button :href="route('orders.billing.index')" variant="ghost" wire:navigate>
                         {{ __('Reset') }}
                     </flux:button>
                 </div>
@@ -112,77 +108,83 @@
         <div
             class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
         >
-            @if($orders->isEmpty())
+            @if($bills->isEmpty())
                 <div class="px-4 py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ __('No orders match your filters.') }}
+                    {{ __('No invoices match your filters.') }}
                 </div>
             @else
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
                         <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
                             <tr>
-                                <th class="px-4 py-3">{{ __('Order') }}</th>
-                                <th class="px-4 py-3 hidden sm:table-cell">{{ __('Customer') }}</th>
+                                <th class="px-4 py-3">{{ __('Invoice') }}</th>
+                                <th class="px-4 py-3 hidden sm:table-cell">{{ __('Order') }}</th>
+                                <th class="px-4 py-3 hidden md:table-cell">{{ __('Customer') }}</th>
                                 <th class="px-4 py-3">{{ __('Status') }}</th>
-                                <th class="px-4 py-3 text-end">{{ __('Total') }}</th>
-                                <th class="px-4 py-3 hidden md:table-cell">{{ __('Placed') }}</th>
+                                <th class="px-4 py-3 text-end">{{ __('Amount') }}</th>
+                                <th class="px-4 py-3 hidden lg:table-cell">{{ __('Created') }}</th>
                                 <th class="px-4 py-3 text-center">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                            @foreach($orders as $order)
+                            @foreach($bills as $bill)
+                                @php
+                                    $ps = $bill->payment_status;
+                                @endphp
                                 <tr class="bg-white transition-colors dark:bg-zinc-900">
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-zinc-900 dark:text-zinc-100">
-                                            {{ $order->order_number }}
+                                            {{ $bill->invoice_number }}
                                         </div>
-                                        @if($order->notes)
-                                            <div class="mt-0.5 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-500">
-                                                {{ $order->notes }}
-                                            </div>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 hidden sm:table-cell text-zinc-600 dark:text-zinc-400">
-                                        @if($order->isWalkIn())
-                                            <div>{{ $order->walk_in_name ?? '—' }}</div>
-                                            @if($order->walk_in_phone)
-                                                <div class="text-xs tabular-nums">{{ $order->walk_in_phone }}</div>
-                                            @endif
-                                            <span
-                                                class="mt-1 inline-flex rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                                        @if($bill->order)
+                                            <a
+                                                href="{{ route('orders.show', $bill->order) }}"
+                                                class="text-sky-600 underline decoration-sky-300 underline-offset-2 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                                                wire:navigate
                                             >
-                                                {{ __('Walk-in') }}
-                                            </span>
+                                                {{ $bill->order->order_number }}
+                                            </a>
                                         @else
-                                            <div>{{ $order->user?->name ?? '—' }}</div>
-                                            @if($order->user?->email)
-                                                <div class="text-xs">{{ $order->user->email }}</div>
+                                            —
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 hidden md:table-cell text-zinc-600 dark:text-zinc-400">
+                                        @if($bill->order)
+                                            @if($bill->order->isWalkIn())
+                                                <span>{{ $bill->order->walk_in_name ?? '—' }}</span>
+                                                <span
+                                                    class="mt-1 inline-flex rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                                                >
+                                                    {{ __('Walk-in') }}
+                                                </span>
+                                            @else
+                                                {{ $bill->order->user?->name ?? '—' }}
                                             @endif
+                                        @else
+                                            —
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        @php
-                                            $s = $order->status;
-                                        @endphp
                                         <span
                                             @class([
                                                 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                                                'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200' => $s === \App\Enums\OrderStatus::Pending,
-                                                'bg-sky-100 text-sky-900 dark:bg-sky-950/80 dark:text-sky-200' => $s === \App\Enums\OrderStatus::Confirmed,
-                                                'bg-violet-100 text-violet-900 dark:bg-violet-950/80 dark:text-violet-200' => $s === \App\Enums\OrderStatus::ReadyForPickup,
-                                                'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200' => $s === \App\Enums\OrderStatus::Completed,
-                                                'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $s === \App\Enums\OrderStatus::Cancelled,
+                                                'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200' => $ps === \App\Enums\PaymentStatus::Unpaid,
+                                                'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200' => $ps === \App\Enums\PaymentStatus::Paid,
+                                                'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $ps === \App\Enums\PaymentStatus::Voided,
+                                                'bg-violet-100 text-violet-900 dark:bg-violet-950/80 dark:text-violet-200' => $ps === \App\Enums\PaymentStatus::Refunded,
                                             ])
                                         >
-                                            {{ $order->status->label() }}
+                                            {{ $bill->payment_status->label() }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">
-                                        {{ number_format((float) $order->total_amount, 2) }}
+                                        {{ number_format((float) $bill->amount, 2) }}
                                     </td>
-                                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 hidden md:table-cell">
-                                        <time datetime="{{ $order->created_at->toIso8601String() }}">
-                                            {{ $order->created_at->format('M j, Y g:i A') }}
+                                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 hidden lg:table-cell">
+                                        <time datetime="{{ $bill->created_at->toIso8601String() }}">
+                                            {{ $bill->created_at->format('M j, Y') }}
                                         </time>
                                     </td>
                                     <td class="px-4 py-3">
@@ -191,7 +193,7 @@
                                                 size="sm"
                                                 variant="ghost"
                                                 icon="eye"
-                                                :href="route('orders.show', $order)"
+                                                :href="route('orders.billing.show', $bill)"
                                                 wire:navigate
                                             >
                                                 <span class="sr-only">{{ __('View') }}</span>
@@ -205,7 +207,7 @@
                 </div>
 
                 <div class="border-t border-zinc-200 px-4 py-3 text-sm dark:border-zinc-700">
-                    {{ $orders->withQueryString()->links() }}
+                    {{ $bills->withQueryString()->links() }}
                 </div>
             @endif
         </div>
