@@ -14,9 +14,13 @@
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Inventory') }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-400">
-                    {{ __('Stock levels and reorder thresholds. Catalog status matches Products: inactive items are labeled and dimmed. Staff can view; only admins can adjust quantities.') }}
-                </flux:text>
+                <x-app-breadcrumbs
+                    class="mt-1.5"
+                    :items="[
+                        ['label' => __('Home'), 'href' => route('dashboard')],
+                        ['label' => __('Inventory')],
+                    ]"
+                />
             </div>
         </div>
 

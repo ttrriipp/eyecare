@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+// Physical device: set dev.backend.url to your PC's Wi‑Fi IP (see ipconfig). Emulator: 10.0.2.2 reaches the host machine.
+val devBackendUrl =
+    (localProperties.getProperty("dev.backend.url") ?: "http://10.0.2.2:6969").trim().trimEnd('/')
+val apiBaseUrl = "$devBackendUrl/api/v1/"
 
 android {
     namespace = "com.example.opticalsystem"

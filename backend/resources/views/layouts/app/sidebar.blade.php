@@ -34,6 +34,15 @@
                         {{ __('Products') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item
+                        icon="clipboard-document-list"
+                        :href="route('orders.index')"
+                        :current="request()->routeIs('orders.*')"
+                        wire:navigate
+                    >
+                        {{ __('Ordering') }}
+                    </flux:sidebar.item>
+
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item
                             icon="package"

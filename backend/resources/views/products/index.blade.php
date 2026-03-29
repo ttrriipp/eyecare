@@ -14,9 +14,13 @@
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Products') }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-400">
-                    {{ __('Browse and manage products in your optical inventory.') }}
-                </flux:text>
+                <x-app-breadcrumbs
+                    class="mt-1.5"
+                    :items="[
+                        ['label' => __('Home'), 'href' => route('dashboard')],
+                        ['label' => __('Products')],
+                    ]"
+                />
             </div>
 
             @if(auth()->user()?->isAdmin())
