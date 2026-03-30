@@ -2,6 +2,7 @@ package com.example.opticalsystem.di
 
 import com.example.opticalsystem.data.api.AuthApi
 import com.example.opticalsystem.data.api.BillApi
+import com.example.opticalsystem.data.api.FeedbackApi
 import com.example.opticalsystem.data.api.OrderApi
 import com.example.opticalsystem.data.api.ProductApi
 import com.example.opticalsystem.util.TokenManager
@@ -87,5 +88,11 @@ object NetworkModule {
     @Singleton
     fun provideBillApi(retrofit: Retrofit): BillApi {
         return retrofit.create(BillApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFeedbackApi(retrofit: Retrofit): FeedbackApi {
+        return retrofit.create(FeedbackApi::class.java)
     }
 }

@@ -11,7 +11,9 @@ class ProductService
 {
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Product::with(['category', 'images']);
+        $query = Product::with(['category', 'images'])
+            ->withAvg('feedbacks as average_rating', 'rating')
+            ->withCount(['feedbacks as reviews_count']);
 
         if (! ($filters['include_inactive'] ?? false)) {
             $query->active();
@@ -45,7 +47,10 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'images'])->findOrFail($id);
+        return Product::with(['category', 'images'])
+            ->withAvg('feedbacks as average_rating', 'rating')
+            ->withCount(['feedbacks as reviews_count'])
+            ->findOrFail($id);
     }
 
     public function create(array $data): Product

@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductImage
@@ -24,6 +25,7 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class ProductDetailFragment : Fragment() {
@@ -37,6 +39,8 @@ class ProductDetailFragment : Fragment() {
 
     private var quantity: Int = 1
     private var loadedProductId: Int = -1
+    private lateinit var feedbackAdapter: FeedbackAdapter
+    private var isUpdatingReview: Boolean = false
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -98,6 +102,9 @@ class ProductDetailFragment : Fragment() {
 
         observeCartBadge()
         viewModel.loadProduct(productId)
+        setupFeedbackSection(productId)
+        viewModel.loadCurrentUser()
+        viewModel.loadFeedbacks(productId)
 
         viewModel.product.observe(viewLifecycleOwner) { result ->
             when (result) {
@@ -124,6 +131,73 @@ class ProductDetailFragment : Fragment() {
         viewModel.cartMessage.observe(viewLifecycleOwner) { message ->
             Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
         }
+
+        viewModel.feedbacks.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Resource.Loading -> showFeedbackLoading(true)
+                is Resource.Success -> {
+                    showFeedbackLoading(false)
+
+                    val payload = result.data
+                    val average = payload.averageRating
+                    val total = payload.meta?.total ?: payload.data.size
+
+                    updateRatingSummary(averageRating = average, totalReviews = total)
+
+                    binding.tvNoReviews.isVisible = payload.data.isEmpty()
+                    binding.rvFeedbacks.isVisible = payload.data.isNotEmpty()
+                    feedbackAdapter.submitList(payload.data)
+                }
+                is Resource.Error -> {
+                    showFeedbackLoading(false)
+                    binding.tvNoReviews.isVisible = true
+                    binding.rvFeedbacks.isVisible = false
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        viewModel.myFeedback.observe(viewLifecycleOwner) { feedback ->
+            if (feedback != null) {
+                // User already reviewed this product; let them update it.
+                if (binding.ratingBarWrite.rating != feedback.rating.toFloat()) {
+                    binding.ratingBarWrite.rating = feedback.rating.toFloat()
+                }
+                binding.etReviewComment.setText(feedback.comment.orEmpty())
+
+                binding.btnSubmitReview.text = getString(R.string.update_review)
+                binding.btnSubmitReview.isEnabled = feedback.rating >= 1
+            } else {
+                binding.ratingBarWrite.rating = 0f
+                binding.etReviewComment.setText("")
+                binding.btnSubmitReview.text = getString(R.string.submit_review)
+                binding.btnSubmitReview.isEnabled = false
+            }
+        }
+
+        viewModel.submitFeedback.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Resource.Loading -> {
+                    showSubmitFeedbackLoading(true)
+                }
+                is Resource.Success -> {
+                    showSubmitFeedbackLoading(false)
+                    val msgRes = if (isUpdatingReview) {
+                        R.string.review_update_success
+                    } else {
+                        R.string.review_submit_success
+                    }
+                    Snackbar.make(binding.root, getString(msgRes), Snackbar.LENGTH_SHORT).show()
+                    isUpdatingReview = false
+                    viewModel.loadFeedbacks(productId)
+                    viewModel.loadProduct(productId) // Refresh product rating summary from feedback summary.
+                }
+                is Resource.Error -> {
+                    showSubmitFeedbackLoading(false)
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     private fun observeCartBadge() {
@@ -141,6 +215,59 @@ class ProductDetailFragment : Fragment() {
         binding.btnAddToCart.isEnabled = !loading
         binding.btnDecreaseQty.isEnabled = !loading && quantity > 1
         binding.btnIncreaseQty.isEnabled = !loading && quantity < MAX_QTY
+    }
+
+    private fun setupFeedbackSection(productId: Int) {
+        feedbackAdapter = FeedbackAdapter()
+        binding.rvFeedbacks.apply {
+            adapter = feedbackAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            isNestedScrollingEnabled = false
+        }
+
+        binding.btnSubmitReview.isEnabled = false
+        binding.ratingBarWrite.setOnRatingBarChangeListener { _, rating, _ ->
+            binding.btnSubmitReview.isEnabled = rating >= 1f
+        }
+
+        binding.btnSubmitReview.setOnClickListener {
+            val rating = binding.ratingBarWrite.rating.roundToInt()
+            val comment = binding.etReviewComment.text?.toString()?.trim().orEmpty()
+            val commentOrNull = comment.takeIf { it.isNotBlank() }
+
+            if (rating < 1) {
+                Toast.makeText(requireContext(), getString(R.string.review_pick_rating_first), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            isUpdatingReview = viewModel.myFeedback.value != null
+            viewModel.saveReview(
+                productId = productId,
+                rating = rating,
+                comment = commentOrNull,
+            )
+        }
+    }
+
+    private fun showFeedbackLoading(loading: Boolean) {
+        binding.progressFeedbackList.isVisible = loading
+        binding.rvFeedbacks.isVisible = !loading && binding.rvFeedbacks.adapter?.itemCount.orZero() > 0
+        binding.tvNoReviews.isVisible = !loading && (binding.rvFeedbacks.adapter?.itemCount.orZero() == 0)
+    }
+
+    private fun showSubmitFeedbackLoading(loading: Boolean) {
+        binding.progressSubmitReview.isVisible = loading
+        binding.btnSubmitReview.isEnabled = !loading && binding.ratingBarWrite.rating >= 1f
+    }
+
+    private fun updateRatingSummary(averageRating: Float?, totalReviews: Int?) {
+        if (averageRating != null && totalReviews != null && totalReviews > 0) {
+            binding.ratingBar.rating = averageRating
+            binding.tvRatingValue.text = "$averageRating (${totalReviews} reviews)"
+            binding.layoutRating.isVisible = true
+        } else {
+            binding.layoutRating.isVisible = false
+        }
     }
 
     private fun updateQuantityUi() {
@@ -272,3 +399,6 @@ class ProductDetailFragment : Fragment() {
         private const val STATE_PRODUCT_ID = "product_detail_product_id"
     }
 }
+
+private fun Int?.orZero(): Int = this ?: 0
+

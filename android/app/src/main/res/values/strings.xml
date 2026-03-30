@@ -68,6 +68,16 @@
     <string name="spec_na">N/A</string>
     <string name="coming_soon">Coming soon</string>
 
+    <!-- Reviews -->
+    <string name="ratings_and_reviews">Ratings &amp; Reviews</string>
+    <string name="write_a_review">Write a review</string>
+    <string name="review_comment_optional">Comment (optional)</string>
+    <string name="submit_review">Submit Review</string>
+    <string name="update_review">Update Review</string>
+    <string name="review_submit_success">Review submitted successfully</string>
+    <string name="review_update_success">Review updated successfully</string>
+    <string name="review_pick_rating_first">Please pick a rating first</string>
+
     <!-- Cart -->
     <string name="nav_cart">Cart</string>
     <string name="cart_title">My Cart</string>
