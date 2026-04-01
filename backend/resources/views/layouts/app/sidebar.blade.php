@@ -63,6 +63,15 @@
                         >
                             {{ __('Inventory') }}
                         </flux:sidebar.item>
+
+                        <flux:sidebar.item
+                            icon="star"
+                            :href="route('feedbacks.index')"
+                            :current="request()->routeIs('feedbacks.*')"
+                            wire:navigate
+                        >
+                            {{ __('Feedback') }}
+                        </flux:sidebar.item>
                     @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
@@ -111,23 +120,40 @@
 
                     <flux:menu.separator />
 
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
+                    <flux:modal.trigger name="confirm-logout">
                         <flux:menu.item
                             as="button"
-                            type="submit"
+                            type="button"
                             icon="arrow-right-start-on-rectangle"
                             class="w-full cursor-pointer"
                             data-test="logout-button"
                         >
                             {{ __('Log Out') }}
                         </flux:menu.item>
-                    </form>
+                    </flux:modal.trigger>
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
 
         {{ $slot }}
+
+        <flux:modal name="confirm-logout" focusable class="max-w-lg">
+            <div class="space-y-2">
+                <flux:heading size="lg">{{ __('Log out') }}</flux:heading>
+                <flux:subheading>
+                    {{ __('Do you want to log out?') }}
+                </flux:subheading>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <flux:button type="submit" variant="primary">{{ __('Log Out') }}</flux:button>
+                </form>
+            </div>
+        </flux:modal>
 
         @fluxScripts
     </body>

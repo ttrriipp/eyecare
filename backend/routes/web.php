@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -57,6 +58,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('inventory.edit');
     Route::put('inventory/{product}', [InventoryController::class, 'update'])
         ->name('inventory.update');
+
+    Route::middleware('role:admin,staff')->group(function () {
+        Route::get('feedbacks', [FeedbackController::class, 'index'])
+            ->name('feedbacks.index');
+    });
+
+    Route::middleware('role:admin')->group(function () {
+        Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
+            ->name('feedbacks.destroy');
+    });
 });
 
 require __DIR__.'/settings.php';

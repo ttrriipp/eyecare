@@ -10,6 +10,44 @@ use Illuminate\Validation\ValidationException;
 class FeedbackService
 {
     /**
+     * Paginate all reviews for staff/admin (product + customer visible).
+     */
+    public function paginateForStaff(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Feedback::query()
+            ->with(['user', 'product.category']);
+
+        if (! empty($filters['product_id'])) {
+            $query->forProduct((int) $filters['product_id']);
+        }
+
+        if (! empty($filters['rating'])) {
+            $query->byRating((int) $filters['rating']);
+        }
+
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', function ($p) use ($search) {
+                    $p->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%');
+                })
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%');
+                    })
+                    ->orWhere('comment', 'like', '%'.$search.'%');
+            });
+        }
+
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortDir = $filters['sort_dir'] ?? 'desc';
+        $query->orderBy($sortBy, $sortDir);
+
+        return $query->paginate($perPage);
+    }
+
+    /**
      * List reviews for a product with pagination.
      */
     public function listForProduct(int $productId, array $filters = [], int $perPage = 15): LengthAwarePaginator
