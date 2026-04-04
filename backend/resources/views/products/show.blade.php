@@ -56,7 +56,7 @@
                                 class="h-full w-full object-cover"
                             >
                         @else
-                            <x-placeholder-pattern class="h-full w-full stroke-gray-900/20 dark:stroke-zinc-100/20" />
+                            <x-product-image-placeholder class="h-full w-full" />
                         @endif
                     </div>
                 </div>

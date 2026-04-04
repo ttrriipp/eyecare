@@ -110,7 +110,7 @@
                             class="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-lg dark:hover:shadow-zinc-950/50"
                         >
                             @php
-                                $imageUrl = $product->images->first()->image_url ?? null;
+                                $imageUrl = $product->images->first()?->image_url;
                             @endphp
                             <div class="aspect-[4/3] w-full bg-zinc-100 transition group-hover:opacity-95 dark:bg-zinc-800">
                                 @if($imageUrl)
@@ -120,7 +120,7 @@
                                         class="h-full w-full object-cover"
                                     >
                                 @else
-                                    <x-placeholder-pattern class="h-full w-full stroke-gray-900/20 dark:stroke-zinc-100/20" />
+                                    <x-product-image-placeholder class="h-full w-full" />
                                 @endif
                             </div>
 
