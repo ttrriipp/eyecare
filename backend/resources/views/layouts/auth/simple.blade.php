@@ -3,7 +3,7 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-[#A9D7FF] antialiased">
+    <body class="min-h-screen bg-[#A9D7FF] antialiased dark:bg-slate-950 dark:text-zinc-100">
         <div class="flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
             <div class="w-full max-w-7xl">
                 <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
@@ -17,7 +17,7 @@
 
                     <div class="hidden h-full items-center justify-center md:flex">
                         <div class="relative flex h-[360px] w-full max-w-xl items-center justify-center">
-                            <div class="absolute inset-0 rounded-3xl bg-[#A9D7FF]"></div>
+                            <div class="absolute inset-0 rounded-3xl bg-[#A9D7FF] dark:bg-slate-900/80"></div>
 
                             <div class="relative flex h-full w-full items-center justify-center gap-5">
                                 <div class="h-[320px] w-[230px] overflow-hidden rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:scale-[1.06]">
