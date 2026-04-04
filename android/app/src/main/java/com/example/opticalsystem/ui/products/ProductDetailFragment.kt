@@ -72,10 +72,6 @@ class ProductDetailFragment : Fragment() {
             findNavController().navigate(R.id.action_productDetail_to_cart)
         }
 
-        binding.btnWishlist.setOnClickListener {
-            Toast.makeText(requireContext(), "Saved to wishlist", Toast.LENGTH_SHORT).show()
-        }
-
         savedInstanceState?.let {
             loadedProductId = it.getInt(STATE_PRODUCT_ID, -1)
             quantity = it.getInt(STATE_QTY, 1).coerceIn(1, MAX_QTY)
@@ -102,6 +98,7 @@ class ProductDetailFragment : Fragment() {
 
         observeCartBadge()
         viewModel.loadProduct(productId)
+        observeWishlist(productId)
         setupFeedbackSection(productId)
         viewModel.loadCurrentUser()
         viewModel.loadFeedbacks(productId)
@@ -195,6 +192,34 @@ class ProductDetailFragment : Fragment() {
                 is Resource.Error -> {
                     showSubmitFeedbackLoading(false)
                     Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun observeWishlist(productId: Int) {
+        viewModel.isInWishlist.observe(viewLifecycleOwner) { inWishlist ->
+            val iconRes = if (inWishlist) {
+                R.drawable.ic_heart_filled_24      // filled
+            } else {
+                R.drawable.ic_heart_24              // default
+            }
+            binding.btnWishlist.setImageResource(iconRes)
+            binding.btnWishlist.contentDescription = if (inWishlist) {
+                getString(R.string.remove_from_wishlist)
+            } else {
+                getString(R.string.save_to_wishlist)
+            }
+
+            binding.btnWishlist.setOnClickListener {
+                currentProduct?.let { product ->
+                    viewModel.toggleWishlist(product)
+                    val messageRes = if (inWishlist) {
+                        R.string.wishlist_removed
+                    } else {
+                        R.string.wishlist_added
+                    }
+                    Snackbar.make(binding.root, getString(messageRes), Snackbar.LENGTH_SHORT).show()
                 }
             }
         }

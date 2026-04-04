@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.opticalsystem.data.local.CartItem
 import com.example.opticalsystem.data.local.CartManager
+import com.example.opticalsystem.data.local.WishlistManager
 import com.example.opticalsystem.data.repository.AuthRepository
 import com.example.opticalsystem.data.model.Feedback
 import com.example.opticalsystem.data.model.FeedbackListResponse
@@ -23,6 +24,7 @@ class ProductDetailViewModel @Inject constructor(
     private val feedbackRepository: FeedbackRepository,
     private val authRepository: AuthRepository,
     private val cartManager: CartManager,
+    private val wishlistManager: WishlistManager,
 ) : ViewModel() {
 
     private val _product = MutableLiveData<Resource<Product>>()
@@ -40,11 +42,25 @@ class ProductDetailViewModel @Inject constructor(
     private val _myFeedback = MutableLiveData<Feedback?>()
     val myFeedback: LiveData<Feedback?> = _myFeedback
 
+    private val _isInWishlist = MutableLiveData<Boolean>()
+    val isInWishlist: LiveData<Boolean> = _isInWishlist
+
     private var currentUserId: Int? = null
     private var cachedFeedbacks: List<Feedback> = emptyList()
+    private var currentProductId: Int? = null
+
+    init {
+        viewModelScope.launch {
+            wishlistManager.wishlistIds.collect { ids ->
+                val id = currentProductId
+                _isInWishlist.postValue(id != null && ids.contains(id))
+            }
+        }
+    }
 
     fun loadProduct(id: Int) {
         _product.value = Resource.Loading
+        currentProductId = id
         viewModelScope.launch {
             _product.value = productRepository.getProduct(id)
         }
@@ -149,6 +165,12 @@ class ProductDetailViewModel @Inject constructor(
             } else {
                 "$q × ${product.name} added to cart"
             }
+        }
+    }
+
+    fun toggleWishlist(product: Product) {
+        viewModelScope.launch {
+            wishlistManager.toggle(product.id)
         }
     }
 }

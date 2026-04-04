@@ -68,6 +68,12 @@
     <string name="spec_na">N/A</string>
     <string name="coming_soon">Coming soon</string>
 
+    <!-- Wishlist -->
+    <string name="save_to_wishlist">Save to wishlist</string>
+    <string name="remove_from_wishlist">Remove from wishlist</string>
+    <string name="wishlist_added">Saved to wishlist</string>
+    <string name="wishlist_removed">Removed from wishlist</string>
+
     <!-- Reviews -->
     <string name="ratings_and_reviews">Ratings &amp; Reviews</string>
     <string name="write_a_review">Write a review</string>
