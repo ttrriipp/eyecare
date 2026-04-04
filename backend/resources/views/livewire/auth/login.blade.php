@@ -43,21 +43,9 @@
 
                     <!-- Password -->
                     <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <label for="password" class="block text-sm font-semibold tracking-wide text-gray-800 dark:text-zinc-200">
-                                Password
-                            </label>
-
-                            @if (Route::has('password.request'))
-                                <flux:link
-                                    class="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-                                    :href="route('password.request')"
-                                    wire:navigate
-                                >
-                                    {{ __('Forgot password?') }}
-                                </flux:link>
-                            @endif
-                        </div>
+                        <label for="password" class="mb-2 block text-sm font-semibold tracking-wide text-gray-800 dark:text-zinc-200">
+                            Password
+                        </label>
 
                         <flux:input
                             id="password"
@@ -69,18 +57,33 @@
                             placeholder="Enter Password"
                             viewable
                         />
-                    </div>
 
-                    <!-- Remember Me -->
-                    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-zinc-300">
-                        <input
-                            type="checkbox"
-                            name="remember"
-                            value="1"
-                            @checked(old('remember'))
-                            class="login-checkbox h-4 w-4 rounded border border-zinc-400 bg-white dark:border-zinc-500 dark:bg-zinc-800"
-                        >
-                        <span>{{ __('Remember me') }}</span>
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                            <label
+                                for="remember"
+                                class="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 text-sm text-gray-700 select-none dark:text-zinc-300"
+                            >
+                                <input
+                                    id="remember"
+                                    type="checkbox"
+                                    name="remember"
+                                    value="1"
+                                    @checked(old('remember'))
+                                    class="login-checkbox h-4 w-4 shrink-0 rounded border border-zinc-400 bg-white dark:border-zinc-500 dark:bg-zinc-800"
+                                >
+                                <span>{{ __('Remember me') }}</span>
+                            </label>
+
+                            @if (Route::has('password.request'))
+                                <flux:link
+                                    class="shrink-0 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                                    :href="route('password.request')"
+                                    wire:navigate
+                                >
+                                    {{ __('Forgot password?') }}
+                                </flux:link>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -88,7 +91,7 @@
                     <flux:button
                         variant="primary"
                         type="submit"
-                        class="mt-2 inline-flex w-full items-center justify-center"
+                        class="mt-2 inline-flex w-full cursor-pointer items-center justify-center"
                         data-test="login-button"
                     >
                         {{ __('Log in') }}
