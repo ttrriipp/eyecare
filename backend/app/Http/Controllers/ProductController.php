@@ -33,6 +33,11 @@ class ProductController extends Controller
             $filters['include_inactive'] = $request->boolean('include_inactive');
         }
 
+        $listView = $request->query('view', 'grid');
+        if (! in_array($listView, ['grid', 'table'], true)) {
+            $listView = 'grid';
+        }
+
         $products = $this->productService->list($filters, perPage: 15);
         $categories = $this->productService->listCategories();
 
@@ -40,6 +45,7 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => $categories,
             'filters' => $filters,
+            'listView' => $listView,
         ]);
     }
 

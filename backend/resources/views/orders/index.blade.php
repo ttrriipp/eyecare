@@ -178,7 +178,7 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">
-                                        {{ number_format((float) $order->total_amount, 2) }}
+                                        {{ \App\Support\Money::peso($order->total_amount) }}
                                     </td>
                                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 hidden md:table-cell">
                                         <time datetime="{{ $order->created_at->toIso8601String() }}">

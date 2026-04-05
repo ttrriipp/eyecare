@@ -44,7 +44,7 @@
                     {{ $bill->payment_status->label() }}
                 </span>
                 <div class="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {{ number_format((float) $bill->amount, 2) }} PHP
+                    {{ \App\Support\Money::peso($bill->amount) }}
                 </div>
             </div>
         </div>

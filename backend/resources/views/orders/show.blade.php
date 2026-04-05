@@ -57,7 +57,7 @@
                     {{ $order->status->label() }}
                 </span>
                 <div class="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {{ __('Total: :amount PHP', ['amount' => number_format((float) $order->total_amount, 2)]) }}
+                    {{ __('Total: :amount', ['amount' => \App\Support\Money::peso($order->total_amount)]) }}
                 </div>
             </div>
         </div>
@@ -186,7 +186,7 @@
                         <div>
                             <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Amount') }}</dt>
                             <dd class="tabular-nums text-zinc-900 dark:text-zinc-100">
-                                {{ number_format((float) $order->bill->amount, 2) }} PHP
+                                {{ \App\Support\Money::peso($order->bill->amount) }}
                             </dd>
                         </div>
                         <div>
@@ -253,10 +253,10 @@
                                         {{ $line->quantity }}
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-600 dark:text-zinc-400 hidden sm:table-cell">
-                                        {{ number_format((float) $line->unit_price, 2) }}
+                                        {{ \App\Support\Money::peso($line->unit_price) }}
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums font-medium text-zinc-900 dark:text-zinc-100">
-                                        {{ number_format((float) $line->subtotal, 2) }}
+                                        {{ \App\Support\Money::peso($line->subtotal) }}
                                     </td>
                                 </tr>
                             @endforeach

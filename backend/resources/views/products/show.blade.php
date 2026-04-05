@@ -92,7 +92,7 @@
                 >
                     <div class="flex items-baseline justify-between">
                         <div class="text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-                            {{ number_format((float) ($product->price ?? 0), 2) }}
+                            {{ \App\Support\Money::peso($product->price ?? 0) }}
                         </div>
 
                         @if($product->is_active ?? true)

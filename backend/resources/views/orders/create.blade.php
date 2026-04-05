@@ -235,7 +235,7 @@
                                                         @if($product->sku)
                                                             ({{ $product->sku }})
                                                         @endif
-                                                        — {{ number_format((float) $product->price, 2) }}
+                                                        — {{ \App\Support\Money::peso($product->price) }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -346,7 +346,7 @@
                                     @if($product->sku)
                                         ({{ $product->sku }})
                                     @endif
-                                    — {{ number_format((float) $product->price, 2) }}
+                                    — {{ \App\Support\Money::peso($product->price) }}
                                 </option>
                             @endforeach
                         </select>

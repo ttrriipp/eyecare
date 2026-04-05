@@ -180,7 +180,7 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">
-                                        {{ number_format((float) $bill->amount, 2) }}
+                                        {{ \App\Support\Money::peso($bill->amount) }}
                                     </td>
                                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 hidden lg:table-cell">
                                         <time datetime="{{ $bill->created_at->toIso8601String() }}">
