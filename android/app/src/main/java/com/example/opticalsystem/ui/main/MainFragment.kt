@@ -38,6 +38,20 @@ class MainFragment : Fragment() {
 
         binding.bottomNav.setupWithNavController(navController)
 
+        // Tapping the already-selected tab pops nested destinations (e.g. Shop → detail → cart)
+        // back to that tab's root, matching common bottom-nav behavior.
+        binding.bottomNav.setOnItemReselectedListener { menuItem ->
+            val rootDestinationId = when (menuItem.itemId) {
+                R.id.nav_home -> R.id.nav_home
+                R.id.nav_explore -> R.id.nav_explore
+                R.id.nav_schedule -> R.id.nav_schedule
+                R.id.nav_orders -> R.id.nav_orders
+                R.id.nav_profile -> R.id.nav_profile
+                else -> return@setOnItemReselectedListener
+            }
+            navController.popBackStack(rootDestinationId, inclusive = false)
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { v, insets ->
             val navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             v.updatePadding(bottom = navBars.bottom)
