@@ -17,36 +17,9 @@ class ProductController extends Controller
         private readonly InventoryService $inventoryService,
     ) {}
 
-    public function index(Request $request): View
+    public function index(): View
     {
-        $filters = $request->only([
-            'category_id',
-            'brand',
-            'search',
-            'min_price',
-            'max_price',
-            'sort_by',
-            'sort_dir',
-        ]);
-
-        if ($request->user() && $request->user()->isAdmin()) {
-            $filters['include_inactive'] = $request->boolean('include_inactive');
-        }
-
-        $listView = $request->query('view', 'grid');
-        if (! in_array($listView, ['grid', 'table'], true)) {
-            $listView = 'grid';
-        }
-
-        $products = $this->productService->list($filters, perPage: 15);
-        $categories = $this->productService->listCategories();
-
-        return view('products.index', [
-            'products' => $products,
-            'categories' => $categories,
-            'filters' => $filters,
-            'listView' => $listView,
-        ]);
+        return view('products.index');
     }
 
     public function create(Request $request): View
