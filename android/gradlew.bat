@@ -35,6 +35,11 @@ set APP_HOME=%DIRNAME%
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
+@rem Full JDK with jlink (IDE/Cursor JAVA_HOME often points at a JRE-only runtime).
+if exist "C:\Program Files\Java\jdk-17\bin\jlink.exe" (
+  set "JAVA_HOME=C:\Program Files\Java\jdk-17"
+)
+
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 

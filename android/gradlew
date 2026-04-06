@@ -114,6 +114,15 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
+# Prefer a full JDK with bin/jlink (IDE-managed "java" runtimes often omit it).
+if [ -n "${EYECARE_JAVA_HOME:-}" ] && [ -x "${EYECARE_JAVA_HOME}/bin/jlink" ]; then
+    JAVA_HOME="${EYECARE_JAVA_HOME}"
+    export JAVA_HOME
+elif { [ "$msys" = true ] || [ "$cygwin" = true ]; } && [ -x "/c/Program Files/Java/jdk-17/bin/jlink.exe" ]; then
+    JAVA_HOME="/c/Program Files/Java/jdk-17"
+    export JAVA_HOME
+fi
+
 CLASSPATH="\\\"\\\""
 
 
