@@ -14,6 +14,7 @@ class OrderService
 {
     public function __construct(
         private readonly BillingService $billingService,
+        private readonly InventoryService $inventoryService,
     ) {}
     /**
      * List orders with filters and pagination.
@@ -94,6 +95,9 @@ class OrderService
                     'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ]);
+
+                // Deduct inventory for the ordered quantity
+                $this->inventoryService->deduct($product, $itemData['quantity']);
             }
 
             $order->update(['total_amount' => $totalAmount]);
@@ -133,6 +137,12 @@ class OrderService
         }
 
         $order->update(['status' => OrderStatus::Cancelled]);
+
+        // Restore inventory quantities for each cancelled item
+        $order->load('items.product');
+        foreach ($order->items as $item) {
+            $this->inventoryService->restore($item->product, $item->quantity);
+        }
 
         // Auto-void unpaid bill or auto-refund paid bill
         $this->billingService->handleOrderCancellation($order);

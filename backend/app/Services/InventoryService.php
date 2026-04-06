@@ -79,4 +79,35 @@ class InventoryService
     {
         return $this->list(filters: ['low_stock' => true], perPage: $perPage);
     }
+
+    /**
+     * Deduct stock for a product. Used when an order is placed.
+     *
+     * @throws \RuntimeException if insufficient stock
+     */
+    public function deduct(Product $product, int $quantity): void
+    {
+        $inventory = Inventory::where('product_id', $product->id)->first();
+
+        if (! $inventory || ! $inventory->isInStock($quantity)) {
+            $available = $inventory?->quantity ?? 0;
+            throw new \RuntimeException(
+                "Insufficient stock for product [{$product->name}]. Requested: {$quantity}, available: {$available}."
+            );
+        }
+
+        $inventory->decrement('quantity', $quantity);
+    }
+
+    /**
+     * Restore stock for a product. Used when an order is cancelled.
+     */
+    public function restore(Product $product, int $quantity): void
+    {
+        $inventory = Inventory::where('product_id', $product->id)->first();
+
+        if ($inventory) {
+            $inventory->increment('quantity', $quantity);
+        }
+    }
 }

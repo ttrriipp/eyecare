@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FrameMaterial;
+use App\Enums\LensType;
 use App\Models\Product;
 use App\Services\InventoryService;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -24,9 +27,7 @@ class ProductController extends Controller
 
     public function create(Request $request): View
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('create', Product::class);
 
         $categories = $this->productService->listCategories();
 
@@ -37,9 +38,7 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('create', Product::class);
 
         $validated = $request->validate($this->storeRules());
 
@@ -66,9 +65,7 @@ class ProductController extends Controller
 
     public function edit(Request $request, Product $product): View
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('update', $product);
 
         $product->load(['category', 'images']);
         $categories = $this->productService->listCategories();
@@ -81,9 +78,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('update', $product);
 
         $validated = $request->validate($this->updateRules($product));
 
@@ -109,9 +104,7 @@ class ProductController extends Controller
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('delete', $product);
 
         $this->productService->delete($product);
 
@@ -128,12 +121,12 @@ class ProductController extends Controller
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0.01'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'lens_type' => ['nullable', 'string', 'max:255'],
-            'frame_material' => ['nullable', 'string', 'max:255'],
-            'ar_model_url' => ['nullable', 'string', 'max:2048'],
+            'lens_type' => ['nullable', 'string', Rule::in(LensType::values())],
+            'frame_material' => ['nullable', 'string', Rule::in(FrameMaterial::values())],
+            'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
             'image' => ['nullable', 'image', 'max:4096'],
         ];
@@ -147,12 +140,12 @@ class ProductController extends Controller
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0.01'],
             'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
             'brand' => ['nullable', 'string', 'max:255'],
-            'lens_type' => ['nullable', 'string', 'max:255'],
-            'frame_material' => ['nullable', 'string', 'max:255'],
-            'ar_model_url' => ['nullable', 'string', 'max:2048'],
+            'lens_type' => ['nullable', 'string', Rule::in(LensType::values())],
+            'frame_material' => ['nullable', 'string', Rule::in(FrameMaterial::values())],
+            'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
             'image' => ['nullable', 'image', 'max:4096'],
             'remove_image' => ['sometimes', 'boolean'],
@@ -181,7 +174,7 @@ class ProductController extends Controller
         }
 
         $file = $request->file('image');
-        $filename = uniqid('product_', true).'.'.$file->getClientOriginalExtension();
+        $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
         $destination = public_path('images/products');
 
         if (! is_dir($destination)) {

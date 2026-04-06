@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\FrameMaterial;
+use App\Enums\LensType;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductImage;
@@ -37,7 +39,7 @@ class ProductSeeder extends Seeder
                 'price' => 1500.00,
                 'sku' => 'FRM-001',
                 'brand' => 'Bolon',
-                'frame_material' => 'Acetate',
+                'frame_material' => FrameMaterial::Acetate->value,
             ],
             [
                 'category_id' => $frames->id,
@@ -46,7 +48,7 @@ class ProductSeeder extends Seeder
                 'price' => 2800.00,
                 'sku' => 'FRM-002',
                 'brand' => 'Hangten',
-                'frame_material' => 'Titanium',
+                'frame_material' => FrameMaterial::Titanium->value,
             ],
             [
                 'category_id' => $frames->id,
@@ -55,7 +57,7 @@ class ProductSeeder extends Seeder
                 'price' => 1200.00,
                 'sku' => 'FRM-003',
                 'brand' => 'Peculiar',
-                'frame_material' => 'TR90',
+                'frame_material' => FrameMaterial::TR90->value,
             ],
             [
                 'category_id' => $lenses->id,
@@ -63,7 +65,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Single vision lens with anti-radiation and blue-light blocking coating.',
                 'price' => 800.00,
                 'sku' => 'LNS-001',
-                'lens_type' => 'Single Vision',
+                'lens_type' => LensType::SingleVision->value,
             ],
             [
                 'category_id' => $lenses->id,
@@ -71,7 +73,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Progressive lens with photochromic (Transitions) coating.',
                 'price' => 3500.00,
                 'sku' => 'LNS-002',
-                'lens_type' => 'Progressive',
+                'lens_type' => LensType::Progressive->value,
             ],
             [
                 'category_id' => $contacts->id,
@@ -80,7 +82,7 @@ class ProductSeeder extends Seeder
                 'price' => 1200.00,
                 'sku' => 'CTL-001',
                 'brand' => 'Acuvue',
-                'lens_type' => 'Daily',
+                'lens_type' => LensType::Daily->value,
             ],
             [
                 'category_id' => $sunglasses->id,
@@ -89,7 +91,7 @@ class ProductSeeder extends Seeder
                 'price' => 2000.00,
                 'sku' => 'SUN-001',
                 'brand' => 'Bolon',
-                'frame_material' => 'Acetate',
+                'frame_material' => FrameMaterial::Acetate->value,
             ],
             [
                 'category_id' => $accessories->id,

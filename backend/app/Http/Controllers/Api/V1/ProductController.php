@@ -77,7 +77,7 @@ class ProductController extends Controller
     public function storeImage(Request $request, Product $product): JsonResponse
     {
         $validated = $request->validate([
-            'image_url' => ['required', 'string', 'max:2048'],
+            'image_url' => ['required', 'url', 'max:2048'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
