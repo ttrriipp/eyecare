@@ -5,6 +5,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -67,6 +68,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
             ->name('feedbacks.destroy');
+
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('staff', [UserManagementController::class, 'staffIndex'])->name('staff.index');
+            Route::get('staff/create', [UserManagementController::class, 'staffCreate'])->name('staff.create');
+            Route::post('staff', [UserManagementController::class, 'staffStore'])->name('staff.store');
+            Route::get('staff/{staff}/edit', [UserManagementController::class, 'staffEdit'])->name('staff.edit');
+            Route::put('staff/{staff}', [UserManagementController::class, 'staffUpdate'])->name('staff.update');
+            Route::delete('staff/{staff}', [UserManagementController::class, 'staffDestroy'])->name('staff.destroy');
+
+            Route::get('customers', [UserManagementController::class, 'customersIndex'])->name('customers.index');
+            Route::get('customers/{customer}', [UserManagementController::class, 'customersShow'])->name('customers.show');
+            Route::post('customers/{customer}/deactivate', [UserManagementController::class, 'customersDeactivate'])
+                ->name('customers.deactivate');
+            Route::post('customers/{customer}/restore', [UserManagementController::class, 'customersRestore'])
+                ->name('customers.restore');
+        });
     });
 });
 

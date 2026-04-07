@@ -25,6 +25,7 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
 
+
                     <flux:sidebar.item
                         icon="layout-grid"
                         :href="route('products.index')"
@@ -71,6 +72,17 @@
                             wire:navigate
                         >
                             {{ __('Feedback') }}
+                        </flux:sidebar.item>
+                    @endif
+
+                    @if(auth()->user()?->isAdmin())
+                        <flux:sidebar.item
+                            icon="users"
+                            :href="route('users.staff.index')"
+                            :current="request()->routeIs('users.*')"
+                            wire:navigate
+                        >
+                            {{ __('Users') }}
                         </flux:sidebar.item>
                     @endif
                 </flux:sidebar.group>
