@@ -45,7 +45,12 @@ class ProductController extends Controller
         $validated['is_active'] = $this->resolveIsActive($request);
 
         $product = $this->productService->create($validated);
-        $this->inventoryService->findByProduct($product);
+        $inventory = $this->inventoryService->findByProduct($product);
+        $this->inventoryService->update($inventory, [
+            'quantity' => (int) $request->integer('inventory_quantity', 0),
+            'reorder_level' => (int) $request->integer('inventory_reorder_level', 0),
+            'notes' => $request->input('inventory_notes'),
+        ]);
 
         $this->syncPrimaryImage($request, $product);
 
@@ -129,6 +134,9 @@ class ProductController extends Controller
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
             'image' => ['nullable', 'image', 'max:4096'],
+            'inventory_quantity' => ['nullable', 'integer', 'min:0'],
+            'inventory_reorder_level' => ['nullable', 'integer', 'min:0'],
+            'inventory_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 

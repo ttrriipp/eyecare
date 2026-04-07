@@ -52,6 +52,7 @@
                     <select
                         id="fb-product"
                         name="product_id"
+                        onchange="this.form.submit()"
                         class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                     >
                         <option value="">{{ __('All products') }}</option>
@@ -73,6 +74,7 @@
                     <select
                         id="fb-rating"
                         name="rating"
+                        onchange="this.form.submit()"
                         class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                     >
                         <option value="">{{ __('Any') }}</option>
@@ -85,9 +87,6 @@
                 </div>
 
                 <div class="flex gap-2 lg:ml-auto">
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Apply') }}
-                    </flux:button>
                     <flux:button :href="route('feedbacks.index')" variant="ghost" wire:navigate>
                         {{ __('Reset') }}
                     </flux:button>

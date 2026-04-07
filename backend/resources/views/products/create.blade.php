@@ -270,6 +270,73 @@
                         @enderror
                     </div>
 
+                    {{-- ── Initial stock (Inventory) ────────────────────── --}}
+                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+                        <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                            {{ __('Initial stock') }}
+                        </h2>
+                        <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('These values are saved to Inventory when the product is created.') }}
+                        </p>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="space-y-1.5">
+                                <label for="inventory_quantity" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('On hand quantity') }}
+                                </label>
+                                <flux:input
+                                    id="inventory_quantity"
+                                    name="inventory_quantity"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    :label="false"
+                                    value="{{ old('inventory_quantity', 0) }}"
+                                    placeholder="0"
+                                />
+                                @error('inventory_quantity')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="inventory_reorder_level" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Reorder level') }}
+                                </label>
+                                <flux:input
+                                    id="inventory_reorder_level"
+                                    name="inventory_reorder_level"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    :label="false"
+                                    value="{{ old('inventory_reorder_level', 0) }}"
+                                    placeholder="0"
+                                />
+                                @error('inventory_reorder_level')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="inventory_notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Inventory notes') }}
+                                    <span class="ml-0.5 text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
+                                </label>
+                                <textarea
+                                    id="inventory_notes"
+                                    name="inventory_notes"
+                                    rows="3"
+                                    placeholder="{{ __('Optional note for stock setup...') }}"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                >{{ old('inventory_notes') }}</textarea>
+                                @error('inventory_notes')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ── Actions ───────────────────────────────────────── --}}
                     <div class="flex items-center justify-end gap-3">
                         <flux:button :href="route('products.index')" variant="ghost" wire:navigate>

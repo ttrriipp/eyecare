@@ -23,6 +23,8 @@ class InventoryController extends Controller
         $filters = $request->only([
             'search',
             'low_stock',
+            'date_from',
+            'date_to',
             'sort_by',
             'sort_dir',
         ]);
