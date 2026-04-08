@@ -303,6 +303,28 @@
                     </div>
 
                     <div class="space-y-1.5">
+                        <label for="discount_amount" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Discount amount') }}
+                        </label>
+                        <flux:input
+                            id="discount_amount"
+                            name="discount_amount"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            :label="false"
+                            value="{{ old('discount_amount', '0') }}"
+                            placeholder="{{ __('Optional manual discount (e.g. SC/PWD)') }}"
+                        />
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                            {{ __('Recorded manually and deducted from the order total.') }}
+                        </p>
+                        @error('discount_amount')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1.5">
                         <label for="notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             {{ __('Notes') }}
                         </label>

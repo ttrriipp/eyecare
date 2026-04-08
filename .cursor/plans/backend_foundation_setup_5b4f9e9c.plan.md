@@ -97,7 +97,7 @@ app/
 ├── Enums/                          # PHP 8.1+ backed enums
 │   ├── UserRole.php                # admin, staff, customer
 │   ├── OrderStatus.php             # pending, confirmed, ready, completed, cancelled
-│   ├── PaymentStatus.php           # unpaid, paid, refunded, voided
+│   ├── PaymentStatus.php           # unpaid, partially_paid, paid, refunded, voided
 │   └── AppointmentStatus.php       # scheduled, confirmed, completed, cancelled
 ├── Http/
 │   ├── Controllers/
@@ -204,6 +204,7 @@ erDiagram
         string order_number UK
         enum status
         decimal total_amount
+        decimal discount_amount
         text notes
     }
 
@@ -225,6 +226,8 @@ erDiagram
         bigint appointment_id FK_nullable
         string invoice_number UK
         decimal amount
+        decimal amount_paid
+        decimal balance_due
         enum payment_status
         string payment_method
         timestamp paid_at
@@ -313,9 +316,9 @@ erDiagram
 
 **Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price plus optional compare-at price and cost per unit, along with brand/gender metadata. Each product has one or more **product variants** (color, frame size, material, lens type, price adjustment — fields nullable when not applicable to the category). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
-**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. A bill is auto-generated with each order.
+**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` (e.g., SC/PWD) which is deducted from the order total before billing. A bill is auto-generated with each order.
 
-**Billing** -- Invoice tracking only, no payment gateway. Bills are generated for both orders and paid appointments. Admin/staff marks payments as received. Customer sees their own bills. Lifecycle: Unpaid -> Paid (or Refunded / Voided). When an order is cancelled before payment, the bill is voided. When cancelled after payment, the bill is marked refunded.
+**Billing** -- Invoice tracking only, no payment gateway. Bills are generated for both orders and paid appointments. Admin/staff marks payments as received. Customer sees their own bills. Lifecycle: Unpaid -> Partially Paid -> Paid (or Refunded / Voided). Partial payments are tracked using `amount_paid` and `balance_due`, supporting deposit-on-order and balance-on-pickup workflows. When an order is cancelled before payment, the bill is voided. When cancelled after partial/full payment, the bill is marked refunded.
 
 **Scheduling** -- Time-slot based with predefined service types and schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates schedule templates (e.g., "Mon-Sat, 9AM-5PM, 30-min slots") and the system generates time slots for a date range based on those templates. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. One appointment per customer per time slot; multiple appointments per day allowed (e.g., eye exam morning, fitting afternoon). Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
 
@@ -330,7 +333,7 @@ erDiagram
 ## Key Decisions
 
 - **Roles**: Simple `role` enum column on `users` table (admin/staff/customer) -- 3 roles with clear boundaries, no need for a full RBAC package
-- **Staff permissions**: Staff can process orders, mark bills as paid, respond to messages, manage schedules, and view inventory -- but cannot manage products, adjust inventory levels, issue refunds/voids, or access system settings
+- **Staff permissions**: Staff can process orders, record manual order discounts, record partial/full bill payments, respond to messages, manage schedules, and view inventory -- but cannot manage products, adjust inventory levels, issue refunds/voids, or access system settings
 - **API Versioning**: URL-based (`/api/v1/`) so Android app can be updated independently
 - **Auth**: Sanctum token auth for API (Android), session auth for web (Livewire admin later)
 - **Validation**: Form Request classes per endpoint -- keeps controllers thin
@@ -344,7 +347,7 @@ erDiagram
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
 - **Client-side cart**: Android app manages the cart locally; backend receives all items in a single order creation call. No cart table needed.
 - **Stock validation**: Orders are blocked if any item is out of stock. Stock is checked at order creation time against the inventory table.
-- **Order cancellation**: Customers can cancel before "Ready for Pickup." After that, only staff/admin. Bill is voided (if unpaid) or refunded (if paid).
+- **Order cancellation**: Customers can cancel before "Ready for Pickup." After that, only staff/admin. Bill is voided (if unpaid) or refunded (if partially/fully paid).
 - **Schedule templates**: Admin defines weekly templates (day, start/end time, slot duration, capacity). System batch-generates time slots for a date range. Individual slots can be overridden.
 - **Appointment billing**: Paid appointments (fee > 0) auto-generate a bill. Free appointments do not. Bills support both orders and appointments via two nullable foreign keys.
 
@@ -427,7 +430,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 
 - **Module 2: Inventory** -- inventory table keyed by `product_variant_id`, stock tracking per variant, reorder level alerts, admin adjusts stock, staff views only
 - **Module 3: Ordering** -- `OrderStatus` enum, orders, `order_items` referencing `product_variant_id`, stock validation against inventory, walk-in support, cancellation rules
-- **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), payment tracking, void/refund logic
+- **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), partial/full payment tracking (`amount_paid`, `balance_due`), void/refund logic
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment
 - **Module 6: Scheduling** -- `AppointmentStatus` enum, service_types, schedule_templates, time_slots, appointments tables, slot generation logic, appointment billing
 - **Module 7: Direct Messaging** -- conversations, messages tables, Laravel Reverb setup, broadcast events, private channels, read tracking
@@ -452,7 +455,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 **Limitations:**
 
 - Prescription records are excluded due to additional compliance requirements under RA 10173 (Data Privacy Act of 2012), which classifies health/medical data as sensitive personal information requiring enhanced security, explicit consent, and breach notification protocols
-- Automated SC/PWD discount computation (RA 9994, RA 10754) is not included; staff can manually apply discounts when recording payments in the billing module
+- Automated SC/PWD discount computation (RA 9994, RA 10754) is not included; staff can manually apply discounts using `orders.discount_amount`
 
 **Future recommendations:**
 

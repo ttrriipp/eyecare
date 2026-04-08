@@ -79,6 +79,7 @@ class StoreStaffOrderRequest extends FormRequest
                 }),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

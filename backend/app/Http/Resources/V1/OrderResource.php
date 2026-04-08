@@ -20,6 +20,7 @@ class OrderResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'total_amount' => $this->total_amount,
+            'discount_amount' => $this->discount_amount,
             'notes' => $this->notes,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at->toISOString(),

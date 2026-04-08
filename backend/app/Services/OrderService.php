@@ -72,6 +72,8 @@ class OrderService
         $this->validateStock($data['items']);
 
         return DB::transaction(function () use ($data) {
+            $discountAmount = round((float) ($data['discount_amount'] ?? 0), 2);
+
             $order = Order::create([
                 'user_id' => $data['user_id'] ?? null,
                 'walk_in_name' => $data['walk_in_name'] ?? null,
@@ -79,6 +81,7 @@ class OrderService
                 'order_number' => $this->generateOrderNumber(),
                 'status' => OrderStatus::Pending,
                 'total_amount' => 0,
+                'discount_amount' => 0,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -100,7 +103,17 @@ class OrderService
                 $this->inventoryService->deduct($variant, $itemData['quantity']);
             }
 
-            $order->update(['total_amount' => $totalAmount]);
+            if ($discountAmount > $totalAmount) {
+                throw ValidationException::withMessages([
+                    'discount_amount' => 'Discount amount cannot be greater than order subtotal.',
+                ]);
+            }
+
+            $finalAmount = round($totalAmount - $discountAmount, 2);
+            $order->update([
+                'discount_amount' => $discountAmount,
+                'total_amount' => $finalAmount,
+            ]);
 
             $this->billingService->createForOrder($order);
 

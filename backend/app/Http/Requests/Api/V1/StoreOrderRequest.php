@@ -37,6 +37,7 @@ class StoreOrderRequest extends FormRequest
             $rules['user_id'] = ['nullable', 'integer', 'exists:users,id'];
             $rules['walk_in_name'] = ['nullable', 'string', 'max:255'];
             $rules['walk_in_phone'] = ['nullable', 'string', 'max:20'];
+            $rules['discount_amount'] = ['nullable', 'numeric', 'min:0'];
         }
 
         return $rules;

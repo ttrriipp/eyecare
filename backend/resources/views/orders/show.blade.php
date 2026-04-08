@@ -59,6 +59,11 @@
                 <div class="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
                     {{ __('Total: :amount', ['amount' => \App\Support\Money::peso($order->total_amount)]) }}
                 </div>
+                @if((float) $order->discount_amount > 0)
+                    <div class="text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
+                        {{ __('Discount: -:amount', ['amount' => \App\Support\Money::peso($order->discount_amount)]) }}
+                    </div>
+                @endif
             </div>
         </div>
 

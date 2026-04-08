@@ -22,6 +22,7 @@ class Order extends Model
         'order_number',
         'status',
         'total_amount',
+        'discount_amount',
         'notes',
     ];
 
@@ -30,6 +31,7 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'total_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
         ];
     }
 
