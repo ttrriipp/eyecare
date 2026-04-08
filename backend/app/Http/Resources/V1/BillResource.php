@@ -16,6 +16,8 @@ class BillResource extends JsonResource
             'appointment_id' => $this->appointment_id,
             'invoice_number' => $this->invoice_number,
             'amount' => $this->amount,
+            'amount_paid' => $this->amount_paid,
+            'balance_due' => $this->balance_due,
             'payment_status' => $this->payment_status->value,
             'payment_status_label' => $this->payment_status->label(),
             'payment_method' => $this->payment_method,

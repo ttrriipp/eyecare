@@ -36,6 +36,7 @@
                     @class([
                         'inline-flex rounded-full px-3 py-1 text-sm font-medium',
                         'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200' => $ps === \App\Enums\PaymentStatus::Unpaid,
+                        'bg-sky-100 text-sky-900 dark:bg-sky-950/80 dark:text-sky-200' => $ps === \App\Enums\PaymentStatus::PartiallyPaid,
                         'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200' => $ps === \App\Enums\PaymentStatus::Paid,
                         'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $ps === \App\Enums\PaymentStatus::Voided,
                         'bg-violet-100 text-violet-900 dark:bg-violet-950/80 dark:text-violet-200' => $ps === \App\Enums\PaymentStatus::Refunded,
@@ -44,7 +45,10 @@
                     {{ $bill->payment_status->label() }}
                 </span>
                 <div class="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {{ \App\Support\Money::peso($bill->amount) }}
+                    {{ \App\Support\Money::peso($bill->amount_paid) }} / {{ \App\Support\Money::peso($bill->amount) }}
+                </div>
+                <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('Balance due: :amount', ['amount' => \App\Support\Money::peso($bill->balance_due)]) }}
                 </div>
             </div>
         </div>
@@ -81,6 +85,14 @@
                             <dd class="text-zinc-900 dark:text-zinc-100">{{ $bill->payment_method }}</dd>
                         </div>
                     @endif
+                    <div>
+                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Amount paid') }}</dt>
+                        <dd class="text-zinc-900 dark:text-zinc-100">{{ \App\Support\Money::peso($bill->amount_paid) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Balance due') }}</dt>
+                        <dd class="text-zinc-900 dark:text-zinc-100">{{ \App\Support\Money::peso($bill->balance_due) }}</dd>
+                    </div>
                 </dl>
             </div>
 
@@ -104,7 +116,7 @@
             @endif
         </div>
 
-        @if(auth()->user()?->isAdminOrStaff() && $ps === \App\Enums\PaymentStatus::Unpaid)
+        @if(auth()->user()?->isAdminOrStaff() && in_array($ps, [\App\Enums\PaymentStatus::Unpaid, \App\Enums\PaymentStatus::PartiallyPaid], true))
             <div
                 class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
             >
@@ -112,11 +124,30 @@
                     {{ __('Record payment') }}
                 </flux:heading>
                 <flux:text class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('No payment gateway — record how the customer paid (cash, transfer, etc.).') }}
+                    {{ __('No payment gateway — record deposit or balance payment (cash, transfer, etc.).') }}
                 </flux:text>
                 <form method="POST" action="{{ route('orders.billing.pay', $bill) }}" class="flex flex-col gap-4 sm:flex-row sm:items-end">
                     @csrf
                     @method('PUT')
+                    <div class="min-w-0 flex-1">
+                        <label for="payment_amount" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Amount received') }} <span class="text-red-600 dark:text-red-400">*</span>
+                        </label>
+                        <flux:input
+                            id="payment_amount"
+                            name="payment_amount"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            max="{{ $bill->balance_due }}"
+                            :label="false"
+                            value="{{ old('payment_amount', $bill->balance_due) }}"
+                            required
+                        />
+                        @error('payment_amount')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
                     <div class="min-w-0 flex-1">
                         <label for="payment_method" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             {{ __('Payment method') }} <span class="text-red-600 dark:text-red-400">*</span>
@@ -134,7 +165,7 @@
                         @enderror
                     </div>
                     <flux:button type="submit" variant="primary">
-                        {{ __('Mark as paid') }}
+                        {{ __('Record payment') }}
                     </flux:button>
                 </form>
             </div>
@@ -155,7 +186,7 @@
                         </flux:button>
                     </form>
                 @endif
-                @if($ps === \App\Enums\PaymentStatus::Paid)
+                @if(in_array($ps, [\App\Enums\PaymentStatus::PartiallyPaid, \App\Enums\PaymentStatus::Paid], true))
                     <form method="POST" action="{{ route('orders.billing.refund', $bill) }}" class="inline">
                         @csrf
                         @method('PUT')

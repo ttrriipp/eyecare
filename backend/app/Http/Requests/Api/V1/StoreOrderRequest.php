@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,9 +22,10 @@ class StoreOrderRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('product_variants', 'id')->where(function ($q) {
-                    $q->whereHas('product', function ($p) {
-                        $p->where('is_active', true)->whereNull('deleted_at');
-                    });
+                    $q->whereIn('product_id', Product::query()
+                        ->where('is_active', true)
+                        ->whereNull('deleted_at')
+                        ->select('id'));
                 }),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

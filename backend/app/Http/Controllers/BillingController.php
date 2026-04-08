@@ -66,11 +66,18 @@ class BillingController extends Controller
      */
     public function pay(RecordBillPaymentRequest $request, Bill $bill): RedirectResponse
     {
-        $bill = $this->billingService->markAsPaid($bill, $request->validated('payment_method'));
+        $validated = $request->validated();
+        $bill = $this->billingService->recordPayment(
+            $bill,
+            (float) $validated['payment_amount'],
+            $validated['payment_method'],
+        );
 
         return redirect()
             ->route('orders.billing.show', $bill)
-            ->with('status', __('Payment recorded for :invoice.', ['invoice' => $bill->invoice_number]));
+            ->with('status', $bill->isPaid()
+                ? __('Invoice :invoice is now fully paid.', ['invoice' => $bill->invoice_number])
+                : __('Partial payment recorded for :invoice.', ['invoice' => $bill->invoice_number]));
     }
 
     /**

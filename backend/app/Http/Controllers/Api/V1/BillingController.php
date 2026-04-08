@@ -57,14 +57,19 @@ class BillingController extends Controller
     }
 
     /**
-     * Mark a bill as paid (admin/staff only).
+     * Record bill payment (partial or full; admin/staff only).
      */
     public function markAsPaid(MarkBillPaidRequest $request, Bill $bill): JsonResponse
     {
-        $bill = $this->billingService->markAsPaid($bill, $request->validated('payment_method'));
+        $validated = $request->validated();
+        $bill = $this->billingService->recordPayment(
+            $bill,
+            (float) $validated['payment_amount'],
+            $validated['payment_method'],
+        );
 
         return response()->json([
-            'message' => 'Bill marked as paid.',
+            'message' => $bill->isPaid() ? 'Bill fully paid.' : 'Partial payment recorded.',
             'bill' => new BillResource($bill),
         ]);
     }

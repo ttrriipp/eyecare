@@ -15,6 +15,7 @@ class RecordBillPaymentRequest extends FormRequest
     {
         return [
             'payment_method' => ['required', 'string', 'max:100'],
+            'payment_amount' => ['required', 'numeric', 'gt:0'],
         ];
     }
 
@@ -22,6 +23,8 @@ class RecordBillPaymentRequest extends FormRequest
     {
         return [
             'payment_method.required' => __('Record how payment was received (e.g. cash, GCash, bank transfer).'),
+            'payment_amount.required' => __('Enter the amount received for this payment.'),
+            'payment_amount.gt' => __('Payment amount must be greater than zero.'),
         ];
     }
 }

@@ -17,6 +17,8 @@ class Bill extends Model
         'appointment_id',
         'invoice_number',
         'amount',
+        'amount_paid',
+        'balance_due',
         'payment_status',
         'payment_method',
         'paid_at',
@@ -27,6 +29,8 @@ class Bill extends Model
         return [
             'payment_status' => PaymentStatus::class,
             'amount' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
+            'balance_due' => 'decimal:2',
             'paid_at' => 'datetime',
         ];
     }
@@ -72,5 +76,10 @@ class Bill extends Model
     public function isUnpaid(): bool
     {
         return $this->payment_status === PaymentStatus::Unpaid;
+    }
+
+    public function isPartiallyPaid(): bool
+    {
+        return $this->payment_status === PaymentStatus::PartiallyPaid;
     }
 }

@@ -194,6 +194,7 @@
                                             @class([
                                                 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
                                                 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200' => $ps === \App\Enums\PaymentStatus::Unpaid,
+                                                'bg-sky-100 text-sky-900 dark:bg-sky-950/80 dark:text-sky-200' => $ps === \App\Enums\PaymentStatus::PartiallyPaid,
                                                 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200' => $ps === \App\Enums\PaymentStatus::Paid,
                                                 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $ps === \App\Enums\PaymentStatus::Voided,
                                                 'bg-violet-100 text-violet-900 dark:bg-violet-950/80 dark:text-violet-200' => $ps === \App\Enums\PaymentStatus::Refunded,
@@ -203,7 +204,12 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">
-                                        {{ \App\Support\Money::peso($bill->amount) }}
+                                        <div>{{ \App\Support\Money::peso($bill->amount_paid) }} / {{ \App\Support\Money::peso($bill->amount) }}</div>
+                                        @if((float) $bill->balance_due > 0)
+                                            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                                {{ __('Bal: :amount', ['amount' => \App\Support\Money::peso($bill->balance_due)]) }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 hidden lg:table-cell">
                                         <time datetime="{{ $bill->created_at->toIso8601String() }}">

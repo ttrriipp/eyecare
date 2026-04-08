@@ -15,6 +15,7 @@ class MarkBillPaidRequest extends FormRequest
     {
         return [
             'payment_method' => ['required', 'string', 'max:100'],
+            'payment_amount' => ['required', 'numeric', 'gt:0'],
         ];
     }
 
@@ -22,6 +23,8 @@ class MarkBillPaidRequest extends FormRequest
     {
         return [
             'payment_method.required' => 'A payment method is required (e.g., cash, GCash, bank transfer).',
+            'payment_amount.required' => 'A payment amount is required.',
+            'payment_amount.gt' => 'Payment amount must be greater than zero.',
         ];
     }
 }

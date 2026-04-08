@@ -64,25 +64,46 @@ class BillingService
             'order_id' => $order->id,
             'invoice_number' => $this->generateInvoiceNumber(),
             'amount' => $order->total_amount,
+            'amount_paid' => 0,
+            'balance_due' => $order->total_amount,
             'payment_status' => PaymentStatus::Unpaid,
         ]);
     }
 
     /**
-     * Mark a bill as paid.
+     * Record bill payment (partial or full).
      */
-    public function markAsPaid(Bill $bill, string $paymentMethod): Bill
+    public function recordPayment(Bill $bill, float $paymentAmount, string $paymentMethod): Bill
     {
-        if (! $bill->payment_status->canTransitionTo(PaymentStatus::Paid)) {
+        if (in_array($bill->payment_status, [PaymentStatus::Voided, PaymentStatus::Refunded], true)) {
             throw ValidationException::withMessages([
-                'payment_status' => "Cannot mark a '{$bill->payment_status->label()}' bill as paid.",
+                'payment_status' => "Cannot record payment for a '{$bill->payment_status->label()}' bill.",
             ]);
         }
 
+        if ($paymentAmount <= 0) {
+            throw ValidationException::withMessages([
+                'payment_amount' => 'Payment amount must be greater than zero.',
+            ]);
+        }
+
+        $remaining = (float) $bill->balance_due;
+        if ($paymentAmount > $remaining) {
+            throw ValidationException::withMessages([
+                'payment_amount' => 'Payment amount cannot be greater than the remaining balance.',
+            ]);
+        }
+
+        $newAmountPaid = round(((float) $bill->amount_paid) + $paymentAmount, 2);
+        $newBalanceDue = round(((float) $bill->amount) - $newAmountPaid, 2);
+        $isFullyPaid = $newBalanceDue <= 0;
+
         $bill->update([
-            'payment_status' => PaymentStatus::Paid,
+            'payment_status' => $isFullyPaid ? PaymentStatus::Paid : PaymentStatus::PartiallyPaid,
+            'amount_paid' => $newAmountPaid,
+            'balance_due' => max($newBalanceDue, 0),
             'payment_method' => $paymentMethod,
-            'paid_at' => now(),
+            'paid_at' => $isFullyPaid ? now() : null,
         ]);
 
         return $bill->fresh(['order.user']);
@@ -122,7 +143,7 @@ class BillingService
 
     /**
      * Handle bill when an order is cancelled.
-     * Unpaid → Voided, Paid → Refunded.
+     * Unpaid → Voided, Partial/Paid → Refunded.
      */
     public function handleOrderCancellation(Order $order): void
     {
@@ -134,7 +155,7 @@ class BillingService
 
         if ($bill->isUnpaid()) {
             $bill->update(['payment_status' => PaymentStatus::Voided]);
-        } elseif ($bill->isPaid()) {
+        } elseif ($bill->isPartiallyPaid() || $bill->isPaid()) {
             $bill->update(['payment_status' => PaymentStatus::Refunded]);
         }
     }

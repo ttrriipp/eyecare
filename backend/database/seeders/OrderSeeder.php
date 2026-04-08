@@ -115,13 +115,16 @@ class OrderSeeder extends Seeder
             }
 
             // Create bill for the order
+            $isPaid = $orderData['bill_status'] === PaymentStatus::Paid;
             Bill::create([
                 'order_id' => $order->id,
                 'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($invoiceNumber, 5, '0', STR_PAD_LEFT),
                 'amount' => $totalAmount,
+                'amount_paid' => $isPaid ? $totalAmount : 0,
+                'balance_due' => $isPaid ? 0 : $totalAmount,
                 'payment_status' => $orderData['bill_status'],
                 'payment_method' => $orderData['payment_method'],
-                'paid_at' => $orderData['bill_status'] === PaymentStatus::Paid ? now() : null,
+                'paid_at' => $isPaid ? now() : null,
             ]);
 
             $orderNumber++;
