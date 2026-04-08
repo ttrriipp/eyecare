@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Inventory extends Model
 {
@@ -18,6 +19,9 @@ class Inventory extends Model
         'product_variant_id',
         'quantity',
         'reorder_level',
+        'reorder_quantity',
+        'batch_number',
+        'expires_at',
         'notes',
     ];
 
@@ -26,12 +30,19 @@ class Inventory extends Model
         return [
             'quantity' => 'integer',
             'reorder_level' => 'integer',
+            'reorder_quantity' => 'integer',
+            'expires_at' => 'date',
         ];
     }
 
     public function productVariant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(InventoryAdjustment::class)->latest();
     }
 
     /**

@@ -19,6 +19,7 @@ class UpdateProductCategoryRequest extends FormRequest
             'slug' => ['sometimes', 'string', 'max:255', Rule::unique('product_categories')->ignore($this->route('category'))],
             'description' => ['nullable', 'string'],
             'has_ar_support' => ['sometimes', 'boolean'],
+            'requires_expiry_tracking' => ['sometimes', 'boolean'],
         ];
     }
 }

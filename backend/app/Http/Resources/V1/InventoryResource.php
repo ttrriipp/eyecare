@@ -19,8 +19,12 @@ class InventoryResource extends JsonResource
             )),
             'quantity' => $this->quantity,
             'reorder_level' => $this->reorder_level,
+            'reorder_quantity' => $this->reorder_quantity,
+            'batch_number' => $this->batch_number,
+            'expires_at' => $this->expires_at?->toDateString(),
             'notes' => $this->notes,
             'is_low_stock' => $this->isLowStock(),
+            'adjustments' => InventoryAdjustmentResource::collection($this->whenLoaded('adjustments')),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

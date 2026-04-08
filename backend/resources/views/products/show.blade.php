@@ -90,16 +90,6 @@
                 <div
                     class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                 >
-                    @php
-                        $genderLabel = match ($product->gender) {
-                            'men' => __('Men'),
-                            'women' => __('Women'),
-                            'kids' => __('Kids'),
-                            'unisex' => __('Unisex'),
-                            default => null,
-                        };
-                    @endphp
-
                     <div class="flex items-baseline justify-between">
                         <div class="text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                             {{ \App\Support\Money::peso($product->price ?? 0) }}
@@ -138,17 +128,6 @@
                                 {{ $product->category?->name ?? __('Uncategorized') }}
                             </dd>
                         </div>
-
-                        @if($product->gender)
-                            <div class="flex justify-between gap-4">
-                                <dt class="text-zinc-500 dark:text-zinc-500">
-                                    {{ __('Gender') }}
-                                </dt>
-                                <dd class="text-end text-zinc-900 dark:text-zinc-100">
-                                    {{ $genderLabel ?? ucfirst($product->gender) }}
-                                </dd>
-                            </div>
-                        @endif
 
                         @if(auth()->user()?->isAdminOrStaff() && $product->cost_per_unit !== null)
                             <div class="flex justify-between gap-4">

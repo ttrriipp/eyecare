@@ -18,6 +18,7 @@ class StoreProductCategoryRequest extends FormRequest
             'slug' => ['required', 'string', 'max:255', 'unique:product_categories,slug'],
             'description' => ['nullable', 'string'],
             'has_ar_support' => ['sometimes', 'boolean'],
+            'requires_expiry_tracking' => ['sometimes', 'boolean'],
         ];
     }
 }

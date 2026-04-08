@@ -66,7 +66,7 @@
                                 <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{{ __('Stored on the default variant; assigned automatically and not editable here.') }}</p>
                             </div>
 
-                            {{-- Brand | Gender --}}
+                            {{-- Brand --}}
                             <div class="space-y-1.5">
                                 <label for="brand" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Brand') }}
@@ -83,21 +83,26 @@
                                 @enderror
                             </div>
 
-                            <div class="space-y-1.5">
-                                <label for="gender" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Gender') }}
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Supplier') }}
                                 </label>
                                 <flux:select
-                                    id="gender"
-                                    name="gender"
+                                    id="supplier_id"
+                                    name="supplier_id"
                                     :label="false"
                                 >
-                                    <option value="unisex" @selected(old('gender', $product->gender) === 'unisex')>{{ __('Unisex') }}</option>
-                                    <option value="men" @selected(old('gender', $product->gender) === 'men')>{{ __('Men') }}</option>
-                                    <option value="women" @selected(old('gender', $product->gender) === 'women')>{{ __('Women') }}</option>
-                                    <option value="kids" @selected(old('gender', $product->gender) === 'kids')>{{ __('Kids') }}</option>
+                                    <option value="">{{ __('No supplier selected') }}</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option
+                                            value="{{ $supplier->id }}"
+                                            @selected(old('supplier_id', $product->supplier_id) == $supplier->id)
+                                        >
+                                            {{ $supplier->name }}
+                                        </option>
+                                    @endforeach
                                 </flux:select>
-                                @error('gender')
+                                @error('supplier_id')
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -107,6 +112,13 @@
                                 <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Category') }}
                                 </label>
+                                @if(auth()->user()?->isAdmin())
+                                    <div class="mb-1">
+                                        <a href="{{ route('products.categories.index') }}" class="text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">
+                                            {{ __('Manage categories') }}
+                                        </a>
+                                    </div>
+                                @endif
                                 <flux:select
                                     id="category_id"
                                     name="category_id"
@@ -117,6 +129,7 @@
                                         <option
                                             value="{{ $category->id }}"
                                             data-has-ar="{{ $category->has_ar_support ? '1' : '0' }}"
+                                            data-requires-expiry="{{ $category->requires_expiry_tracking ? '1' : '0' }}"
                                             @selected(old('category_id', $product->category_id) == $category->id)
                                         >
                                             {{ $category->name }}

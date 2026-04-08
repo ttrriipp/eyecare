@@ -15,12 +15,12 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:product_categories,id'],
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
             'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'is_active' => ['sometimes', 'boolean'],
         ];

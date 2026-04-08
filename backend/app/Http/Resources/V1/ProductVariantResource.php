@@ -17,6 +17,8 @@ class ProductVariantResource extends JsonResource
             'frame_size' => $this->frame_size,
             'material' => $this->material,
             'lens_type' => $this->lens_type,
+            'base_curve' => $this->base_curve,
+            'diameter' => $this->diameter,
             'price_adjustment' => $this->price_adjustment,
             'is_default' => $this->is_default,
             'unit_price' => $this->when($this->relationLoaded('product'), fn () => (float) $this->unitPrice()),

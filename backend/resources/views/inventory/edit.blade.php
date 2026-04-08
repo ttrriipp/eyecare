@@ -67,6 +67,79 @@
                 </div>
 
                 <div class="space-y-1.5">
+                    <label for="reorder_quantity" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Reorder quantity') }}
+                    </label>
+                    <flux:input
+                        id="reorder_quantity"
+                        name="reorder_quantity"
+                        type="number"
+                        min="0"
+                        :label="false"
+                        value="{{ old('reorder_quantity', $inventory->reorder_quantity) }}"
+                    />
+                    @error('reorder_quantity')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="batch_number" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Batch / lot number') }}
+                    </label>
+                    <flux:input
+                        id="batch_number"
+                        name="batch_number"
+                        :label="false"
+                        value="{{ old('batch_number', $inventory->batch_number) }}"
+                    />
+                    @error('batch_number')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="expires_at" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Expiration date') }}
+                        @if($product->category?->requires_expiry_tracking)
+                            <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
+                        @endif
+                    </label>
+                    <flux:input
+                        id="expires_at"
+                        name="expires_at"
+                        type="date"
+                        :label="false"
+                        value="{{ old('expires_at', $inventory->expires_at?->toDateString()) }}"
+                        @required($product->category?->requires_expiry_tracking)
+                    />
+                    @if($product->category?->requires_expiry_tracking)
+                        <p class="text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('Required for this category.') }}
+                        </p>
+                    @endif
+                    @error('expires_at')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="adjustment_reason" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Adjustment reason') }}
+                    </label>
+                    <flux:input
+                        id="adjustment_reason"
+                        name="adjustment_reason"
+                        :label="false"
+                        value="{{ old('adjustment_reason') }}"
+                        placeholder="e.g. physical stock count correction"
+                    />
+                    @error('adjustment_reason')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
                     <label for="notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {{ __('Notes (optional)') }}
                     </label>

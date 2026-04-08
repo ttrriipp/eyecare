@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductImage;
+use App\Models\Supplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\File;
@@ -26,7 +27,7 @@ class ProductService
 
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Product::with(['category', 'images', 'defaultVariant.product'])
+        $query = Product::with(['category', 'supplier', 'images', 'defaultVariant.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count']);
 
@@ -64,7 +65,7 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'images', 'defaultVariant.product', 'variants.product'])
+        return Product::with(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count'])
             ->findOrFail($id);
@@ -74,14 +75,14 @@ class ProductService
     {
         $product = Product::create($this->normalizeArModelUrlForCategory($data));
 
-        return $product->load(['category', 'images', 'defaultVariant.product', 'variants.product']);
+        return $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product']);
     }
 
     public function update(Product $product, array $data): Product
     {
         $product->update($this->normalizeArModelUrlForCategory($data, $product));
 
-        return $product->fresh(['category', 'images', 'defaultVariant.product', 'variants.product']);
+        return $product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product']);
     }
 
     /**
@@ -158,6 +159,11 @@ class ProductService
         return \App\Models\ProductCategory::orderBy('name')->get();
     }
 
+    public function listSuppliers(): Collection
+    {
+        return Supplier::query()->active()->orderBy('name')->get();
+    }
+
     public function createCategory(array $data): \App\Models\ProductCategory
     {
         return \App\Models\ProductCategory::create($data);
@@ -177,9 +183,13 @@ class ProductService
      */
     public function deleteCategory(\App\Models\ProductCategory $category): void
     {
-        if ($category->products()->exists()) {
+        $productsCount = $category->products()->count();
+
+        if ($productsCount > 0) {
             throw ValidationException::withMessages([
-                'category' => __('Cannot delete this category because it still contains products. Reassign or remove the products first.'),
+                'category' => __('Cannot delete this category because it is currently used by :count product(s). Reassign or remove those products first.', [
+                    'count' => $productsCount,
+                ]),
             ]);
         }
 

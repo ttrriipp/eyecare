@@ -13,11 +13,11 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Eyeglass Frames', 'slug' => 'eyeglass-frames', 'description' => 'Prescription eyeglass frames in various styles and materials', 'has_ar_support' => true],
-            ['name' => 'Prescription Lenses', 'slug' => 'prescription-lenses', 'description' => 'Single vision, bifocal, and progressive lenses with various coatings', 'has_ar_support' => false],
-            ['name' => 'Contact Lenses', 'slug' => 'contact-lenses', 'description' => 'Daily, monthly, and colored contact lenses', 'has_ar_support' => false],
-            ['name' => 'Sunglasses', 'slug' => 'sunglasses', 'description' => 'Prescription and non-prescription sunglasses', 'has_ar_support' => true],
-            ['name' => 'Accessories', 'slug' => 'accessories', 'description' => 'Cases, cleaning solutions, cloths, and other accessories', 'has_ar_support' => false],
+            ['name' => 'Eyeglass Frames', 'slug' => 'eyeglass-frames', 'description' => 'Prescription eyeglass frames in various styles and materials', 'has_ar_support' => true, 'requires_expiry_tracking' => false],
+            ['name' => 'Prescription Lenses', 'slug' => 'prescription-lenses', 'description' => 'Single vision, bifocal, and progressive lenses with various coatings', 'has_ar_support' => false, 'requires_expiry_tracking' => false],
+            ['name' => 'Contact Lenses', 'slug' => 'contact-lenses', 'description' => 'Daily, monthly, and colored contact lenses', 'has_ar_support' => false, 'requires_expiry_tracking' => true],
+            ['name' => 'Sunglasses', 'slug' => 'sunglasses', 'description' => 'Prescription and non-prescription sunglasses', 'has_ar_support' => true, 'requires_expiry_tracking' => false],
+            ['name' => 'Accessories', 'slug' => 'accessories', 'description' => 'Cases, cleaning solutions, cloths, and other accessories', 'has_ar_support' => false, 'requires_expiry_tracking' => false],
         ];
 
         foreach ($categories as $categoryData) {

@@ -41,7 +41,11 @@ class InventoryController extends Controller
     {
         $inventory = $this->inventoryService->findByProduct($product);
 
-        $inventory = $this->inventoryService->update($inventory, $request->validated());
+        $inventory = $this->inventoryService->update(
+            $inventory,
+            $request->validated(),
+            $request->user()?->id,
+        );
 
         return response()->json([
             'message' => 'Inventory updated successfully.',

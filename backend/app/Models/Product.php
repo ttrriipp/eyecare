@@ -17,12 +17,12 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'supplier_id',
         'name',
         'description',
         'price',
         'cost_per_unit',
         'brand',
-        'gender',
         'ar_model_url',
         'is_active',
     ];
@@ -47,6 +47,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ProductCategory::class, 'category_id');
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function images(): HasMany

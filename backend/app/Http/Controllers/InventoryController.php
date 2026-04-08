@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class InventoryController extends Controller
@@ -61,11 +62,19 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:0'],
             'reorder_level' => ['required', 'integer', 'min:0'],
+            'reorder_quantity' => ['nullable', 'integer', 'min:0'],
+            'batch_number' => ['nullable', 'string', 'max:255'],
+            'expires_at' => [
+                'nullable',
+                'date',
+                Rule::requiredIf((bool) optional($product->category)->requires_expiry_tracking),
+            ],
+            'adjustment_reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $inventory = $this->inventoryService->findByProduct($product);
-        $this->inventoryService->update($inventory, $validated);
+        $this->inventoryService->update($inventory, $validated, $request->user()?->id);
 
         return redirect()
             ->route('inventory.index')

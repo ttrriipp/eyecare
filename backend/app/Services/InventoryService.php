@@ -79,6 +79,7 @@ class InventoryService
             ->with([
                 'productVariant.product.category',
                 'productVariant.product.images',
+                'adjustments.adjustedBy',
             ]);
 
         if (($filters['low_stock'] ?? false) === true) {
@@ -108,20 +109,51 @@ class InventoryService
             ->with([
                 'productVariant.product.category',
                 'productVariant.product.images',
+                'adjustments.adjustedBy',
             ])
             ->firstOrCreate(
                 ['product_variant_id' => $variant->id],
-                ['quantity' => 0, 'reorder_level' => 0, 'notes' => null],
+                [
+                    'quantity' => 0,
+                    'reorder_level' => 0,
+                    'reorder_quantity' => 0,
+                    'batch_number' => null,
+                    'expires_at' => null,
+                    'notes' => null,
+                ],
             );
     }
 
-    public function update(Inventory $inventory, array $data): Inventory
+    public function update(Inventory $inventory, array $data, ?int $adjustedBy = null): Inventory
     {
+        $quantityBefore = $inventory->quantity;
+        $quantityAfter = array_key_exists('quantity', $data)
+            ? (int) $data['quantity']
+            : $quantityBefore;
+
+        $reason = $data['adjustment_reason'] ?? null;
+        unset($data['adjustment_reason']);
+
         $inventory->update($data);
+
+        if ($quantityAfter !== $quantityBefore) {
+            $delta = $quantityAfter - $quantityBefore;
+            $type = $delta > 0 ? 'add' : 'subtract';
+
+            $inventory->adjustments()->create([
+                'quantity_before' => $quantityBefore,
+                'quantity_after' => $quantityAfter,
+                'delta' => $delta,
+                'adjustment_type' => $type,
+                'reason' => $reason,
+                'adjusted_by' => $adjustedBy,
+            ]);
+        }
 
         return $inventory->fresh([
             'productVariant.product.category',
             'productVariant.product.images',
+            'adjustments.adjustedBy',
         ]);
     }
 

@@ -149,6 +149,7 @@ erDiagram
         timestamp email_verified_at
     }
 
+    Supplier ||--o{ Product : supplies
     ProductCategory ||--o{ Product : contains
     Product ||--o{ ProductImage : has
     Product ||--o{ ProductVariant : has
@@ -158,12 +159,12 @@ erDiagram
     Product {
         bigint id PK
         bigint category_id FK
+        bigint supplier_id FK_nullable
         string name
         text description
         decimal price
         decimal cost_per_unit
         string brand
-        string gender
         string ar_model_url
         boolean is_active
     }
@@ -176,6 +177,8 @@ erDiagram
         string frame_size
         string material
         string lens_type
+        string base_curve
+        string diameter
         decimal price_adjustment
         boolean is_default
     }
@@ -186,6 +189,17 @@ erDiagram
         string slug UK
         text description
         boolean has_ar_support
+        boolean requires_expiry_tracking
+    }
+
+    Supplier {
+        bigint id PK
+        string name
+        string contact_person
+        string phone
+        string email
+        text address
+        boolean is_active
     }
 
     ProductImage {
@@ -298,7 +312,22 @@ erDiagram
         bigint product_variant_id FK
         integer quantity
         integer reorder_level
+        integer reorder_quantity
+        string batch_number
+        date expires_at
         text notes
+    }
+
+    Inventory ||--o{ InventoryAdjustment : tracks
+    InventoryAdjustment {
+        bigint id PK
+        bigint inventory_id FK
+        integer quantity_before
+        integer quantity_after
+        integer delta
+        string adjustment_type
+        string reason
+        bigint adjusted_by FK_nullable
     }
 
     Feedback {
@@ -314,7 +343,7 @@ erDiagram
 
 ## Module Behavior Summary
 
-**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price plus optional compare-at price and cost per unit, along with brand/gender metadata. Each product has one or more **product variants** (color, frame size, material, lens type, price adjustment — fields nullable when not applicable to the category). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
+**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price, cost per unit, supplier linkage, and brand metadata. Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
 **Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` (e.g., SC/PWD) which is deducted from the order total before billing. A bill is auto-generated with each order.
 
@@ -324,7 +353,7 @@ erDiagram
 
 **Direct Messaging** -- Real-time team inbox using Laravel Reverb (WebSockets). Customer starts a conversation with the shop. Any staff/admin can view and respond. New messages are broadcast instantly via private channels. Messages have read tracking. REST API for history/sending, WebSocket for live delivery.
 
-**Inventory** -- Simple stock tracker. One record per **product variant** with quantity and reorder level (the default variant covers single-SKU products). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
+**Inventory** -- Stock tracker keyed per **product variant** (default variant covers single-SKU products) with quantity, reorder level, reorder quantity, optional batch number, and optional expiry date. Category-level `requires_expiry_tracking` controls whether `expires_at` is required. Every quantity change writes an `inventory_adjustments` audit row (`before`, `after`, `delta`, `type`, `reason`, `adjusted_by`). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
 
 **Feedbacks** -- Customers rate products (1-5 stars + comment). One review per customer per product. Staff/admin can view all. Admin can delete inappropriate reviews.
 
@@ -342,7 +371,10 @@ erDiagram
 - **Soft Deletes**: On products, orders, and users to prevent accidental data loss
 - **Database**: MySQL with proper foreign keys, indexes, and unique constraints
 - **AR / virtual try-on**: `has_ar_support` on `product_categories` flags categories that can use AR; `ar_model_url` on Product stores a path/URL to the 3D model file. New products automatically get a **default product variant** (and empty inventory row) so catalog entries work without manually defining variants.
+- **Expiry enforcement**: `requires_expiry_tracking` on `product_categories` controls whether inventory `expires_at` is mandatory for products in that category (e.g., contact lens solutions), while durable products (e.g., frames) can keep `expires_at` nullable.
 - **SKU**: Stored on **`product_variants`** (one unique code per sellable variant). Auto-generated on variant create when not provided (format `PRD-` + 8 random alphanumeric characters). The `Product` model exposes `sku` as the **default variant’s** SKU for convenience in lists and legacy views. Not mass-assignable; searchable via product search and variant records.
+- **Supplier linkage**: `products.supplier_id` links catalog items to vendor contacts for restocking workflows.
+- **Inventory audit trail**: `inventory_adjustments` stores each stock quantity change with actor and reason for accountability.
 - **Real-time messaging**: Laravel Reverb (WebSocket server) + Laravel Broadcasting for instant message delivery. Private channels per conversation, authorized via Sanctum.
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
 - **Client-side cart**: Android app manages the cart locally; backend receives all items in a single order creation call. No cart table needed.
@@ -400,13 +432,14 @@ After this, any module can be built and tested with real auth and role checks.
 
 The first full module. Everything needed for product catalog to work:
 
-- **Migrations**: `product_categories`, `products`, `product_images`, `product_variants` (variant attributes and `price_adjustment`; orders and inventory reference variants)
+- **Migrations**: `product_categories`, `suppliers`, `products`, `product_images`, `product_variants` (variant attributes incl. optical contact-lens fields and `price_adjustment`; orders and inventory reference variants)
 - **Models**: `ProductCategory`, `Product`, `ProductImage`, `ProductVariant` with relationships, casts, scopes (`active()`, `byCategory()`); observer ensures default variant + inventory on product create
 - **Service**: `ProductService` (list with filters/pagination, create, update, soft delete, manage images)
 - **Controller**: `ProductController` (CRUD endpoints)
 - **Form Requests**: `StoreProductRequest`, `UpdateProductRequest`
 - **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource`
 - **Policy**: `ProductPolicy` (admin: full CRUD, staff/customer: view only)
+- **Web admin settings UI**: Category settings screen for toggling `has_ar_support` and `requires_expiry_tracking`
 - **Routes**: Product endpoints within role-based route groups
 - **Seeder**: Sample categories and products for testing
 
@@ -428,7 +461,7 @@ The first full module. Everything needed for product catalog to work:
 
 Each follows the same pattern -- migration, model, service, controller, requests, resources, policy, seeder:
 
-- **Module 2: Inventory** -- inventory table keyed by `product_variant_id`, stock tracking per variant, reorder level alerts, admin adjusts stock, staff views only
+- **Module 2: Inventory** -- inventory table keyed by `product_variant_id`, stock tracking per variant, reorder level + reorder quantity, batch/expiry fields, adjustment history audit trail, admin adjusts stock, staff views only
 - **Module 3: Ordering** -- `OrderStatus` enum, orders, `order_items` referencing `product_variant_id`, stock validation against inventory, walk-in support, cancellation rules
 - **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), partial/full payment tracking (`amount_paid`, `balance_due`), void/refund logic
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment

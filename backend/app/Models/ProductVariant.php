@@ -19,6 +19,8 @@ class ProductVariant extends Model
         'frame_size',
         'material',
         'lens_type',
+        'base_curve',
+        'diameter',
         'price_adjustment',
         'is_default',
     ];

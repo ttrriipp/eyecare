@@ -5,6 +5,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductCategorySettingsController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('products.store');
     Route::get('products', [ProductController::class, 'index'])
         ->name('products.index');
+    Route::get('products/categories', [ProductCategorySettingsController::class, 'index'])
+        ->name('products.categories.index');
+    Route::post('products/categories', [ProductCategorySettingsController::class, 'store'])
+        ->name('products.categories.store');
+    Route::put('products/categories/{category}', [ProductCategorySettingsController::class, 'update'])
+        ->name('products.categories.update');
+    Route::delete('products/categories/{category}', [ProductCategorySettingsController::class, 'destroy'])
+        ->name('products.categories.destroy');
     Route::get('products/{product}', [ProductController::class, 'show'])
         ->name('products.show');
     Route::get('products/{product}/edit', [ProductController::class, 'edit'])

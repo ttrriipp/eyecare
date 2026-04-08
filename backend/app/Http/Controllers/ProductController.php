@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Services\InventoryService;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -27,9 +29,11 @@ class ProductController extends Controller
         $this->authorize('create', Product::class);
 
         $categories = $this->productService->listCategories();
+        $suppliers = $this->productService->listSuppliers();
 
         return view('products.create', [
             'categories' => $categories,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -48,8 +52,12 @@ class ProductController extends Controller
         $this->inventoryService->update($inventory, [
             'quantity' => (int) $request->integer('inventory_quantity', 0),
             'reorder_level' => (int) $request->integer('inventory_reorder_level', 0),
+            'reorder_quantity' => (int) $request->integer('inventory_reorder_quantity', 0),
+            'batch_number' => $request->input('inventory_batch_number'),
+            'expires_at' => $request->input('inventory_expires_at'),
+            'adjustment_reason' => 'Initial stock setup',
             'notes' => $request->input('inventory_notes'),
-        ]);
+        ], $request->user()?->id);
 
         $this->syncPrimaryImage($request, $product);
 
@@ -73,10 +81,12 @@ class ProductController extends Controller
 
         $product->load(['category', 'images']);
         $categories = $this->productService->listCategories();
+        $suppliers = $this->productService->listSuppliers();
 
         return view('products.edit', [
             'product' => $product,
             'categories' => $categories,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -128,12 +138,28 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0.01'],
             'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'image' => ['nullable', 'image', 'max:4096'],
             'inventory_quantity' => ['nullable', 'integer', 'min:0'],
             'inventory_reorder_level' => ['nullable', 'integer', 'min:0'],
+            'inventory_reorder_quantity' => ['nullable', 'integer', 'min:0'],
+            'inventory_batch_number' => ['nullable', 'string', 'max:255'],
+            'inventory_expires_at' => [
+                'nullable',
+                'date',
+                Rule::requiredIf(function () {
+                    $categoryId = request()->input('category_id');
+                    if (! $categoryId) {
+                        return false;
+                    }
+
+                    return (bool) ProductCategory::query()
+                        ->whereKey($categoryId)
+                        ->value('requires_expiry_tracking');
+                }),
+            ],
             'inventory_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -149,9 +175,9 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0.01'],
             'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'image' => ['nullable', 'image', 'max:4096'],
             'remove_image' => ['sometimes', 'boolean'],
         ];

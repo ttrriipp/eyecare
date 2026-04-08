@@ -1,8 +1,6 @@
 ---
-description: Always read the project plan before responding to any prompt
-alwaysApply: true
+alwaysApply: false
 ---
-
 # Always Read the Project Plan
 
 Before responding to any user prompt, you MUST read the plan file:

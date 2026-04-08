@@ -16,12 +16,14 @@ class ProductCategory extends Model
         'slug',
         'description',
         'has_ar_support',
+        'requires_expiry_tracking',
     ];
 
     protected function casts(): array
     {
         return [
             'has_ar_support' => 'boolean',
+            'requires_expiry_tracking' => 'boolean',
         ];
     }
 

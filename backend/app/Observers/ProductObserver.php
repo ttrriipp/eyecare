@@ -16,6 +16,9 @@ class ProductObserver
         $variant->inventory()->create([
             'quantity' => 0,
             'reorder_level' => 0,
+            'reorder_quantity' => 0,
+            'batch_number' => null,
+            'expires_at' => null,
             'notes' => null,
         ]);
     }

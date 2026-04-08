@@ -24,9 +24,14 @@
             </div>
 
             @if(auth()->user()?->isAdmin())
-                <flux:button variant="primary" icon="plus" :href="route('products.create')" wire:navigate>
-                    {{ __('Add product') }}
-                </flux:button>
+                <div class="flex items-center gap-2">
+                    <flux:button variant="ghost" icon="cog-6-tooth" :href="route('products.categories.index')" wire:navigate>
+                        {{ __('Category settings') }}
+                    </flux:button>
+                    <flux:button variant="primary" icon="plus" :href="route('products.create')" wire:navigate>
+                        {{ __('Add product') }}
+                    </flux:button>
+                </div>
             @endif
         </div>
 
