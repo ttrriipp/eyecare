@@ -17,6 +17,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'processed_by',
         'walk_in_name',
         'walk_in_phone',
         'order_number',
@@ -24,6 +25,8 @@ class Order extends Model
         'total_amount',
         'discount_amount',
         'notes',
+        'ready_at',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -32,6 +35,8 @@ class Order extends Model
             'status' => OrderStatus::class,
             'total_amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'ready_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -40,6 +45,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function processedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
     }
 
     public function items(): HasMany

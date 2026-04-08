@@ -17,6 +17,11 @@ class FeedbackResource extends JsonResource
             'product' => new ProductResource($this->whenLoaded('product')),
             'rating' => $this->rating,
             'comment' => $this->comment,
+            'is_verified_purchase' => $this->is_verified_purchase,
+            'is_visible' => $this->is_visible,
+            'admin_reply' => $this->admin_reply,
+            'moderated_by' => $this->moderated_by,
+            'moderated_at' => $this->moderated_at?->toISOString(),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

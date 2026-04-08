@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Models\Feedback;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
@@ -56,7 +58,8 @@ class FeedbackService
     {
         $query = Feedback::query()
             ->with(['user'])
-            ->forProduct($productId);
+            ->forProduct($productId)
+            ->visible();
 
         if (! empty($filters['rating'])) {
             $query->byRating((int) $filters['rating']);
@@ -90,6 +93,7 @@ class FeedbackService
             'product_id' => $data['product_id'],
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
+            'is_verified_purchase' => $this->hasCompletedPurchase($userId, (int) $data['product_id']),
         ]);
 
         return $feedback->load('user');
@@ -121,5 +125,21 @@ class FeedbackService
         $avg = Feedback::forProduct($productId)->avg('rating');
 
         return $avg ? round((float) $avg, 1) : null;
+    }
+
+    /**
+     * Verify if customer has at least one completed order containing the product.
+     */
+    private function hasCompletedPurchase(int $userId, int $productId): bool
+    {
+        return OrderItem::query()
+            ->whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->where('status', OrderStatus::Completed);
+            })
+            ->whereHas('productVariant', function ($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->exists();
     }
 }

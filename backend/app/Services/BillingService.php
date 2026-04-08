@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Bill;
 use App\Models\Order;
@@ -73,7 +74,12 @@ class BillingService
     /**
      * Record bill payment (partial or full).
      */
-    public function recordPayment(Bill $bill, float $paymentAmount, string $paymentMethod): Bill
+    public function recordPayment(
+        Bill $bill,
+        float $paymentAmount,
+        string $paymentMethod,
+        ?int $collectedBy = null
+    ): Bill
     {
         if (in_array($bill->payment_status, [PaymentStatus::Voided, PaymentStatus::Refunded], true)) {
             throw ValidationException::withMessages([
@@ -97,16 +103,18 @@ class BillingService
         $newAmountPaid = round(((float) $bill->amount_paid) + $paymentAmount, 2);
         $newBalanceDue = round(((float) $bill->amount) - $newAmountPaid, 2);
         $isFullyPaid = $newBalanceDue <= 0;
+        $normalizedMethod = PaymentMethod::from(strtolower(trim($paymentMethod)));
 
         $bill->update([
             'payment_status' => $isFullyPaid ? PaymentStatus::Paid : PaymentStatus::PartiallyPaid,
             'amount_paid' => $newAmountPaid,
             'balance_due' => max($newBalanceDue, 0),
-            'payment_method' => $paymentMethod,
+            'payment_method' => $normalizedMethod,
+            'collected_by' => $collectedBy,
             'paid_at' => $isFullyPaid ? now() : null,
         ]);
 
-        return $bill->fresh(['order.user']);
+        return $bill->fresh(['order.user', 'collector']);
     }
 
     /**

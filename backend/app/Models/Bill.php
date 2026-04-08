@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,11 +17,15 @@ class Bill extends Model
         'order_id',
         'appointment_id',
         'invoice_number',
+        'official_receipt_number',
         'amount',
+        'tax_amount',
         'amount_paid',
         'balance_due',
         'payment_status',
         'payment_method',
+        'collected_by',
+        'remarks',
         'paid_at',
     ];
 
@@ -28,7 +33,9 @@ class Bill extends Model
     {
         return [
             'payment_status' => PaymentStatus::class,
+            'payment_method' => PaymentMethod::class,
             'amount' => 'decimal:2',
+            'tax_amount' => 'decimal:2',
             'amount_paid' => 'decimal:2',
             'balance_due' => 'decimal:2',
             'paid_at' => 'datetime',
@@ -40,6 +47,11 @@ class Bill extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function collector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'collected_by');
     }
 
     // Appointment relationship will be added when scheduling module is built

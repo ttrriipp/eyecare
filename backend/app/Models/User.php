@@ -67,9 +67,24 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function processedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'processed_by');
+    }
+
+    public function collectedBills(): HasMany
+    {
+        return $this->hasMany(Bill::class, 'collected_by');
+    }
+
     public function feedbacks(): HasMany
     {
         return $this->hasMany(Feedback::class);
+    }
+
+    public function moderatedFeedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class, 'moderated_by');
     }
 
     public function initials(): string

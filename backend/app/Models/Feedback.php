@@ -18,12 +18,20 @@ class Feedback extends Model
         'product_id',
         'rating',
         'comment',
+        'is_verified_purchase',
+        'is_visible',
+        'admin_reply',
+        'moderated_by',
+        'moderated_at',
     ];
 
     protected function casts(): array
     {
         return [
             'rating' => 'integer',
+            'is_verified_purchase' => 'boolean',
+            'is_visible' => 'boolean',
+            'moderated_at' => 'datetime',
         ];
     }
 
@@ -37,6 +45,11 @@ class Feedback extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function moderator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderated_by');
     }
 
     // ── Scopes ───────────────────────────────────────────────
@@ -54,5 +67,10 @@ class Feedback extends Model
     public function scopeByRating(Builder $query, int $rating): Builder
     {
         return $query->where('rating', $rating);
+    }
+
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->where('is_visible', true);
     }
 }

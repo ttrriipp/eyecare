@@ -71,6 +71,7 @@ class BillingController extends Controller
             $bill,
             (float) $validated['payment_amount'],
             $validated['payment_method'],
+            $request->user()->id,
         );
 
         return redirect()

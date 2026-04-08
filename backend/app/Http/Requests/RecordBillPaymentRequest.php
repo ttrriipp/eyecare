@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RecordBillPaymentRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class RecordBillPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', 'string', 'max:100'],
+            'payment_method' => ['required', 'string', Rule::in(PaymentMethod::values())],
             'payment_amount' => ['required', 'numeric', 'gt:0'],
         ];
     }
