@@ -440,6 +440,7 @@ The first full module. Everything needed for product catalog to work:
 - **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource`
 - **Policy**: `ProductPolicy` (admin: full CRUD, staff/customer: view only)
 - **Web admin settings UI**: Category settings screen for toggling `has_ar_support` and `requires_expiry_tracking`
+- **Web admin settings UI**: Supplier settings screen for maintaining supplier records used by product forms
 - **Routes**: Product endpoints within role-based route groups
 - **Seeder**: Sample categories and products for testing
 

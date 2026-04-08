@@ -6,6 +6,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCategorySettingsController;
+use App\Http\Controllers\SupplierSettingsController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('products.categories.update');
     Route::delete('products/categories/{category}', [ProductCategorySettingsController::class, 'destroy'])
         ->name('products.categories.destroy');
+    Route::get('products/suppliers', [SupplierSettingsController::class, 'index'])
+        ->name('products.suppliers.index');
+    Route::post('products/suppliers', [SupplierSettingsController::class, 'store'])
+        ->name('products.suppliers.store');
+    Route::put('products/suppliers/{supplier}', [SupplierSettingsController::class, 'update'])
+        ->name('products.suppliers.update');
+    Route::delete('products/suppliers/{supplier}', [SupplierSettingsController::class, 'destroy'])
+        ->name('products.suppliers.destroy');
     Route::get('products/{product}', [ProductController::class, 'show'])
         ->name('products.show');
     Route::get('products/{product}/edit', [ProductController::class, 'edit'])

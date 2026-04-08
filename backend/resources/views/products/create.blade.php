@@ -59,7 +59,7 @@
                             </div>
 
                             {{-- Brand --}}
-                            <div class="space-y-1.5">
+                            <div class="space-y-1.5 sm:col-span-2">
                                 <label for="brand" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Brand') }}
                                 </label>
@@ -75,29 +75,6 @@
                                 @enderror
                             </div>
 
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Supplier') }}
-                                </label>
-                                <flux:select
-                                    id="supplier_id"
-                                    name="supplier_id"
-                                    :label="false"
-                                >
-                                    <option value="">{{ __('No supplier selected') }}</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option
-                                            value="{{ $supplier->id }}"
-                                            @selected(old('supplier_id') == $supplier->id)
-                                        >
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('supplier_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
 
                             {{-- Category (full width for long labels) --}}
                             <div class="space-y-1.5 sm:col-span-2">
@@ -105,13 +82,6 @@
                                     {{ __('Category') }}
                                     <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
                                 </label>
-                                @if(auth()->user()?->isAdmin())
-                                    <div class="mb-1">
-                                        <a href="{{ route('products.categories.index') }}" class="text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">
-                                            {{ __('Manage categories') }}
-                                        </a>
-                                    </div>
-                                @endif
                                 <flux:select
                                     id="category_id"
                                     name="category_id"
@@ -151,6 +121,31 @@
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
+
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Supplier') }}
+                                </label>
+                                <flux:select
+                                    id="supplier_id"
+                                    name="supplier_id"
+                                    :label="false"
+                                >
+                                    <option value="">{{ __('No supplier selected') }}</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option
+                                            value="{{ $supplier->id }}"
+                                            @selected(old('supplier_id') == $supplier->id)
+                                        >
+                                            {{ $supplier->name }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('supplier_id')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
 
                         </div>
                     </div>
@@ -306,7 +301,7 @@
                                 @enderror
                             </div>
 
-                            <div class="space-y-1.5 sm:col-span-2">
+                            <div id="inventory-expires-at-wrapper" class="hidden space-y-1.5 sm:col-span-2">
                                 <label id="inventory-expires-at-label" for="inventory_expires_at" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Expiration date') }}
                                 </label>
@@ -415,15 +410,17 @@
         (function () {
             const categorySelect = document.getElementById('category_id');
             const expiresInput = document.getElementById('inventory_expires_at');
+            const expiresWrapper = document.getElementById('inventory-expires-at-wrapper');
             const expiresLabel = document.getElementById('inventory-expires-at-label');
             const expiresHelp = document.getElementById('inventory-expires-at-help');
 
-            if (!categorySelect || !expiresInput || !expiresLabel || !expiresHelp) return;
+            if (!categorySelect || !expiresInput || !expiresWrapper || !expiresLabel || !expiresHelp) return;
 
             function syncExpiryRequirement() {
                 const opt = categorySelect.selectedOptions[0];
                 const required = opt && opt.getAttribute('data-requires-expiry') === '1';
 
+                expiresWrapper.classList.toggle('hidden', !required);
                 expiresInput.required = !!required;
                 expiresHelp.classList.toggle('hidden', !required);
 
@@ -431,6 +428,7 @@
                     expiresLabel.innerHTML = "{{ __('Expiration date') }} <span class=\"ml-0.5 text-red-500\" aria-hidden=\"true\">*</span>";
                 } else {
                     expiresLabel.textContent = "{{ __('Expiration date') }}";
+                    expiresInput.value = '';
                 }
             }
 

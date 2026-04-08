@@ -87,6 +87,13 @@
                                 <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Supplier') }}
                                 </label>
+                                @if(auth()->user()?->isAdmin())
+                                    <div class="mb-1">
+                                        <a href="{{ route('products.suppliers.index') }}" class="text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">
+                                            {{ __('Manage suppliers') }}
+                                        </a>
+                                    </div>
+                                @endif
                                 <flux:select
                                     id="supplier_id"
                                     name="supplier_id"
