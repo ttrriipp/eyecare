@@ -90,6 +90,16 @@
                 <div
                     class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                 >
+                    @php
+                        $genderLabel = match ($product->gender) {
+                            'men' => __('Men'),
+                            'women' => __('Women'),
+                            'kids' => __('Kids'),
+                            'unisex' => __('Unisex'),
+                            default => null,
+                        };
+                    @endphp
+
                     <div class="flex items-baseline justify-between">
                         <div class="text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                             {{ \App\Support\Money::peso($product->price ?? 0) }}
@@ -113,6 +123,15 @@
                     <dl class="mt-4 space-y-2 text-sm">
                         <div class="flex justify-between gap-4">
                             <dt class="text-zinc-500 dark:text-zinc-500">
+                                {{ __('Brand') }}
+                            </dt>
+                            <dd class="text-end text-zinc-900 dark:text-zinc-100">
+                                {{ $product->brand ?: '—' }}
+                            </dd>
+                        </div>
+
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-zinc-500 dark:text-zinc-500">
                                 {{ __('Category') }}
                             </dt>
                             <dd class="text-end text-zinc-900 dark:text-zinc-100">
@@ -120,24 +139,49 @@
                             </dd>
                         </div>
 
-                        @if($product->lens_type)
+                        @if($product->gender)
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-zinc-500 dark:text-zinc-500">
+                                    {{ __('Gender') }}
+                                </dt>
+                                <dd class="text-end text-zinc-900 dark:text-zinc-100">
+                                    {{ $genderLabel ?? ucfirst($product->gender) }}
+                                </dd>
+                            </div>
+                        @endif
+
+                        @if(auth()->user()?->isAdminOrStaff() && $product->cost_per_unit !== null)
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-zinc-500 dark:text-zinc-500">
+                                    {{ __('Cost per unit') }}
+                                </dt>
+                                <dd class="text-end tabular-nums text-zinc-900 dark:text-zinc-100">
+                                    {{ \App\Support\Money::peso($product->cost_per_unit) }}
+                                </dd>
+                            </div>
+                        @endif
+
+                        @php
+                            $defaultVar = $product->defaultVariant;
+                        @endphp
+                        @if($defaultVar?->lens_type)
                             <div class="flex justify-between gap-4">
                                 <dt class="text-zinc-500 dark:text-zinc-500">
                                     {{ __('Lens type') }}
                                 </dt>
                                 <dd class="text-end text-zinc-900 dark:text-zinc-100">
-                                    {{ $product->lens_type }}
+                                    {{ $defaultVar->lens_type }}
                                 </dd>
                             </div>
                         @endif
 
-                        @if($product->frame_material)
+                        @if($defaultVar?->material)
                             <div class="flex justify-between gap-4">
                                 <dt class="text-zinc-500 dark:text-zinc-500">
-                                    {{ __('Frame material') }}
+                                    {{ __('Material') }}
                                 </dt>
                                 <dd class="text-end text-zinc-900 dark:text-zinc-100">
-                                    {{ $product->frame_material }}
+                                    {{ $defaultVar->material }}
                                 </dd>
                             </div>
                         @endif
@@ -145,7 +189,7 @@
 
                     @if(auth()->user()?->isAdminOrStaff())
                         @php
-                            $inv = $product->inventory;
+                            $inv = $product->defaultVariant?->inventory;
                         @endphp
                         <div
                             class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-600 dark:bg-zinc-800/50"

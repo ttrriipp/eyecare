@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -19,18 +20,26 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'sku',
+        'cost_per_unit',
         'brand',
-        'lens_type',
-        'frame_material',
+        'gender',
         'ar_model_url',
         'is_active',
     ];
+
+    /**
+     * Convenience accessor: default variant's SKU (sellable units are variants).
+     */
+    public function getSkuAttribute(): ?string
+    {
+        return $this->defaultVariant?->sku;
+    }
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'cost_per_unit' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -45,14 +54,27 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
-    public function inventory(): HasOne
+    public function variants(): HasMany
     {
-        return $this->hasOne(Inventory::class);
+        return $this->hasMany(ProductVariant::class);
     }
 
-    public function orderItems(): HasMany
+    public function defaultVariant(): HasOne
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
+    /**
+     * Inventory rows for all variants (one row per variant).
+     */
+    public function variantInventories(): HasManyThrough
+    {
+        return $this->hasManyThrough(Inventory::class, ProductVariant::class, 'product_id', 'product_variant_id');
+    }
+
+    public function orderItems(): HasManyThrough
+    {
+        return $this->hasManyThrough(OrderItem::class, ProductVariant::class, 'product_id', 'product_variant_id');
     }
 
     public function feedbacks(): HasMany
@@ -81,7 +103,9 @@ class Product extends Model
             $q->where('name', 'like', "%{$term}%")
                 ->orWhere('description', 'like', "%{$term}%")
                 ->orWhere('brand', 'like', "%{$term}%")
-                ->orWhere('sku', 'like', "%{$term}%");
+                ->orWhereHas('variants', function (Builder $vq) use ($term) {
+                    $vq->where('sku', 'like', "%{$term}%");
+                });
         });
     }
 

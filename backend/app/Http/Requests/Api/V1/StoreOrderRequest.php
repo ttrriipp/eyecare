@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends FormRequest
 {
@@ -16,7 +17,15 @@ class StoreOrderRequest extends FormRequest
     {
         $rules = [
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.product_variant_id' => [
+                'required',
+                'integer',
+                Rule::exists('product_variants', 'id')->where(function ($q) {
+                    $q->whereHas('product', function ($p) {
+                        $p->where('is_active', true)->whereNull('deleted_at');
+                    });
+                }),
+            ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
@@ -36,7 +45,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'items.required' => 'At least one item is required.',
             'items.min' => 'At least one item is required.',
-            'items.*.product_id.exists' => 'The selected product does not exist.',
+            'items.*.product_variant_id.exists' => 'The selected product variant does not exist or is not available.',
             'items.*.quantity.min' => 'Each item must have a quantity of at least 1.',
         ];
     }

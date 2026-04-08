@@ -14,6 +14,7 @@ class ProductCategoryResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'has_ar_support' => $this->has_ar_support,
             'products_count' => $this->whenCounted('products'),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),

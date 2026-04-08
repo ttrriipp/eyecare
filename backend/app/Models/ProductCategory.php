@@ -15,7 +15,15 @@ class ProductCategory extends Model
         'name',
         'slug',
         'description',
+        'has_ar_support',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'has_ar_support' => 'boolean',
+        ];
+    }
 
     public function products(): HasMany
     {

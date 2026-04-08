@@ -29,11 +29,11 @@ class StoreStaffOrderRequest extends FormRequest
         $items = $this->input('items', []);
         $filtered = [];
         foreach ($items as $row) {
-            $productId = $row['product_id'] ?? null;
+            $variantId = $row['product_variant_id'] ?? null;
             $quantity = isset($row['quantity']) ? (int) $row['quantity'] : 0;
-            if ($productId !== null && $productId !== '' && $quantity >= 1) {
+            if ($variantId !== null && $variantId !== '' && $quantity >= 1) {
                 $filtered[] = [
-                    'product_id' => (int) $productId,
+                    'product_variant_id' => (int) $variantId,
                     'quantity' => $quantity,
                 ];
             }
@@ -67,12 +67,14 @@ class StoreStaffOrderRequest extends FormRequest
                 Rule::requiredIf(fn () => $this->input('customer_type') === 'walk_in'),
             ],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => [
+            'items.*.product_variant_id' => [
                 'required',
                 'integer',
-                Rule::exists('products', 'id')
-                    ->whereNull('deleted_at')
-                    ->where('is_active', true),
+                Rule::exists('product_variants', 'id')->where(function ($q) {
+                    $q->whereHas('product', function ($p) {
+                        $p->where('is_active', true)->whereNull('deleted_at');
+                    });
+                }),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:1000'],

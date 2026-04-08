@@ -18,6 +18,7 @@ class UpdateProductCategoryRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'slug' => ['sometimes', 'string', 'max:255', Rule::unique('product_categories')->ignore($this->route('category'))],
             'description' => ['nullable', 'string'],
+            'has_ar_support' => ['sometimes', 'boolean'],
         ];
     }
 }

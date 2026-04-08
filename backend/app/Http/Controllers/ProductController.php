@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\FrameMaterial;
-use App\Enums\LensType;
 use App\Models\Product;
 use App\Services\InventoryService;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -42,7 +39,9 @@ class ProductController extends Controller
 
         $validated = $request->validate($this->storeRules());
 
-        $validated['is_active'] = $this->resolveIsActive($request);
+        $validated['is_active'] = $request->has('is_active')
+            ? $this->resolveIsActive($request)
+            : true;
 
         $product = $this->productService->create($validated);
         $inventory = $this->inventoryService->findByProduct($product);
@@ -61,7 +60,7 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load(['category', 'images', 'inventory']);
+        $product->load(['category', 'images', 'defaultVariant.inventory']);
 
         return view('products.show', [
             'product' => $product,
@@ -127,10 +126,9 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
-            'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
+            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'lens_type' => ['nullable', 'string', Rule::in(LensType::values())],
-            'frame_material' => ['nullable', 'string', Rule::in(FrameMaterial::values())],
+            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -149,10 +147,9 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
-            'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
+            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'lens_type' => ['nullable', 'string', Rule::in(LensType::values())],
-            'frame_material' => ['nullable', 'string', Rule::in(FrameMaterial::values())],
+            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
             'image' => ['nullable', 'image', 'max:4096'],

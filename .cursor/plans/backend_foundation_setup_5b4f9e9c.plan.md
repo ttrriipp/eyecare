@@ -151,21 +151,33 @@ erDiagram
 
     ProductCategory ||--o{ Product : contains
     Product ||--o{ ProductImage : has
-    Product ||--o{ OrderItem : ordered_in
-    Product ||--o{ Inventory : tracked_in
+    Product ||--o{ ProductVariant : has
     Product ||--o{ Feedback : reviewed_in
+    ProductVariant ||--o{ OrderItem : ordered_as
+    ProductVariant ||--o| Inventory : tracked_in
     Product {
         bigint id PK
         bigint category_id FK
         string name
         text description
         decimal price
-        string sku UK
+        decimal cost_per_unit
         string brand
-        string lens_type
-        string frame_material
+        string gender
         string ar_model_url
         boolean is_active
+    }
+
+    ProductVariant {
+        bigint id PK
+        bigint product_id FK
+        string sku UK
+        string color
+        string frame_size
+        string material
+        string lens_type
+        decimal price_adjustment
+        boolean is_default
     }
 
     ProductCategory {
@@ -173,6 +185,7 @@ erDiagram
         string name
         string slug UK
         text description
+        boolean has_ar_support
     }
 
     ProductImage {
@@ -197,7 +210,7 @@ erDiagram
     OrderItem {
         bigint id PK
         bigint order_id FK
-        bigint product_id FK
+        bigint product_variant_id FK
         integer quantity
         decimal unit_price
         decimal subtotal
@@ -279,7 +292,7 @@ erDiagram
 
     Inventory {
         bigint id PK
-        bigint product_id FK
+        bigint product_variant_id FK
         integer quantity
         integer reorder_level
         text notes
@@ -298,7 +311,7 @@ erDiagram
 
 ## Module Behavior Summary
 
-**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Admin has full CRUD. Staff and customers can view only.
+**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price plus optional compare-at price and cost per unit, along with brand/gender metadata. Each product has one or more **product variants** (color, frame size, material, lens type, price adjustment — fields nullable when not applicable to the category). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
 **Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. A bill is auto-generated with each order.
 
@@ -308,7 +321,7 @@ erDiagram
 
 **Direct Messaging** -- Real-time team inbox using Laravel Reverb (WebSockets). Customer starts a conversation with the shop. Any staff/admin can view and respond. New messages are broadcast instantly via private channels. Messages have read tracking. REST API for history/sending, WebSocket for live delivery.
 
-**Inventory** -- Simple stock tracker. One record per product with quantity and reorder level. Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
+**Inventory** -- Simple stock tracker. One record per **product variant** with quantity and reorder level (the default variant covers single-SKU products). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
 
 **Feedbacks** -- Customers rate products (1-5 stars + comment). One review per customer per product. Staff/admin can view all. Admin can delete inappropriate reviews.
 
@@ -325,7 +338,8 @@ erDiagram
 - **Business Logic**: Service classes injected into controllers via constructor -- testable, swappable
 - **Soft Deletes**: On products, orders, and users to prevent accidental data loss
 - **Database**: MySQL with proper foreign keys, indexes, and unique constraints
-- **AR Model**: `ar_model_url` field on Product stores a path/URL to the 3D model file for virtual try-on
+- **AR / virtual try-on**: `has_ar_support` on `product_categories` flags categories that can use AR; `ar_model_url` on Product stores a path/URL to the 3D model file. New products automatically get a **default product variant** (and empty inventory row) so catalog entries work without manually defining variants.
+- **SKU**: Stored on **`product_variants`** (one unique code per sellable variant). Auto-generated on variant create when not provided (format `PRD-` + 8 random alphanumeric characters). The `Product` model exposes `sku` as the **default variant’s** SKU for convenience in lists and legacy views. Not mass-assignable; searchable via product search and variant records.
 - **Real-time messaging**: Laravel Reverb (WebSocket server) + Laravel Broadcasting for instant message delivery. Private channels per conversation, authorized via Sanctum.
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
 - **Client-side cart**: Android app manages the cart locally; backend receives all items in a single order creation call. No cart table needed.
@@ -383,8 +397,8 @@ After this, any module can be built and tested with real auth and role checks.
 
 The first full module. Everything needed for product catalog to work:
 
-- **Migrations**: `product_categories`, `products`, `product_images`
-- **Models**: `ProductCategory`, `Product`, `ProductImage` with relationships, casts, scopes (`active()`, `byCategory()`)
+- **Migrations**: `product_categories`, `products`, `product_images`, `product_variants` (variant attributes and `price_adjustment`; orders and inventory reference variants)
+- **Models**: `ProductCategory`, `Product`, `ProductImage`, `ProductVariant` with relationships, casts, scopes (`active()`, `byCategory()`); observer ensures default variant + inventory on product create
 - **Service**: `ProductService` (list with filters/pagination, create, update, soft delete, manage images)
 - **Controller**: `ProductController` (CRUD endpoints)
 - **Form Requests**: `StoreProductRequest`, `UpdateProductRequest`
@@ -411,8 +425,8 @@ The first full module. Everything needed for product catalog to work:
 
 Each follows the same pattern -- migration, model, service, controller, requests, resources, policy, seeder:
 
-- **Module 2: Inventory** -- inventory table, stock tracking per product, reorder level alerts, admin adjusts stock, staff views only
-- **Module 3: Ordering** -- `OrderStatus` enum, orders, order_items tables, stock validation against inventory, walk-in support, cancellation rules
+- **Module 2: Inventory** -- inventory table keyed by `product_variant_id`, stock tracking per variant, reorder level alerts, admin adjusts stock, staff views only
+- **Module 3: Ordering** -- `OrderStatus` enum, orders, `order_items` referencing `product_variant_id`, stock validation against inventory, walk-in support, cancellation rules
 - **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), payment tracking, void/refund logic
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment
 - **Module 6: Scheduling** -- `AppointmentStatus` enum, service_types, schedule_templates, time_slots, appointments tables, slot generation logic, appointment billing

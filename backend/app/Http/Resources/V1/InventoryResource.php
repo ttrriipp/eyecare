@@ -11,8 +11,12 @@ class InventoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'product_id' => $this->product_id,
-            'product' => new ProductResource($this->whenLoaded('product')),
+            'product_variant_id' => $this->product_variant_id,
+            'product_variant' => new ProductVariantResource($this->whenLoaded('productVariant')),
+            'product' => new ProductResource($this->when(
+                $this->relationLoaded('productVariant') && $this->productVariant?->relationLoaded('product'),
+                fn () => $this->productVariant->product,
+            )),
             'quantity' => $this->quantity,
             'reorder_level' => $this->reorder_level,
             'notes' => $this->notes,
@@ -22,4 +26,3 @@ class InventoryResource extends JsonResource
         ];
     }
 }
-

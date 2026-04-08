@@ -142,10 +142,11 @@
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             @foreach($products as $product)
                                 @php
-                                    $inv = $product->inventory;
-                                    $qty = $inv?->quantity ?? 0;
-                                    $reorder = $inv?->reorder_level ?? 0;
-                                    $low = $inv && $inv->isLowStock();
+                                    $inv = $product->defaultVariant?->inventory;
+                                    $qty = (int) ($product->aggregate_qty ?? 0);
+                                    $reorder = (int) ($inv?->reorder_level ?? 0);
+                                    $low = $inv !== null && $qty <= $reorder;
+                                    $touch = $product->inventory_last_touch ?? $inv?->updated_at;
                                     $catalogActive = (bool) $product->is_active;
                                 @endphp
                                 <tr
@@ -187,9 +188,9 @@
                                         {{ $product->category?->name ?? '—' }}
                                     </td>
                                     <td class="px-4 py-3 hidden lg:table-cell text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
-                                        @if($inv?->updated_at)
-                                            <time datetime="{{ $inv->updated_at->toIso8601String() }}">
-                                                {{ $inv->updated_at->format('M j, Y g:i A') }}
+                                        @if($touch)
+                                            <time datetime="{{ \Illuminate\Support\Carbon::parse($touch)->toIso8601String() }}">
+                                                {{ \Illuminate\Support\Carbon::parse($touch)->format('M j, Y g:i A') }}
                                             </time>
                                         @else
                                             —
@@ -207,7 +208,7 @@
                                                 <span
                                                     class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950/80 dark:text-amber-200"
                                                 >
-                                                    {{ __('Not initialized') }}
+                                                    {{ __('No default variant') }}
                                                 </span>
                                             @elseif($low)
                                                 <span

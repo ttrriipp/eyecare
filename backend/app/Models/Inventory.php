@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class Inventory extends Model
     protected $table = 'inventory';
 
     protected $fillable = [
-        'product_id',
+        'product_variant_id',
         'quantity',
         'reorder_level',
         'notes',
@@ -28,9 +29,17 @@ class Inventory extends Model
         ];
     }
 
-    public function product(): BelongsTo
+    public function productVariant(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Parent product (via variant). Eager-load `productVariant.product` when listing.
+     */
+    protected function product(): Attribute
+    {
+        return Attribute::get(fn (): ?Product => $this->productVariant?->product);
     }
 
     public function scopeLowStock(Builder $query): Builder

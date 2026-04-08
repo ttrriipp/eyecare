@@ -2,20 +2,20 @@
     $rawItems = old('items');
     if ($rawItems === null) {
         $rows = [
-            ['product_id' => '', 'quantity' => 1],
-            ['product_id' => '', 'quantity' => 1],
-            ['product_id' => '', 'quantity' => 1],
+            ['product_variant_id' => '', 'quantity' => 1],
+            ['product_variant_id' => '', 'quantity' => 1],
+            ['product_variant_id' => '', 'quantity' => 1],
         ];
     } else {
         $rows = [];
         foreach (array_values($rawItems) as $row) {
             $rows[] = [
-                'product_id' => $row['product_id'] ?? '',
+                'product_variant_id' => $row['product_variant_id'] ?? '',
                 'quantity' => isset($row['quantity']) ? max(1, (int) $row['quantity']) : 1,
             ];
         }
         while (count($rows) < 3) {
-            $rows[] = ['product_id' => '', 'quantity' => 1];
+            $rows[] = ['product_variant_id' => '', 'quantity' => 1];
         }
     }
     $nextLineIndex = count($rows);
@@ -222,14 +222,15 @@
                                                 {{ __('Product') }}
                                             </label>
                                             <select
-                                                name="items[{{ $i }}][product_id]"
+                                                name="items[{{ $i }}][product_variant_id]"
                                                 class="block w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                                             >
                                                 <option value="">{{ __('—') }}</option>
                                                 @foreach($products as $product)
+                                                    @continue(!$product->defaultVariant)
                                                     <option
-                                                        value="{{ $product->id }}"
-                                                        @selected((string) ($row['product_id'] ?? '') === (string) $product->id)
+                                                        value="{{ $product->defaultVariant->id }}"
+                                                        @selected((string) ($row['product_variant_id'] ?? '') === (string) $product->defaultVariant->id)
                                                     >
                                                         {{ $product->name }}
                                                         @if($product->sku)
@@ -336,12 +337,13 @@
                     <div class="min-w-0">
                         <label class="mb-1 block text-xs text-zinc-500 sm:hidden">{{ __('Product') }}</label>
                         <select
-                            name="items[__INDEX__][product_id]"
+                            name="items[__INDEX__][product_variant_id]"
                             class="block w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                         >
                             <option value="">{{ __('—') }}</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}">
+                                @continue(!$product->defaultVariant)
+                                <option value="{{ $product->defaultVariant->id }}">
                                     {{ $product->name }}
                                     @if($product->sku)
                                         ({{ $product->sku }})

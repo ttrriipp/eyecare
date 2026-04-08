@@ -2,10 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
-use App\Enums\FrameMaterial;
-use App\Enums\LensType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -21,10 +18,9 @@ class StoreProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
-            'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
+            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'lens_type' => ['nullable', 'string', Rule::in(LensType::values())],
-            'frame_material' => ['nullable', 'string', Rule::in(FrameMaterial::values())],
+            'gender' => ['nullable', 'in:unisex,men,women,kids'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'is_active' => ['sometimes', 'boolean'],
         ];

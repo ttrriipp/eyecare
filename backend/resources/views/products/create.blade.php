@@ -38,7 +38,7 @@
 
                         <div class="grid gap-4 sm:grid-cols-2">
 
-                            {{-- Name --}}
+                            {{-- Name + SKU note (full width) --}}
                             <div class="space-y-1.5 sm:col-span-2">
                                 <label for="name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Product name') }}
@@ -58,30 +58,10 @@
                                 @enderror
                             </div>
 
-                            {{-- SKU --}}
-                            <div class="space-y-1.5">
-                                <label for="sku" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('SKU') }}
-                                    <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
-                                </label>
-                                <flux:input
-                                    id="sku"
-                                    name="sku"
-                                    :label="false"
-                                    value="{{ old('sku') }}"
-                                    placeholder="e.g. FRM-001"
-                                    required
-                                />
-                                @error('sku')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Brand --}}
+                            {{-- Brand | Gender --}}
                             <div class="space-y-1.5">
                                 <label for="brand" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Brand') }}
-                                    <span class="ml-0.5 text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
                                 </label>
                                 <flux:input
                                     id="brand"
@@ -95,10 +75,86 @@
                                 @enderror
                             </div>
 
-                            {{-- Price --}}
+                            <div class="space-y-1.5">
+                                <label for="gender" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Gender') }}
+                                </label>
+                                <flux:select
+                                    id="gender"
+                                    name="gender"
+                                    :label="false"
+                                >
+                                    <option value="unisex" @selected(old('gender') === 'unisex')>{{ __('Unisex') }}</option>
+                                    <option value="men" @selected(old('gender') === 'men')>{{ __('Men') }}</option>
+                                    <option value="women" @selected(old('gender') === 'women')>{{ __('Women') }}</option>
+                                    <option value="kids" @selected(old('gender') === 'kids')>{{ __('Kids') }}</option>
+                                </flux:select>
+                                @error('gender')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Category (full width for long labels) --}}
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Category') }}
+                                    <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
+                                </label>
+                                <flux:select
+                                    id="category_id"
+                                    name="category_id"
+                                    required
+                                    :label="false"
+                                >
+                                    <option value="" disabled data-has-ar="0" @selected(! old('category_id'))>{{ __('Select a category…') }}</option>
+                                    @foreach($categories as $category)
+                                        <option
+                                            value="{{ $category->id }}"
+                                            data-has-ar="{{ $category->has_ar_support ? '1' : '0' }}"
+                                            @selected(old('category_id') == $category->id)
+                                        >
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('category_id')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Description --}}
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Description') }}
+                                </label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    rows="4"
+                                    placeholder="{{ __('Describe the product — materials, fit, use case, coatings…') }}"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                >{{ old('description') }}</textarea>
+                                @error('description')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- ── Pricing ───────────────────────────────────────── --}}
+                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+                        <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                            {{ __('Pricing') }}
+                        </h2>
+                        <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('Set the product pricing and cost details.') }}
+                        </p>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
                                 <label for="price" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Price (₱)') }}
+                                    {{ __('Selling price (₱)') }}
                                     <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
                                 </label>
                                 <flux:input
@@ -117,157 +173,25 @@
                                 @enderror
                             </div>
 
-                            {{-- Category --}}
                             <div class="space-y-1.5">
-                                <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Category') }}
-                                    <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
-                                </label>
-                                <flux:select
-                                    id="category_id"
-                                    name="category_id"
-                                    required
-                                    :label="false"
-                                >
-                                    <option value="" disabled @selected(! old('category_id'))>{{ __('Select a category…') }}</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('category_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Description --}}
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Description') }}
-                                    <span class="ml-0.5 text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
-                                </label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    rows="4"
-                                    placeholder="{{ __('Describe the product — materials, fit, use case, coatings…') }}"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                >{{ old('description') }}</textarea>
-                                @error('description')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                        </div>
-                    </div>
-
-                    {{-- ── Optical specifications ────────────────────────── --}}
-                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
-                        <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
-                            {{ __('Optical specifications') }}
-                        </h2>
-                        <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
-                            {{ __('Leave blank if not applicable for this product type.') }}
-                        </p>
-
-                        <div class="grid gap-4 sm:grid-cols-2">
-
-                            {{-- Lens type --}}
-                            <div class="space-y-1.5">
-                                <label for="lens_type" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Lens type') }}
-                                </label>
-                                <flux:select
-                                    id="lens_type"
-                                    name="lens_type"
-                                    :label="false"
-                                >
-                                    <option value="" @selected(! old('lens_type'))>{{ __('— None —') }}</option>
-                                    @foreach(\App\Enums\LensType::cases() as $type)
-                                        <option value="{{ $type->value }}" @selected(old('lens_type') === $type->value)>
-                                            {{ $type->label() }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('lens_type')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Frame material --}}
-                            <div class="space-y-1.5">
-                                <label for="frame_material" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Frame material') }}
-                                </label>
-                                <flux:select
-                                    id="frame_material"
-                                    name="frame_material"
-                                    :label="false"
-                                >
-                                    <option value="" @selected(! old('frame_material'))>{{ __('— None —') }}</option>
-                                    @foreach(\App\Enums\FrameMaterial::cases() as $material)
-                                        <option value="{{ $material->value }}" @selected(old('frame_material') === $material->value)>
-                                            {{ $material->label() }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('frame_material')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- AR model URL --}}
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="ar_model_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('AR model URL') }}
-                                    <span class="ml-0.5 text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
+                                <label for="cost_per_unit" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Cost per unit (₱)') }}
                                 </label>
                                 <flux:input
-                                    id="ar_model_url"
-                                    name="ar_model_url"
-                                    type="url"
+                                    id="cost_per_unit"
+                                    name="cost_per_unit"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
                                     :label="false"
-                                    value="{{ old('ar_model_url') }}"
-                                    placeholder="https://example.com/models/frame.glb"
+                                    value="{{ old('cost_per_unit') }}"
+                                    placeholder="0.00"
                                 />
-                                <p class="text-xs text-zinc-500 dark:text-zinc-500">
-                                    {{ __('A publicly accessible .glb / .usdz file used for the try-on feature in the mobile app.') }}
-                                </p>
-                                @error('ar_model_url')
+                                @error('cost_per_unit')
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
-
                         </div>
-                    </div>
-
-                    {{-- ── Visibility ────────────────────────────────────── --}}
-                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
-                        <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
-                            {{ __('Visibility') }}
-                        </h2>
-
-                        <label class="inline-flex cursor-pointer items-start gap-3 text-sm text-zinc-800 dark:text-zinc-200">
-                            <input type="hidden" name="is_active" value="0">
-                            <input
-                                type="checkbox"
-                                name="is_active"
-                                value="1"
-                                @checked(filter_var(old('is_active', '1'), FILTER_VALIDATE_BOOLEAN))
-                                class="mt-0.5 size-4 shrink-0 cursor-pointer rounded border border-zinc-400 bg-white accent-sky-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-zinc-500 dark:bg-zinc-900 dark:accent-sky-500 dark:focus:ring-offset-zinc-900"
-                            >
-                            <span>
-                                {{ __('Active — visible to customers') }}
-                                <span class="block text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                    {{ __('Uncheck to save as a draft while you finish setting up the product.') }}
-                                </span>
-                            </span>
-                        </label>
-
-                        @error('is_active')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     {{-- ── Initial stock (Inventory) ────────────────────── --}}
@@ -321,7 +245,6 @@
                             <div class="space-y-1.5 sm:col-span-2">
                                 <label for="inventory_notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     {{ __('Inventory notes') }}
-                                    <span class="ml-0.5 text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
                                 </label>
                                 <textarea
                                     id="inventory_notes"
@@ -416,24 +339,6 @@
                     </button>
                 </div>
 
-                {{-- Tips card --}}
-                <div class="rounded-xl border border-sky-100 bg-sky-50 p-4 dark:border-sky-900/40 dark:bg-sky-950/30">
-                    <p class="text-xs font-semibold text-sky-800 dark:text-sky-300">{{ __('Tips') }}</p>
-                    <ul class="mt-2 space-y-1 text-xs text-sky-700 dark:text-sky-400">
-                        <li class="flex items-start gap-1.5">
-                            <span class="mt-0.5 shrink-0">•</span>
-                            {{ __('Use a square or 4:3 image for best results in the app.') }}
-                        </li>
-                        <li class="flex items-start gap-1.5">
-                            <span class="mt-0.5 shrink-0">•</span>
-                            {{ __('Lens type and frame material are used to filter products in the mobile catalog.') }}
-                        </li>
-                        <li class="flex items-start gap-1.5">
-                            <span class="mt-0.5 shrink-0">•</span>
-                            {{ __('The AR URL enables the try-on feature. Leave blank if not supported.') }}
-                        </li>
-                    </ul>
-                </div>
             </div>
 
         </div>

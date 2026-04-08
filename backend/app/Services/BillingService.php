@@ -52,7 +52,7 @@ class BillingService
      */
     public function find(int $billId): Bill
     {
-        return Bill::with(['order.user', 'order.items.product'])->findOrFail($billId);
+        return Bill::with(['order.user', 'order.items.productVariant.product'])->findOrFail($billId);
     }
 
     /**
@@ -144,9 +144,9 @@ class BillingService
      */
     private function generateInvoiceNumber(): string
     {
-        $datePrefix = 'INV-' . now()->format('Ymd') . '-';
+        $datePrefix = 'INV-'.now()->format('Ymd').'-';
 
-        $lastBill = Bill::where('invoice_number', 'like', $datePrefix . '%')
+        $lastBill = Bill::where('invoice_number', 'like', $datePrefix.'%')
             ->orderByDesc('invoice_number')
             ->first();
 
@@ -157,6 +157,6 @@ class BillingService
             $nextSequence = 1;
         }
 
-        return $datePrefix . str_pad($nextSequence, 5, '0', STR_PAD_LEFT);
+        return $datePrefix.str_pad($nextSequence, 5, '0', STR_PAD_LEFT);
     }
 }

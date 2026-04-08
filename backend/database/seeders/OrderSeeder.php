@@ -15,7 +15,7 @@ class OrderSeeder extends Seeder
     public function run(): void
     {
         $customer = User::where('role', 'customer')->first();
-        $products = Product::where('is_active', true)->take(5)->get();
+        $products = Product::where('is_active', true)->with('defaultVariant')->take(5)->get();
 
         if (! $customer || $products->isEmpty()) {
             $this->command->warn('OrderSeeder skipped: no customer or products found.');
@@ -83,13 +83,19 @@ class OrderSeeder extends Seeder
 
             foreach ($orderData['items'] as $itemData) {
                 $product = $products[$itemData['product_index']] ?? $products->first();
-                $subtotal = $product->price * $itemData['quantity'];
+                $variant = $product->defaultVariant;
+                if (! $variant) {
+                    continue;
+                }
+
+                $unitPrice = (float) $variant->unitPrice();
+                $subtotal = $unitPrice * $itemData['quantity'];
                 $totalAmount += $subtotal;
 
                 $itemsPayload[] = [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $variant->id,
                     'quantity' => $itemData['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ];
             }
@@ -98,7 +104,7 @@ class OrderSeeder extends Seeder
                 'user_id' => $orderData['user_id'],
                 'walk_in_name' => $orderData['walk_in_name'] ?? null,
                 'walk_in_phone' => $orderData['walk_in_phone'] ?? null,
-                'order_number' => 'ORD-' . now()->format('Ymd') . '-' . str_pad($orderNumber, 5, '0', STR_PAD_LEFT),
+                'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad($orderNumber, 5, '0', STR_PAD_LEFT),
                 'status' => $orderData['status'],
                 'total_amount' => $totalAmount,
                 'notes' => $orderData['notes'],
@@ -111,7 +117,7 @@ class OrderSeeder extends Seeder
             // Create bill for the order
             Bill::create([
                 'order_id' => $order->id,
-                'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad($invoiceNumber, 5, '0', STR_PAD_LEFT),
+                'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($invoiceNumber, 5, '0', STR_PAD_LEFT),
                 'amount' => $totalAmount,
                 'payment_status' => $orderData['bill_status'],
                 'payment_method' => $orderData['payment_method'],
@@ -123,4 +129,3 @@ class OrderSeeder extends Seeder
         }
     }
 }
-

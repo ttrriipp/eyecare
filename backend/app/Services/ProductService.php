@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductImage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,7 +26,7 @@ class ProductService
 
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Product::with(['category', 'images'])
+        $query = Product::with(['category', 'images', 'defaultVariant.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count']);
 
@@ -63,7 +64,7 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'images'])
+        return Product::with(['category', 'images', 'defaultVariant.product', 'variants.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count'])
             ->findOrFail($id);
@@ -71,16 +72,37 @@ class ProductService
 
     public function create(array $data): Product
     {
-        $product = Product::create($data);
+        $product = Product::create($this->normalizeArModelUrlForCategory($data));
 
-        return $product->load(['category', 'images']);
+        return $product->load(['category', 'images', 'defaultVariant.product', 'variants.product']);
     }
 
     public function update(Product $product, array $data): Product
     {
-        $product->update($data);
+        $product->update($this->normalizeArModelUrlForCategory($data, $product));
 
-        return $product->fresh(['category', 'images']);
+        return $product->fresh(['category', 'images', 'defaultVariant.product', 'variants.product']);
+    }
+
+    /**
+     * Clear AR model URL when the target category does not support virtual try-on.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normalizeArModelUrlForCategory(array $data, ?Product $existing = null): array
+    {
+        $categoryId = $data['category_id'] ?? $existing?->category_id;
+        if ($categoryId === null) {
+            return $data;
+        }
+
+        $category = ProductCategory::query()->find($categoryId);
+        if ($category && ! $category->has_ar_support) {
+            $data['ar_model_url'] = null;
+        }
+
+        return $data;
     }
 
     /**

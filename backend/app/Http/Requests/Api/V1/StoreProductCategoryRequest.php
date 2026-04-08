@@ -17,6 +17,7 @@ class StoreProductCategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:product_categories,slug'],
             'description' => ['nullable', 'string'],
+            'has_ar_support' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Inventory;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class OrderService
         private readonly BillingService $billingService,
         private readonly InventoryService $inventoryService,
     ) {}
+
     /**
      * List orders with filters and pagination.
      * Staff/admin see all orders; customers see only their own.
@@ -23,7 +25,7 @@ class OrderService
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Order::query()
-            ->with(['items.product', 'user']);
+            ->with(['items.productVariant.product', 'user']);
 
         if (! empty($filters['status'])) {
             $query->byStatus(OrderStatus::from($filters['status']));
@@ -57,7 +59,7 @@ class OrderService
      */
     public function find(int $orderId): Order
     {
-        return Order::with(['items.product.images', 'user'])->findOrFail($orderId);
+        return Order::with(['items.productVariant.product.images', 'user'])->findOrFail($orderId);
     }
 
     /**
@@ -67,7 +69,6 @@ class OrderService
      */
     public function create(array $data): Order
     {
-        // Validate stock availability before creating the order
         $this->validateStock($data['items']);
 
         return DB::transaction(function () use ($data) {
@@ -84,28 +85,26 @@ class OrderService
             $totalAmount = 0;
 
             foreach ($data['items'] as $itemData) {
-                $product = \App\Models\Product::findOrFail($itemData['product_id']);
-                $unitPrice = $product->price;
+                $variant = ProductVariant::with('product')->findOrFail($itemData['product_variant_id']);
+                $unitPrice = (float) $variant->unitPrice();
                 $subtotal = $unitPrice * $itemData['quantity'];
                 $totalAmount += $subtotal;
 
                 $order->items()->create([
-                    'product_id' => $product->id,
+                    'product_variant_id' => $variant->id,
                     'quantity' => $itemData['quantity'],
                     'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ]);
 
-                // Deduct inventory for the ordered quantity
-                $this->inventoryService->deduct($product, $itemData['quantity']);
+                $this->inventoryService->deduct($variant, $itemData['quantity']);
             }
 
             $order->update(['total_amount' => $totalAmount]);
 
-            // Auto-generate bill for the order
             $this->billingService->createForOrder($order);
 
-            return $order->load(['items.product', 'user', 'bill']);
+            return $order->load(['items.productVariant.product', 'user', 'bill']);
         });
     }
 
@@ -122,7 +121,7 @@ class OrderService
 
         $order->update(['status' => $newStatus]);
 
-        return $order->fresh(['items.product', 'user']);
+        return $order->fresh(['items.productVariant.product', 'user']);
     }
 
     /**
@@ -138,16 +137,14 @@ class OrderService
 
         $order->update(['status' => OrderStatus::Cancelled]);
 
-        // Restore inventory quantities for each cancelled item
-        $order->load('items.product');
+        $order->load('items.productVariant');
         foreach ($order->items as $item) {
-            $this->inventoryService->restore($item->product, $item->quantity);
+            $this->inventoryService->restore($item->productVariant, $item->quantity);
         }
 
-        // Auto-void unpaid bill or auto-refund paid bill
         $this->billingService->handleOrderCancellation($order);
 
-        return $order->fresh(['items.product', 'user', 'bill']);
+        return $order->fresh(['items.productVariant.product', 'user', 'bill']);
     }
 
     /**
@@ -160,11 +157,11 @@ class OrderService
         $errors = [];
 
         foreach ($items as $index => $item) {
-            $inventory = Inventory::where('product_id', $item['product_id'])->first();
+            $inventory = Inventory::where('product_variant_id', $item['product_variant_id'])->first();
 
             if (! $inventory || ! $inventory->isInStock($item['quantity'])) {
                 $available = $inventory?->quantity ?? 0;
-                $errors["items.{$index}.product_id"] = "Insufficient stock. Requested: {$item['quantity']}, available: {$available}.";
+                $errors["items.{$index}.product_variant_id"] = "Insufficient stock. Requested: {$item['quantity']}, available: {$available}.";
             }
         }
 
@@ -178,10 +175,10 @@ class OrderService
      */
     private function generateOrderNumber(): string
     {
-        $datePrefix = 'ORD-' . now()->format('Ymd') . '-';
+        $datePrefix = 'ORD-'.now()->format('Ymd').'-';
 
         $lastOrder = Order::withTrashed()
-            ->where('order_number', 'like', $datePrefix . '%')
+            ->where('order_number', 'like', $datePrefix.'%')
             ->orderByDesc('order_number')
             ->first();
 
@@ -192,6 +189,6 @@ class OrderService
             $nextSequence = 1;
         }
 
-        return $datePrefix . str_pad($nextSequence, 5, '0', STR_PAD_LEFT);
+        return $datePrefix.str_pad($nextSequence, 5, '0', STR_PAD_LEFT);
     }
 }

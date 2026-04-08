@@ -79,8 +79,9 @@ class OrderController extends Controller
 
         $products = Product::query()
             ->active()
+            ->with('defaultVariant')
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'price']);
+            ->get(['id', 'name', 'price']);
 
         return view('orders.create', [
             'customers' => $customers,

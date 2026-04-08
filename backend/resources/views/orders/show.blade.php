@@ -245,8 +245,8 @@
                                         <div class="font-medium text-zinc-900 dark:text-zinc-100">
                                             {{ $line->product?->name ?? __('Unknown product') }}
                                         </div>
-                                        @if($line->product?->sku)
-                                            <div class="text-xs text-zinc-500 dark:text-zinc-500">{{ $line->product->sku }}</div>
+                                        @if($line->productVariant?->sku)
+                                            <div class="text-xs text-zinc-500 dark:text-zinc-500">{{ $line->productVariant->sku }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">

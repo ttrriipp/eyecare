@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpdateInventoryRequest;
 use App\Http\Resources\V1\InventoryResource;
-use App\Models\Inventory;
 use App\Models\Product;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
@@ -40,10 +39,7 @@ class InventoryController extends Controller
 
     public function update(UpdateInventoryRequest $request, Product $product): JsonResponse
     {
-        $inventory = Inventory::firstOrCreate(
-            ['product_id' => $product->id],
-            ['quantity' => 0, 'reorder_level' => 0, 'notes' => null],
-        );
+        $inventory = $this->inventoryService->findByProduct($product);
 
         $inventory = $this->inventoryService->update($inventory, $request->validated());
 
@@ -53,4 +49,3 @@ class InventoryController extends Controller
         ]);
     }
 }
-

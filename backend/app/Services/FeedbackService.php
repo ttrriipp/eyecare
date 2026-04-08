@@ -30,7 +30,9 @@ class FeedbackService
             $query->where(function ($q) use ($search) {
                 $q->whereHas('product', function ($p) use ($search) {
                     $p->where('name', 'like', '%'.$search.'%')
-                        ->orWhere('sku', 'like', '%'.$search.'%');
+                        ->orWhereHas('variants', function ($v) use ($search) {
+                            $v->where('sku', 'like', '%'.$search.'%');
+                        });
                 })
                     ->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'like', '%'.$search.'%')

@@ -4,36 +4,56 @@ namespace App\Services;
 
 use App\Models\Inventory;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class InventoryService
 {
     /**
      * Paginate products with optional inventory row (for web stock overview).
+     * Quantities and dates are aggregated across all variants per product.
      */
     public function paginateProductsForInventory(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
+        $invAgg = DB::table('inventory')
+            ->join('product_variants', 'product_variants.id', '=', 'inventory.product_variant_id')
+            ->select(
+                'product_variants.product_id',
+                DB::raw('SUM(inventory.quantity) as qty_sum'),
+                DB::raw('MAX(inventory.updated_at) as inv_last_updated'),
+            )
+            ->groupBy('product_variants.product_id');
+
         $query = Product::query()
-            ->leftJoin('inventory as inventory_sort', 'inventory_sort.product_id', '=', 'products.id')
+            ->leftJoinSub($invAgg, 'inv_agg', function ($join) {
+                $join->on('inv_agg.product_id', '=', 'products.id');
+            })
             ->select('products.*')
-            ->with(['category', 'images', 'inventory']);
+            ->addSelect(DB::raw('inv_agg.qty_sum as aggregate_qty'))
+            ->addSelect(DB::raw('inv_agg.inv_last_updated as inventory_last_touch'))
+            ->with(['category', 'images', 'defaultVariant.inventory']);
 
         if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
         if (($filters['low_stock'] ?? false) === true) {
-            $query->whereHas('inventory', function ($q) {
-                $q->whereColumn('inventory.quantity', '<=', 'inventory.reorder_level');
+            $query->whereExists(function ($q) {
+                $q->select(DB::raw('1'))
+                    ->from('product_variants as pv')
+                    ->join('inventory as i', 'i.product_variant_id', '=', 'pv.id')
+                    ->whereColumn('pv.product_id', 'products.id')
+                    ->whereColumn('i.quantity', '<=', 'i.reorder_level');
             });
         }
 
         if (! empty($filters['date_from'])) {
-            $query->whereDate('inventory_sort.updated_at', '>=', $filters['date_from']);
+            $query->whereDate('inv_agg.inv_last_updated', '>=', $filters['date_from']);
         }
 
         if (! empty($filters['date_to'])) {
-            $query->whereDate('inventory_sort.updated_at', '<=', $filters['date_to']);
+            $query->whereDate('inv_agg.inv_last_updated', '<=', $filters['date_to']);
         }
 
         $sortBy = $filters['sort_by'] ?? null;
@@ -42,11 +62,11 @@ class InventoryService
         if ($sortBy === 'name') {
             $query->orderBy('products.name', $sortDir === 'asc' ? 'asc' : 'desc');
         } elseif ($sortBy === 'quantity') {
-            $query->orderBy('inventory_sort.quantity', $sortDir === 'asc' ? 'asc' : 'desc');
+            $query->orderBy('inv_agg.qty_sum', $sortDir === 'asc' ? 'asc' : 'desc');
         } else {
             $query
-                ->orderByRaw('CASE WHEN inventory_sort.updated_at IS NULL THEN 1 ELSE 0 END ASC')
-                ->orderBy('inventory_sort.updated_at', 'desc')
+                ->orderByRaw('CASE WHEN inv_agg.inv_last_updated IS NULL THEN 1 ELSE 0 END ASC')
+                ->orderBy('inv_agg.inv_last_updated', 'desc')
                 ->orderBy('products.name', 'asc');
         }
 
@@ -57,8 +77,8 @@ class InventoryService
     {
         $query = Inventory::query()
             ->with([
-                'product.category',
-                'product.images',
+                'productVariant.product.category',
+                'productVariant.product.images',
             ]);
 
         if (($filters['low_stock'] ?? false) === true) {
@@ -72,15 +92,25 @@ class InventoryService
         return $query->paginate($perPage);
     }
 
+    /**
+     * Default variant inventory for admin stock edit (single-SKU-style products).
+     */
     public function findByProduct(Product $product): Inventory
     {
+        $product->loadMissing('defaultVariant');
+
+        $variant = $product->defaultVariant;
+        if (! $variant) {
+            throw new \RuntimeException('Product is missing a default variant.');
+        }
+
         return Inventory::query()
             ->with([
-                'product.category',
-                'product.images',
+                'productVariant.product.category',
+                'productVariant.product.images',
             ])
             ->firstOrCreate(
-                ['product_id' => $product->id],
+                ['product_variant_id' => $variant->id],
                 ['quantity' => 0, 'reorder_level' => 0, 'notes' => null],
             );
     }
@@ -90,8 +120,8 @@ class InventoryService
         $inventory->update($data);
 
         return $inventory->fresh([
-            'product.category',
-            'product.images',
+            'productVariant.product.category',
+            'productVariant.product.images',
         ]);
     }
 
@@ -101,18 +131,19 @@ class InventoryService
     }
 
     /**
-     * Deduct stock for a product. Used when an order is placed.
+     * Deduct stock for a variant line. Used when an order is placed.
      *
      * @throws \RuntimeException if insufficient stock
      */
-    public function deduct(Product $product, int $quantity): void
+    public function deduct(ProductVariant $variant, int $quantity): void
     {
-        $inventory = Inventory::where('product_id', $product->id)->first();
+        $inventory = Inventory::where('product_variant_id', $variant->id)->first();
 
         if (! $inventory || ! $inventory->isInStock($quantity)) {
             $available = $inventory?->quantity ?? 0;
+            $label = $variant->product->name ?? 'product';
             throw new \RuntimeException(
-                "Insufficient stock for product [{$product->name}]. Requested: {$quantity}, available: {$available}."
+                "Insufficient stock for [{$label}]. Requested: {$quantity}, available: {$available}."
             );
         }
 
@@ -120,11 +151,11 @@ class InventoryService
     }
 
     /**
-     * Restore stock for a product. Used when an order is cancelled.
+     * Restore stock for a variant line. Used when an order is cancelled.
      */
-    public function restore(Product $product, int $quantity): void
+    public function restore(ProductVariant $variant, int $quantity): void
     {
-        $inventory = Inventory::where('product_id', $product->id)->first();
+        $inventory = Inventory::where('product_variant_id', $variant->id)->first();
 
         if ($inventory) {
             $inventory->increment('quantity', $quantity);
