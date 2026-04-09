@@ -4,8 +4,8 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCategorySettingsController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierSettingsController;
 use App\Http\Controllers\UserManagementController;
 use App\Livewire\Admin\Inventory\AdjustmentHistory;
@@ -110,6 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('customers', [UserManagementController::class, 'customersIndex'])->name('customers.index');
             Route::get('customers/{customer}', [UserManagementController::class, 'customersShow'])->name('customers.show');
+            Route::put('customers/{customer}', [UserManagementController::class, 'customersUpdate'])->name('customers.update');
             Route::post('customers/{customer}/deactivate', [UserManagementController::class, 'customersDeactivate'])
                 ->name('customers.deactivate');
             Route::post('customers/{customer}/restore', [UserManagementController::class, 'customersRestore'])

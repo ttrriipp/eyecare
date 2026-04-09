@@ -101,6 +101,16 @@
                         {{ $customer->created_at?->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
                     </dd>
                 </div>
+                <div>
+                    <dt class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Date of birth') }}</dt>
+                    <dd class="mt-0.5 text-zinc-900 dark:text-zinc-100">
+                        {{ $customer->date_of_birth?->format('M j, Y') ?? '—' }}
+                    </dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Address') }}</dt>
+                    <dd class="mt-0.5 whitespace-pre-wrap text-zinc-900 dark:text-zinc-100">{{ $customer->address ?? '—' }}</dd>
+                </div>
                 @if($customer->trashed())
                     <div>
                         <dt class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Deactivated') }}</dt>
@@ -110,6 +120,77 @@
                     </div>
                 @endif
             </dl>
+        </div>
+
+        <div
+            class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+        >
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                {{ __('Profile details') }}
+            </h2>
+            <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                {{ __('Date of birth, address, and internal notes (not visible to the customer in the app).') }}
+            </p>
+            <form
+                method="POST"
+                action="{{ route('users.customers.update', $customer) }}"
+                class="max-w-2xl space-y-5"
+            >
+                @csrf
+                @method('PUT')
+
+                <div class="space-y-1.5">
+                    <label for="date_of_birth" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Date of birth') }}
+                    </label>
+                    <flux:input
+                        id="date_of_birth"
+                        name="date_of_birth"
+                        type="date"
+                        :label="false"
+                        value="{{ old('date_of_birth', $customer->date_of_birth?->format('Y-m-d')) }}"
+                    />
+                    @error('date_of_birth')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="address" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Address') }}
+                    </label>
+                    <flux:textarea
+                        id="address"
+                        name="address"
+                        rows="3"
+                        :label="false"
+                        placeholder="{{ __('Street, city, region…') }}"
+                    >{{ old('address', $customer->address) }}</flux:textarea>
+                    @error('address')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="customer_notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Internal notes') }}
+                    </label>
+                    <flux:textarea
+                        id="customer_notes"
+                        name="customer_notes"
+                        rows="4"
+                        :label="false"
+                        placeholder="{{ __('SC/PWD reminders, preferences, follow-ups…') }}"
+                    >{{ old('customer_notes', $customer->customer_notes) }}</flux:textarea>
+                    @error('customer_notes')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex justify-end">
+                    <flux:button type="submit" variant="primary">{{ __('Save profile') }}</flux:button>
+                </div>
+            </form>
         </div>
 
         <div class="flex flex-wrap gap-3">

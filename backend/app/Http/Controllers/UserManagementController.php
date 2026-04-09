@@ -96,6 +96,23 @@ class UserManagementController extends Controller
         ]);
     }
 
+    public function customersUpdate(Request $request, User $customer): RedirectResponse
+    {
+        abort_if(! $customer->isCustomer(), 404);
+
+        $validated = $request->validate([
+            'date_of_birth' => ['nullable', 'date'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'customer_notes' => ['nullable', 'string', 'max:10000'],
+        ]);
+
+        $this->userService->updateCustomerProfile($customer, $validated);
+
+        return redirect()
+            ->route('users.customers.show', $customer)
+            ->with('status', __('Customer profile updated.'));
+    }
+
     public function customersDeactivate(Request $request, User $customer): RedirectResponse
     {
         $this->userService->deactivateCustomer($customer);

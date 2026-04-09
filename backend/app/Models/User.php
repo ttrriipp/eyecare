@@ -23,6 +23,9 @@ class User extends Authenticatable
         'email',
         'phone',
         'avatar_url',
+        'date_of_birth',
+        'address',
+        'customer_notes',
         'password',
     ];
 
@@ -38,6 +41,7 @@ class User extends Authenticatable
         return [
             'role' => UserRole::class,
             'email_verified_at' => 'datetime',
+            'date_of_birth' => 'date',
             'password' => 'hashed',
         ];
     }

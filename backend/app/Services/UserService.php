@@ -136,6 +136,30 @@ class UserService
     }
 
     /**
+     * @param  array{date_of_birth?: string|null, address?: string|null, customer_notes?: string|null}  $data
+     */
+    public function updateCustomerProfile(User $customer, array $data): User
+    {
+        if (! $customer->isCustomer()) {
+            throw ValidationException::withMessages([
+                'user' => [__('Only customer accounts can be updated here.')],
+            ]);
+        }
+
+        $dob = $data['date_of_birth'] ?? null;
+        $address = $data['address'] ?? null;
+        $notes = $data['customer_notes'] ?? null;
+
+        $customer->update([
+            'date_of_birth' => ($dob !== null && $dob !== '') ? $dob : null,
+            'address' => ($address !== null && trim((string) $address) !== '') ? $address : null,
+            'customer_notes' => ($notes !== null && trim((string) $notes) !== '') ? $notes : null,
+        ]);
+
+        return $customer->fresh();
+    }
+
+    /**
      * @param  \Illuminate\Database\Eloquent\Builder<User>  $query
      */
     private function applyStatusScope(\Illuminate\Database\Eloquent\Builder $query, string $status): void
@@ -159,7 +183,8 @@ class UserService
         $query->where(function ($q) use ($search) {
             $q->where('name', 'like', '%'.$search.'%')
                 ->orWhere('email', 'like', '%'.$search.'%')
-                ->orWhere('phone', 'like', '%'.$search.'%');
+                ->orWhere('phone', 'like', '%'.$search.'%')
+                ->orWhere('address', 'like', '%'.$search.'%');
         });
     }
 }

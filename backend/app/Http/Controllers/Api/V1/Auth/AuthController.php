@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\UserResource;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -19,6 +19,8 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'date_of_birth' => ['nullable', 'date'],
+            'address' => ['nullable', 'string', 'max:2000'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
@@ -85,6 +87,8 @@ class AuthController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
             'avatar_url' => ['nullable', 'string', 'max:2048'],
+            'date_of_birth' => ['nullable', 'date'],
+            'address' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $user->update($validated);
