@@ -92,7 +92,7 @@ class AdjustmentHistory extends Component
             $out = fopen('php://output', 'w');
 
             fputcsv($out, [
-                'Date', 'Product', 'Variant', 'Reason', 'Change', 'New Qty', 'Unit', 'Adjusted By', 'Notes',
+                'Date', 'Product', 'Variant', 'Reason', 'Change', 'New Qty', 'Unit', 'Adjusted By',
             ]);
 
             foreach ($rows as $adj) {
@@ -100,20 +100,15 @@ class AdjustmentHistory extends Component
                 $product = $variant?->product;
                 $unit    = $product?->category?->stock_unit ?? 'units';
 
-                [$reason, $notes] = str_contains((string) $adj->reason, ': ')
-                    ? explode(': ', $adj->reason, 2)
-                    : [$adj->reason, ''];
-
                 fputcsv($out, [
                     $adj->created_at->format('Y-m-d H:i'),
                     $product?->name ?? '—',
                     $this->variantLabel($variant),
-                    $reason,
+                    $this->reasonLabel($adj->reason),
                     ($adj->delta >= 0 ? '+' : '') . $adj->delta,
                     $adj->quantity_after,
                     $unit,
                     $adj->adjustedBy?->name ?? '—',
-                    $notes,
                 ]);
             }
 

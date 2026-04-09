@@ -35,6 +35,17 @@
                         >
                             {{ __('Products') }}
                         </flux:sidebar.item>
+
+                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
+                            <flux:sidebar.item
+                                icon="clock"
+                                :href="route('admin.inventory.adjustments')"
+                                :current="request()->routeIs('admin.inventory.*')"
+                                wire:navigate
+                            >
+                                {{ __('Adjustment History') }}
+                            </flux:sidebar.item>
+                        </div>
                     @else
                         <flux:sidebar.item
                             icon="layout-grid"
@@ -67,17 +78,6 @@
                     </div>
 
                     @if(auth()->user()?->isAdminOrStaff())
-                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
-                            <flux:sidebar.item
-                                icon="clock"
-                                :href="route('admin.inventory.adjustments')"
-                                :current="request()->routeIs('admin.inventory.*')"
-                                wire:navigate
-                            >
-                                {{ __('Adjustment History') }}
-                            </flux:sidebar.item>
-                        </div>
-
                         <flux:sidebar.item
                             icon="star"
                             :href="route('feedbacks.index')"

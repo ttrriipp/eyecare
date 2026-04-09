@@ -200,7 +200,6 @@ class InventoryService
      * Make a stock adjustment for a specific variant.
      *
      * @param  'add'|'remove'|'set'  $type
-     * @param  string  $reason  Free-text reason (stored on the adjustment record)
      *
      * @throws \InvalidArgumentException if resulting quantity would be negative
      */
@@ -209,6 +208,7 @@ class InventoryService
         string $type,
         int $quantity,
         string $reason,
+        ?string $notes = null,
         ?int $adjustedBy = null,
     ): Inventory {
         $inventory = Inventory::firstOrCreate(
@@ -223,9 +223,11 @@ class InventoryService
             default  => throw new \InvalidArgumentException("Unknown adjustment type: {$type}"),
         };
 
+        $reasonValue = filled($notes) ? "{$reason}: {$notes}" : $reason;
+
         return $this->update(
             $inventory,
-            ['quantity' => $newQuantity, 'adjustment_reason' => $reason],
+            ['quantity' => $newQuantity, 'adjustment_reason' => $reasonValue],
             $adjustedBy,
         );
     }

@@ -374,15 +374,31 @@
                             </div>
 
                             <div>
-                                <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
-                                    {{ __('Reason') }} <span class="text-red-500">*</span>
-                                </label>
-                                <textarea wire:model="adj_reason" rows="2" maxlength="500"
-                                    placeholder="{{ __('e.g. Restock from supplier, damaged units written off…') }}"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                ></textarea>
-                                @error('adj_reason') <p class="mt-0.5 text-[11px] text-red-600">{{ $message }}</p> @enderror
+                                <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">{{ __('Reason') }}</label>
+                                <select wire:model.live="adj_reason"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+                                    <option value="restock">{{ __('Restock') }}</option>
+                                    <option value="sale_correction">{{ __('Sale correction') }}</option>
+                                    <option value="damaged">{{ __('Damaged') }}</option>
+                                    <option value="expired">{{ __('Expired') }}</option>
+                                    <option value="returned">{{ __('Returned') }}</option>
+                                    <option value="initial_count">{{ __('Initial count') }}</option>
+                                    <option value="other">{{ __('Other') }}</option>
+                                </select>
                             </div>
+
+                            @if($adj_reason === 'other')
+                                <div>
+                                    <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+                                        {{ __('Notes') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input wire:model="adj_notes" type="text" maxlength="300"
+                                        placeholder="{{ __('Describe the reason…') }}"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                    >
+                                    @error('adj_notes') <p class="mt-0.5 text-[11px] text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            @endif
 
                             <div class="flex items-center justify-between gap-2">
                                 <button type="button" wire:click="cancelAdjust"
@@ -419,9 +435,7 @@
                             <div class="flex items-center justify-between text-xs">
                                 <div class="min-w-0 flex-1 truncate text-zinc-500 dark:text-zinc-400">
                                     <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $adjLabel }}</span>
-                                    @if(filled($adj->reason))
-                                        · <span title="{{ $adj->reason }}">{{ \Illuminate\Support\Str::limit($adj->reason, 48) }}</span>
-                                    @endif
+                                    · {{ ucfirst(str_replace('_', ' ', explode(':', $adj->reason)[0])) }}
                                     · {{ $adj->adjustedBy?->name ?? __('System') }}
                                 </div>
                                 <div class="ml-2 shrink-0 font-bold tabular-nums

@@ -102,7 +102,7 @@
                 </p>
             </div>
         @else
-            <table class="w-full min-w-[56rem] text-left text-sm">
+            <table class="w-full min-w-[48rem] text-left text-sm">
                 <thead>
                     <tr class="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400">
                         <th class="px-4 py-3">{{ __('Date & time') }}</th>
@@ -111,7 +111,6 @@
                         <th class="px-4 py-3 text-center">{{ __('Change') }}</th>
                         <th class="px-4 py-3 text-center">{{ __('New qty') }}</th>
                         <th class="px-4 py-3">{{ __('Adjusted by') }}</th>
-                        <th class="px-4 py-3">{{ __('Notes') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -120,9 +119,6 @@
                             $variant  = $adj->inventory?->productVariant;
                             $adjProd  = $variant?->product;
                             $unit     = $adjProd?->category?->stock_unit ?? 'units';
-                            [$reason, $notes] = str_contains((string) $adj->reason, ': ')
-                                ? explode(': ', $adj->reason, 2)
-                                : [$adj->reason, ''];
                         @endphp
                         <tr class="bg-white hover:bg-zinc-50/60 dark:bg-zinc-900 dark:hover:bg-zinc-800/40">
                             <td class="px-4 py-3 text-xs tabular-nums text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
@@ -155,16 +151,6 @@
                                     <p class="text-[11px] text-zinc-400">{{ $adj->adjustedBy->role?->label() ?? '' }}</p>
                                 @else
                                     <span class="text-xs text-zinc-400">{{ __('System') }}</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3">
-                                @if(filled($notes))
-                                    <span class="cursor-help truncate text-xs italic text-zinc-500 dark:text-zinc-400"
-                                          title="{{ $notes }}">
-                                        {{ Str::limit($notes, 40) }}
-                                    </span>
-                                @else
-                                    <span class="text-xs text-zinc-300 dark:text-zinc-600">—</span>
                                 @endif
                             </td>
                         </tr>

@@ -81,8 +81,9 @@ class VariantStockPanel extends Component
 
     public int $adj_quantity = 1;
 
-    /** Free-text reason for the stock adjustment (required for audit trail). */
-    public string $adj_reason = '';
+    public string $adj_reason = 'restock';
+
+    public string $adj_notes = '';
 
     public ?string $adjConfirmation = null;
 
@@ -152,7 +153,8 @@ class VariantStockPanel extends Component
         return [
             'adj_type' => ['required', 'in:add,remove,set'],
             'adj_quantity' => ['required', 'integer', 'min:'.($this->adj_type === 'set' ? '0' : '1')],
-            'adj_reason' => ['required', 'string', 'min:1', 'max:500'],
+            'adj_reason' => ['required', 'in:restock,sale_correction,damaged,expired,returned,initial_count,other'],
+            'adj_notes' => $this->adj_reason === 'other' ? ['required', 'string', 'max:300'] : ['nullable'],
         ];
     }
 
@@ -324,7 +326,8 @@ class VariantStockPanel extends Component
         $this->adjustingVariantId = $variantId;
         $this->adj_type = 'add';
         $this->adj_quantity = 1;
-        $this->adj_reason = '';
+        $this->adj_reason = 'restock';
+        $this->adj_notes = '';
         $this->adjConfirmation = null;
         $this->resetValidation();
     }
@@ -338,7 +341,6 @@ class VariantStockPanel extends Component
 
     public function saveAdjustment(InventoryService $inventoryService): void
     {
-        $this->adj_reason = trim($this->adj_reason);
         $this->validate($this->adjRules());
 
         $variant = ProductVariant::with('inventory')->findOrFail($this->adjustingVariantId);
@@ -348,6 +350,7 @@ class VariantStockPanel extends Component
             type: $this->adj_type,
             quantity: $this->adj_quantity,
             reason: $this->adj_reason,
+            notes: filled($this->adj_notes) ? $this->adj_notes : null,
             adjustedBy: auth()->id(),
         );
 
