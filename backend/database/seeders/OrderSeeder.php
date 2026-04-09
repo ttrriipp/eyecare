@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Bill;
 use App\Models\Order;
@@ -30,7 +31,7 @@ class OrderSeeder extends Seeder
                 'status' => OrderStatus::Completed,
                 'notes' => 'First test order – completed.',
                 'bill_status' => PaymentStatus::Paid,
-                'payment_method' => 'cash',
+                'payment_method' => PaymentMethod::Cash->value,
                 'items' => [
                     ['product_index' => 0, 'quantity' => 1],
                     ['product_index' => 1, 'quantity' => 2],
@@ -67,7 +68,7 @@ class OrderSeeder extends Seeder
                 'status' => OrderStatus::ReadyForPickup,
                 'notes' => 'Walk-in customer.',
                 'bill_status' => PaymentStatus::Paid,
-                'payment_method' => 'GCash',
+                'payment_method' => PaymentMethod::GCash->value,
                 'items' => [
                     ['product_index' => 4, 'quantity' => 1],
                 ],
