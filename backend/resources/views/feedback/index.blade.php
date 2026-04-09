@@ -187,7 +187,7 @@
                 @if(auth()->user()?->isAdmin())
                     @foreach($feedbacks as $fb)
                         <flux:modal name="confirm-delete-feedback-{{ $fb->id }}" focusable class="max-w-xl">
-                            <div class="space-y-2">
+                            <div class="space-y-2 pr-8">
                                 <flux:heading size="lg">
                                     {{ __('Are you sure you want to delete this feedback?') }}
                                 </flux:heading>

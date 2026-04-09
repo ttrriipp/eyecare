@@ -69,6 +69,14 @@
 
         @if(auth()->user()?->isAdminOrStaff() && $nextStatuses->isNotEmpty())
             <div
+                x-data="{
+                    selectedStatus: '',
+                    syncSelectedStatus() {
+                        const select = this.$refs.orderStatus;
+                        this.selectedStatus = select?.options?.[select.selectedIndex]?.text ?? '';
+                    },
+                }"
+                x-init="syncSelectedStatus()"
                 class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
             >
                 <flux:heading size="lg" class="mb-2 text-zinc-900 dark:text-zinc-50">
@@ -77,7 +85,12 @@
                 <flux:text class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
                     {{ __('Move this order through pickup: Pending → Confirmed → Ready for Pickup → Completed. Cancel voids or refunds the bill when applicable.') }}
                 </flux:text>
-                <form method="POST" action="{{ route('orders.status.update', $order) }}" class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                <form
+                    id="order-status-form"
+                    method="POST"
+                    action="{{ route('orders.status.update', $order) }}"
+                    class="flex flex-col gap-4 sm:flex-row sm:items-end"
+                >
                     @csrf
                     @method('PUT')
                     <div class="min-w-0 flex-1 sm:max-w-xs">
@@ -87,6 +100,8 @@
                         <select
                             id="order-status"
                             name="status"
+                            x-ref="orderStatus"
+                            x-on:change="syncSelectedStatus()"
                             required
                             class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                         >
@@ -98,10 +113,30 @@
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Apply') }}
-                    </flux:button>
+                    <flux:modal.trigger name="confirm-order-status-update">
+                        <flux:button type="button" variant="primary" x-on:click="syncSelectedStatus()">
+                            {{ __('Apply') }}
+                        </flux:button>
+                    </flux:modal.trigger>
                 </form>
+
+                <flux:modal name="confirm-order-status-update" focusable class="max-w-xl">
+                    <div class="space-y-2 pr-8">
+                        <flux:heading size="lg">
+                            <span
+                                x-text="`Do you want to update the current status of {{ $order->order_number }} to ${selectedStatus}?`"
+                            ></span>
+                        </flux:heading>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-2">
+                        <flux:modal.close>
+                            <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+                        <flux:button type="submit" variant="primary" form="order-status-form">
+                            {{ __('Apply') }}
+                        </flux:button>
+                    </div>
+                </flux:modal>
             </div>
         @elseif($canCustomerCancel)
             <div
