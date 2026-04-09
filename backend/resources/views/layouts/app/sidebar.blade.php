@@ -30,22 +30,11 @@
                         <flux:sidebar.item
                             icon="layout-grid"
                             :href="route('admin.products.index')"
-                            :current="request()->routeIs('admin.products.*')"
+                            :current="request()->routeIs('admin.products.*', 'admin.inventory.*')"
                             wire:navigate
                         >
                             {{ __('Products') }}
                         </flux:sidebar.item>
-
-                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
-                            <flux:sidebar.item
-                                icon="clock"
-                                :href="route('admin.inventory.adjustments')"
-                                :current="request()->routeIs('admin.inventory.*')"
-                                wire:navigate
-                            >
-                                {{ __('Adjustment History') }}
-                            </flux:sidebar.item>
-                        </div>
                     @else
                         <flux:sidebar.item
                             icon="layout-grid"
@@ -66,19 +55,6 @@
                         {{ __('Orders') }}
                     </flux:sidebar.item>
 
-                    @if(auth()->user()?->isAdmin())
-                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
-                            <flux:sidebar.item
-                                icon="arrow-path"
-                                :href="route('orders.status-history.index')"
-                                :current="request()->routeIs('orders.status-history.index')"
-                                wire:navigate
-                            >
-                                {{ __('Order Status History') }}
-                            </flux:sidebar.item>
-                        </div>
-                    @endif
-
                     <flux:sidebar.item
                         icon="banknotes"
                         :href="route('orders.billing.index')"
@@ -87,19 +63,6 @@
                     >
                         {{ __('Billing') }}
                     </flux:sidebar.item>
-
-                    @if(auth()->user()?->isAdmin())
-                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
-                            <flux:sidebar.item
-                                icon="document-text"
-                                :href="route('orders.billing.payment-history.index')"
-                                :current="request()->routeIs('orders.billing.payment-history.index')"
-                                wire:navigate
-                            >
-                                {{ __('Billing Payment History') }}
-                            </flux:sidebar.item>
-                        </div>
-                    @endif
 
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item

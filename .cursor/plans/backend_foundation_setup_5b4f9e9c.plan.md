@@ -205,6 +205,7 @@ erDiagram
     }
 
     Order ||--o{ OrderItem : contains
+    Order ||--o{ OrderStatusHistory : logs
     Order {
         bigint id PK
         bigint user_id FK_nullable
@@ -228,8 +229,19 @@ erDiagram
         decimal subtotal
     }
 
+    OrderStatusHistory {
+        bigint id PK
+        bigint order_id FK
+        bigint actor_user_id FK_nullable
+        string action
+        string from_status_nullable
+        string to_status
+        timestamp created_at
+    }
+
     Order ||--o| Bill : generates
     Appointment ||--o| Bill : generates
+    Bill ||--o{ BillingPaymentHistory : logs
 
     Bill {
         bigint id PK
@@ -242,6 +254,19 @@ erDiagram
         enum payment_status
         string payment_method
         timestamp paid_at
+    }
+
+    BillingPaymentHistory {
+        bigint id PK
+        bigint bill_id FK
+        bigint actor_user_id FK_nullable
+        string action
+        decimal amount_nullable
+        string payment_method_nullable
+        string from_payment_status_nullable
+        string to_payment_status
+        string note_nullable
+        timestamp created_at
     }
 
     ScheduleTemplate ||--o{ TimeSlot : generates
@@ -347,9 +372,9 @@ erDiagram
 
 **Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price (`products.price`) and brand metadata. **Cost per unit** is stored on each **product variant** (`product_variants.cost_per_unit`) so margin can differ by material, color, or SKU. **Images** attach to a product; optional **`product_variant_id`** on `product_images` means `NULL` = shared gallery for all variants, non-null = image shown when that variant is selected (e.g. frame color). Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
-**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins; `created_by` tracks which staff member processed the order. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` with a `discount_reason` (e.g., "Senior Citizen 20%", "PWD discount") which is deducted from the order total before billing. A bill is auto-generated with each order.
+**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins; `created_by` tracks which staff member processed the order. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` with a `discount_reason` (e.g., "Senior Citizen 20%", "PWD discount") which is deducted from the order total before billing. A bill is auto-generated with each order. Status changes are written to `order_status_histories` (who changed it, from/to status, and when) for timeline/audit.
 
-**Billing** -- Invoice tracking only, no payment gateway. Bills are generated for both orders and paid appointments. Admin/staff marks payments as received. Customer sees their own bills. Lifecycle: Unpaid -> Partially Paid -> Paid (or Refunded / Voided). Partial payments are tracked using `amount_paid` and `balance_due`, supporting deposit-on-order and balance-on-pickup workflows. When an order is cancelled before payment, the bill is voided. When cancelled after partial/full payment, the bill is marked refunded.
+**Billing** -- Invoice tracking only, no payment gateway. Bills are generated for both orders and paid appointments. Admin/staff marks payments as received. Customer sees their own bills. Lifecycle: Unpaid -> Partially Paid -> Paid (or Refunded / Voided). Partial payments are tracked using `amount_paid` and `balance_due`, supporting deposit-on-order and balance-on-pickup workflows. When an order is cancelled before payment, the bill is voided. When cancelled after partial/full payment, the bill is marked refunded. Payment/void/refund actions are written to `billing_payment_histories` (actor, action, status transition, optional amount/method, and note) for traceability.
 
 **Scheduling** -- Time-slot based with predefined service types and named schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates named schedule templates (e.g., "Regular Hours Mon-Fri", "Saturday Hours") and the system generates time slots for a date range based on those templates; each time slot retains a `schedule_template_id` link back to the template that generated it. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. `staff_id` records which optometrist/staff handles the appointment; `created_by` tracks who booked it (the customer themselves, or a staff member on behalf of a walk-in). One appointment per customer per time slot; multiple appointments per day allowed (e.g., eye exam morning, fitting afternoon). Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
 
