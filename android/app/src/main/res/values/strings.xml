@@ -137,6 +137,17 @@
     <string name="order_detail_items">Items</string>
     <string name="order_detail_notes">Notes</string>
     <string name="order_detail_total">Total</string>
+    <string name="order_tab_active">Active</string>
+    <string name="order_tab_past">Past</string>
+    <string name="order_progress_title">Order Progress</string>
+    <string name="order_step_processing">Processing</string>
+    <string name="order_step_confirmed">Confirmed</string>
+    <string name="order_step_ready">Ready</string>
+    <string name="order_step_picked_up">Picked Up</string>
+    <string name="order_summary_title">Order Summary</string>
+    <string name="order_subtotal">Subtotal</string>
+    <string name="order_pickup_fee">Pickup Fee</string>
+    <string name="order_pickup_fee_free">FREE</string>
     <string name="order_item_qty_format">×%d</string>
 
     <!-- Bills -->

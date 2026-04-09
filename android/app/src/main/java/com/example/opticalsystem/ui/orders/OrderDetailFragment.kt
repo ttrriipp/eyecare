@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.os.bundleOf
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -82,17 +82,16 @@ class OrderDetailFragment : Fragment() {
     }
 
     private fun displayOrder(order: Order) {
-        binding.tvHeaderTitle.text = getString(R.string.order_number_format, order.orderNumber)
-        binding.tvOrderNumber.text = getString(R.string.order_number_format, order.orderNumber)
-        binding.tvOrderDate.text = StatusHelper.formatDate(order.createdAt)
+        binding.tvHeaderTitle.text = order.orderNumber
+        binding.tvHeaderDate.text = StatusHelper.formatDateShort(order.createdAt)
         binding.tvOrderTotal.text = StatusHelper.formatPrice(order.totalAmount)
+        binding.tvSummarySubtotal.text = StatusHelper.formatPrice(order.totalAmount)
 
-        StatusHelper.applyOrderStatusBadge(binding.tvOrderStatus, order.status, order.statusLabel)
+        setupStatusBanner(order)
+        updateProgressStepper(order.status)
 
-        // Items
         itemAdapter.submitList(order.items ?: emptyList())
 
-        // Notes
         if (!order.notes.isNullOrBlank()) {
             binding.cardNotes.isVisible = true
             binding.tvNotes.text = order.notes
@@ -100,7 +99,6 @@ class OrderDetailFragment : Fragment() {
             binding.cardNotes.isVisible = false
         }
 
-        // Cancel button (only for pending/confirmed)
         val canCancel = order.status == "pending" || order.status == "confirmed"
         binding.btnCancelOrder.isVisible = canCancel
         binding.btnCancelOrder.setOnClickListener {
@@ -113,22 +111,98 @@ class OrderDetailFragment : Fragment() {
                 .setNegativeButton(R.string.action_cancel, null)
                 .show()
         }
+    }
 
-        // View Bill button
-        binding.btnViewBill.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_orderDetail_to_billDetail,
-                bundleOf("billId" to order.id),
+    private fun setupStatusBanner(order: Order) {
+        val ctx = requireContext()
+        val (bgColor, iconTint, description) = when (order.status) {
+            "pending" -> Triple(
+                ContextCompat.getColor(ctx, R.color.status_pending_bg),
+                ContextCompat.getColor(ctx, R.color.status_pending),
+                "Your order has been placed and is waiting to be confirmed.",
             )
+            "confirmed" -> Triple(
+                ContextCompat.getColor(ctx, R.color.status_confirmed_bg),
+                ContextCompat.getColor(ctx, R.color.status_confirmed),
+                "Your order has been confirmed and is being prepared.",
+            )
+            "ready" -> Triple(
+                ContextCompat.getColor(ctx, R.color.status_ready_bg),
+                ContextCompat.getColor(ctx, R.color.status_ready),
+                "Your order is ready for pickup at our store.",
+            )
+            "completed" -> Triple(
+                ContextCompat.getColor(ctx, R.color.status_completed_bg),
+                ContextCompat.getColor(ctx, R.color.status_completed),
+                "Your order has been picked up. Thank you!",
+            )
+            "cancelled" -> Triple(
+                ContextCompat.getColor(ctx, R.color.status_cancelled_bg),
+                ContextCompat.getColor(ctx, R.color.status_cancelled),
+                "This order has been cancelled.",
+            )
+            else -> Triple(
+                ContextCompat.getColor(ctx, R.color.divider),
+                ContextCompat.getColor(ctx, R.color.text_secondary),
+                "",
+            )
+        }
+
+        binding.cardStatusBanner.setCardBackgroundColor(bgColor)
+        binding.cardStatusBanner.cardElevation = 0f
+
+        val iconBg = binding.ivStatusIcon.parent as android.widget.FrameLayout
+        iconBg.background = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(iconTint)
+        }
+        binding.ivStatusIcon.setColorFilter(android.graphics.Color.WHITE)
+
+        binding.tvStatusTitle.text = order.statusLabel
+        binding.tvStatusDescription.text = description
+    }
+
+    private fun updateProgressStepper(status: String) {
+        val ctx = requireContext()
+        val activeColor = ContextCompat.getColor(ctx, R.color.primary)
+        val inactiveColor = ContextCompat.getColor(ctx, R.color.divider)
+        val activeTextColor = ContextCompat.getColor(ctx, android.R.color.white)
+        val inactiveTextColor = ContextCompat.getColor(ctx, R.color.text_secondary)
+
+        val stepsDone = when (status) {
+            "pending" -> 1
+            "confirmed" -> 2
+            "ready" -> 3
+            "completed" -> 4
+            else -> 0
+        }
+
+        val circles = listOf(binding.stepCircle1, binding.stepCircle2, binding.stepCircle3, binding.stepCircle4)
+        val icons = listOf(binding.stepIcon1, binding.stepIcon2, binding.stepIcon3, binding.stepIcon4)
+        val nums = listOf(binding.stepNum1, binding.stepNum2, binding.stepNum3, binding.stepNum4)
+        val lines = listOf(binding.stepLine12, binding.stepLine23, binding.stepLine34)
+
+        circles.forEachIndexed { index, circle ->
+            val done = index < stepsDone
+            circle.background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(if (done) activeColor else inactiveColor)
+            }
+            icons[index].isVisible = done
+            nums[index].isVisible = !done
+            nums[index].setTextColor(inactiveTextColor)
+        }
+
+        lines.forEachIndexed { index, line ->
+            val done = index + 1 < stepsDone
+            line.setBackgroundColor(if (done) activeColor else inactiveColor)
         }
     }
 
     private fun observeCancelResult() {
         viewModel.cancelResult.observe(viewLifecycleOwner) { result ->
             when (result) {
-                is Resource.Loading -> {
-                    binding.btnCancelOrder.isEnabled = false
-                }
+                is Resource.Loading -> binding.btnCancelOrder.isEnabled = false
                 is Resource.Success -> {
                     binding.btnCancelOrder.isEnabled = true
                     Toast.makeText(requireContext(), getString(R.string.order_cancelled_success), Toast.LENGTH_SHORT).show()

@@ -25,7 +25,7 @@ object NetworkModule {
 
     // For emulator use 10.0.2.2; for physical device use your PC's local IP
     // harvey: 192.168.254.101
-    private const val BASE_URL = "http://10.24.255.137:6969/api/v1/"
+    private const val BASE_URL = "http://10.0.2.2:6969/api/v1/"
 
     @Provides
     @Singleton

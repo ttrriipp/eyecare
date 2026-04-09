@@ -38,9 +38,9 @@ class OrdersFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-        setupChipFilters()
-        setupListeners()
+        setupTabListeners()
         observeOrders()
+        observeCounts()
     }
 
     private fun setupRecyclerView() {
@@ -54,25 +54,49 @@ class OrdersFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = orderAdapter
         }
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
     }
 
-    private fun setupChipFilters() {
-        binding.chipGroupStatus.setOnCheckedStateChangeListener { _, checkedIds ->
-            val status = when {
-                checkedIds.contains(R.id.chipPending) -> "pending"
-                checkedIds.contains(R.id.chipConfirmed) -> "confirmed"
-                checkedIds.contains(R.id.chipReady) -> "ready"
-                checkedIds.contains(R.id.chipCompleted) -> "completed"
-                checkedIds.contains(R.id.chipCancelled) -> "cancelled"
-                else -> null
-            }
-            viewModel.filterByStatus(status)
+    private fun setupTabListeners() {
+        binding.tabActive.setOnClickListener {
+            viewModel.showActive()
+            updateTabAppearance(activeSelected = true)
+        }
+        binding.tabPast.setOnClickListener {
+            viewModel.showPast()
+            updateTabAppearance(activeSelected = false)
         }
     }
 
-    private fun setupListeners() {
-        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
-        binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
+    private fun updateTabAppearance(activeSelected: Boolean) {
+        if (activeSelected) {
+            binding.tabActive.setBackgroundResource(R.drawable.bg_tab_button_active)
+            binding.tabActive.setTextColor(requireContext().getColor(R.color.text_primary))
+            binding.tabActive.textSize = 14f
+            binding.tabActive.paint.isFakeBoldText = true
+            binding.tabPast.setBackgroundResource(android.R.color.transparent)
+            binding.tabPast.setTextColor(requireContext().getColor(R.color.text_secondary))
+            binding.tabPast.paint.isFakeBoldText = false
+        } else {
+            binding.tabPast.setBackgroundResource(R.drawable.bg_tab_button_active)
+            binding.tabPast.setTextColor(requireContext().getColor(R.color.text_primary))
+            binding.tabPast.paint.isFakeBoldText = true
+            binding.tabActive.setBackgroundResource(android.R.color.transparent)
+            binding.tabActive.setTextColor(requireContext().getColor(R.color.text_secondary))
+            binding.tabActive.paint.isFakeBoldText = false
+        }
+    }
+
+    private fun observeCounts() {
+        viewModel.activeCount.observe(viewLifecycleOwner) { count ->
+            val label = if (count > 0) "Active ($count)" else "Active"
+            binding.tabActive.text = label
+        }
+        viewModel.pastCount.observe(viewLifecycleOwner) { count ->
+            val label = if (count > 0) "Past ($count)" else "Past"
+            binding.tabPast.text = label
+        }
     }
 
     private fun observeOrders() {
