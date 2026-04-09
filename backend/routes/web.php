@@ -4,6 +4,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderStatusHistoryController;
 use App\Http\Controllers\ProductCategorySettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierSettingsController;
@@ -53,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('orders', [OrderController::class, 'index'])
         ->name('orders.index');
+    Route::get('orders/order-status-history', [OrderStatusHistoryController::class, 'index'])
+        ->name('orders.status-history.index');
     Route::get('orders/create', [OrderController::class, 'create'])
         ->name('orders.create');
     Route::post('orders', [OrderController::class, 'store'])

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Inventory;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,6 +18,44 @@ class OrderService
         private readonly BillingService $billingService,
         private readonly InventoryService $inventoryService,
     ) {}
+
+    /**
+     * Staff/admin audit trail: order creation and status changes performed by staff or admin.
+     *
+     * @return LengthAwarePaginator<int, OrderStatusHistory>
+     */
+    public function listStatusHistory(array $filters = [], int $perPage = 20): LengthAwarePaginator
+    {
+        $query = OrderStatusHistory::query()
+            ->with(['order', 'actor'])
+            ->orderByDesc('created_at');
+
+        if (! empty($filters['search'])) {
+            $term = $filters['search'];
+            $query->where(function ($q) use ($term) {
+                $q->whereHas('order', function ($oq) use ($term) {
+                    $oq->where('order_number', 'like', "%{$term}%");
+                })->orWhereHas('actor', function ($aq) use ($term) {
+                    $aq->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%");
+                });
+            });
+        }
+
+        if (! empty($filters['actor_user_id'])) {
+            $query->where('actor_user_id', (int) $filters['actor_user_id']);
+        }
+
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
 
     /**
      * List orders with filters and pagination.
@@ -67,11 +106,11 @@ class OrderService
      * Validates stock availability against the inventory table.
      * Calculates totals and generates a unique order number.
      */
-    public function create(array $data): Order
+    public function create(array $data, ?User $actor = null): Order
     {
         $this->validateStock($data['items']);
 
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $actor) {
             $discountAmount = round((float) ($data['discount_amount'] ?? 0), 2);
 
             $order = Order::create([
@@ -117,14 +156,24 @@ class OrderService
 
             $this->billingService->createForOrder($order);
 
-            return $order->load(['items.productVariant.product', 'user', 'bill']);
+            $order->load(['items.productVariant.product', 'user', 'bill']);
+
+            $this->recordStaffOrderActivity(
+                $order,
+                $actor,
+                OrderStatusHistory::ACTION_CREATED,
+                null,
+                OrderStatus::Pending,
+            );
+
+            return $order;
         });
     }
 
     /**
      * Update order status with lifecycle transition validation.
      */
-    public function updateStatus(Order $order, OrderStatus $newStatus): Order
+    public function updateStatus(Order $order, OrderStatus $newStatus, ?User $actor = null): Order
     {
         if (! $order->status->canTransitionTo($newStatus)) {
             throw ValidationException::withMessages([
@@ -132,9 +181,21 @@ class OrderService
             ]);
         }
 
+        $fromStatus = $order->status;
+
         $order->update(['status' => $newStatus]);
 
-        return $order->fresh(['items.productVariant.product', 'user']);
+        $order = $order->fresh(['items.productVariant.product', 'user']);
+
+        $this->recordStaffOrderActivity(
+            $order,
+            $actor,
+            OrderStatusHistory::ACTION_STATUS_UPDATED,
+            $fromStatus,
+            $newStatus,
+        );
+
+        return $order;
     }
 
     /**
@@ -148,6 +209,8 @@ class OrderService
             ]);
         }
 
+        $fromStatus = $order->status;
+
         $order->update(['status' => OrderStatus::Cancelled]);
 
         $order->load('items.productVariant');
@@ -157,7 +220,17 @@ class OrderService
 
         $this->billingService->handleOrderCancellation($order);
 
-        return $order->fresh(['items.productVariant.product', 'user', 'bill']);
+        $order = $order->fresh(['items.productVariant.product', 'user', 'bill']);
+
+        $this->recordStaffOrderActivity(
+            $order,
+            $user,
+            OrderStatusHistory::ACTION_STATUS_UPDATED,
+            $fromStatus,
+            OrderStatus::Cancelled,
+        );
+
+        return $order;
     }
 
     /**
@@ -203,5 +276,28 @@ class OrderService
         }
 
         return $datePrefix.str_pad($nextSequence, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Records staff/admin activity only (skipped for customers and when actor is missing).
+     */
+    private function recordStaffOrderActivity(
+        Order $order,
+        ?User $actor,
+        string $action,
+        ?OrderStatus $fromStatus,
+        OrderStatus $toStatus,
+    ): void {
+        if ($actor === null || ! $actor->isAdminOrStaff()) {
+            return;
+        }
+
+        OrderStatusHistory::query()->create([
+            'order_id' => $order->id,
+            'actor_user_id' => $actor->id,
+            'action' => $action,
+            'from_status' => $fromStatus?->value,
+            'to_status' => $toStatus->value,
+        ]);
     }
 }

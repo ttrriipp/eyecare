@@ -60,22 +60,33 @@
                     <flux:sidebar.item
                         icon="clipboard-document-list"
                         :href="route('orders.index')"
-                        :current="request()->routeIs('orders.index', 'orders.create', 'orders.show')"
+                        :current="request()->routeIs('orders.index', 'orders.create', 'orders.show', 'orders.status-history.index')"
                         wire:navigate
                     >
                         {{ __('Orders') }}
                     </flux:sidebar.item>
 
-                    <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
-                        <flux:sidebar.item
-                            icon="banknotes"
-                            :href="route('orders.billing.index')"
-                            :current="request()->routeIs('orders.billing.*')"
-                            wire:navigate
-                        >
-                            {{ __('Billing') }}
-                        </flux:sidebar.item>
-                    </div>
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
+                            <flux:sidebar.item
+                                icon="arrow-path"
+                                :href="route('orders.status-history.index')"
+                                :current="request()->routeIs('orders.status-history.index')"
+                                wire:navigate
+                            >
+                                {{ __('Order Status History') }}
+                            </flux:sidebar.item>
+                        </div>
+                    @endif
+
+                    <flux:sidebar.item
+                        icon="banknotes"
+                        :href="route('orders.billing.index')"
+                        :current="request()->routeIs('orders.billing.*')"
+                        wire:navigate
+                    >
+                        {{ __('Billing') }}
+                    </flux:sidebar.item>
 
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item

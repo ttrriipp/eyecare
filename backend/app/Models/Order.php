@@ -62,6 +62,11 @@ class Order extends Model
         return $this->hasOne(Bill::class);
     }
 
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderByDesc('created_at');
+    }
+
     // ── Scopes ───────────────────────────────────────────────
 
     public function scopeByStatus(Builder $query, OrderStatus $status): Builder

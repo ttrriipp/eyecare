@@ -58,7 +58,7 @@ class OrderController extends Controller
             // Walk-in: user_id stays null, walk_in_name/phone used instead
         }
 
-        $order = $this->orderService->create($data);
+        $order = $this->orderService->create($data, $request->user());
 
         return response()->json([
             'message' => 'Order created successfully.',
@@ -88,7 +88,7 @@ class OrderController extends Controller
     {
         $newStatus = OrderStatus::from($request->validated('status'));
 
-        $order = $this->orderService->updateStatus($order, $newStatus);
+        $order = $this->orderService->updateStatus($order, $newStatus, $request->user());
 
         return response()->json([
             'message' => 'Order status updated successfully.',

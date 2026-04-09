@@ -102,7 +102,7 @@ class OrderController extends Controller
             $data['user_id'] = null;
         }
 
-        $order = $this->orderService->create($data);
+        $order = $this->orderService->create($data, $request->user());
 
         $customerLabel = $order->user?->name
             ?? (
@@ -138,7 +138,7 @@ class OrderController extends Controller
             if (! $user->isAdminOrStaff()) {
                 abort(403);
             }
-            $order = $this->orderService->updateStatus($order, $newStatus);
+            $order = $this->orderService->updateStatus($order, $newStatus, $user);
         }
 
         return redirect()
