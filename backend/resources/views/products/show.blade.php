@@ -50,7 +50,7 @@
                 <div
                     class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                 >
-                    @php $primaryImage = $product->images->first(); @endphp
+                    @php $primaryImage = $product->images->sortBy('sort_order')->first(); @endphp
                     <div id="main-image-wrap" class="aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800">
                         @if($primaryImage)
                             <img
@@ -66,9 +66,9 @@
                 </div>
 
                 {{-- Thumbnail strip —— clickable to swap main image --}}
-                @if($product->images->count() > 1)
+                @if($product->images->sortBy('sort_order')->count() > 1)
                     <div class="flex gap-3 overflow-x-auto pb-1">
-                        @foreach($product->images as $index => $image)
+                        @foreach($product->images->sortBy('sort_order') as $index => $image)
                             <button
                                 type="button"
                                 onclick="swapMainImage(this, '{{ $image->image_url }}')"
@@ -236,18 +236,11 @@
                             </dd>
                         </div>
 
-                        @if($product->supplier)
+                        @if(auth()->user()?->isAdminOrStaff() && $product->defaultVariant?->cost_per_unit !== null)
                             <div class="flex justify-between gap-4">
-                                <dt class="text-zinc-500 dark:text-zinc-500">{{ __('Supplier') }}</dt>
-                                <dd class="text-end text-zinc-900 dark:text-zinc-100">{{ $product->supplier->name }}</dd>
-                            </div>
-                        @endif
-
-                        @if(auth()->user()?->isAdminOrStaff() && $product->cost_per_unit !== null)
-                            <div class="flex justify-between gap-4">
-                                <dt class="text-zinc-500 dark:text-zinc-500">{{ __('Cost per unit') }}</dt>
+                                <dt class="text-zinc-500 dark:text-zinc-500">{{ __('Cost per unit (default variant)') }}</dt>
                                 <dd class="text-end tabular-nums text-zinc-900 dark:text-zinc-100">
-                                    {{ \App\Support\Money::peso($product->cost_per_unit) }}
+                                    {{ \App\Support\Money::peso($product->defaultVariant->cost_per_unit) }}
                                 </dd>
                             </div>
                         @endif

@@ -7,10 +7,10 @@ use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
-use App\Models\Supplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -32,9 +32,9 @@ class ProductService
     {
         $query = Product::with([
             'category',
-            'supplier',
             'defaultVariant.product',
-            'defaultVariant.primaryImage',
+            'defaultVariant.images',
+            'sharedImages',
             'variants:id,product_id,ar_model_url',
         ])
             ->withAvg('feedbacks as average_rating', 'rating')
@@ -74,7 +74,7 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product'])
+        return Product::with(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count'])
             ->findOrFail($id);
@@ -83,19 +83,32 @@ class ProductService
     public function create(array $data): Product
     {
         unset($data['ar_model_url']);
+        $hasCost = array_key_exists('cost_per_unit', $data);
+        $cost = Arr::pull($data, 'cost_per_unit');
 
         $product = Product::create($data);
+        $variant = $this->ensureDefaultVariantIfMissing($product);
+        if ($hasCost) {
+            $variant->update(['cost_per_unit' => $cost]);
+        }
 
-        return $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
+        return $product->load(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
     }
 
     public function update(Product $product, array $data): Product
     {
         unset($data['ar_model_url']);
+        $hasCost = array_key_exists('cost_per_unit', $data);
+        $cost = Arr::pull($data, 'cost_per_unit');
 
         $product->update($data);
 
-        return $product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
+        if ($hasCost) {
+            $product->loadMissing('defaultVariant');
+            $product->defaultVariant?->update(['cost_per_unit' => $cost]);
+        }
+
+        return $product->fresh(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
     }
 
     /**
@@ -158,19 +171,19 @@ class ProductService
             ]);
         }
 
-        $product->loadMissing('variants.images');
-        foreach ($product->variants as $variant) {
-            foreach ($variant->images as $image) {
-                $this->deletePhysicalFile($image->image_url);
-            }
+        $product->loadMissing('images');
+        foreach ($product->images as $image) {
+            $this->deletePhysicalFile($image->image_url);
         }
 
         $product->delete();
     }
 
-    public function addImage(ProductVariant $variant, string $imageUrl, int $sortOrder = 0): ProductImage
+    public function addImage(Product $product, ?ProductVariant $variant, string $imageUrl, int $sortOrder = 0): ProductImage
     {
-        return $variant->images()->create([
+        return ProductImage::query()->create([
+            'product_id' => $product->id,
+            'product_variant_id' => $variant?->id,
             'image_url' => $imageUrl,
             'sort_order' => $sortOrder,
         ]);
@@ -183,12 +196,13 @@ class ProductService
      */
     public function attachUploadedImagesToVariant(ProductVariant $variant, array $uploads): void
     {
-        $variant->loadMissing('images');
+        $variant->loadMissing(['images', 'product']);
+        $product = $variant->product;
         $nextOrder = $variant->images->isEmpty() ? 0 : ($variant->images->max('sort_order') + 1);
 
         foreach ($uploads as $upload) {
             $url = $this->storePublicCatalogImage($upload);
-            $this->addImage($variant, $url, $nextOrder++);
+            $this->addImage($product, $variant, $url, $nextOrder++);
         }
     }
 
@@ -249,11 +263,6 @@ class ProductService
     public function listCategories(): Collection
     {
         return \App\Models\ProductCategory::orderBy('name')->get();
-    }
-
-    public function listSuppliers(): Collection
-    {
-        return Supplier::query()->active()->orderBy('name')->get();
     }
 
     public function createCategory(array $data): \App\Models\ProductCategory

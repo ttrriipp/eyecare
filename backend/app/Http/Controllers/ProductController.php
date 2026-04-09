@@ -28,11 +28,9 @@ class ProductController extends Controller
         $this->authorize('create', Product::class);
 
         $categories = $this->productService->listCategories();
-        $suppliers = $this->productService->listSuppliers();
 
         return view('products.create', [
             'categories' => $categories,
-            'suppliers' => $suppliers,
         ]);
     }
 
@@ -50,7 +48,6 @@ class ProductController extends Controller
         unset($validated['ar_model_url']);
 
         $product = $this->productService->create($validated);
-        $this->productService->ensureDefaultVariantIfMissing($product);
 
         if ($request->exists('ar_model_url')) {
             $this->productService->applyArModelToDefaultVariant($product, $arModelUrl);
@@ -76,7 +73,7 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load(['category', 'supplier', 'images', 'variants.inventory', 'defaultVariant.inventory', 'feedbacks']);
+        $product->load(['category', 'images', 'sharedImages', 'variants.inventory', 'defaultVariant', 'defaultVariant.inventory', 'feedbacks']);
 
         return view('products.show', [
             'product' => $product,
@@ -89,12 +86,10 @@ class ProductController extends Controller
 
         $product->load(['category', 'images', 'defaultVariant']);
         $categories = $this->productService->listCategories();
-        $suppliers = $this->productService->listSuppliers();
 
         return view('products.edit', [
             'product' => $product,
             'categories' => $categories,
-            'suppliers' => $suppliers,
         ]);
     }
 
@@ -110,12 +105,12 @@ class ProductController extends Controller
         unset($validated['ar_model_url']);
 
         $variantData = array_filter([
-            'color'            => $request->input('variant_color'),
-            'frame_size'       => $request->input('variant_frame_size'),
-            'material'         => $request->input('variant_material'),
-            'lens_type'        => $request->input('variant_lens_type'),
-            'base_curve'       => $request->input('variant_base_curve'),
-            'diameter'         => $request->input('variant_diameter'),
+            'color' => $request->input('variant_color'),
+            'frame_size' => $request->input('variant_frame_size'),
+            'material' => $request->input('variant_material'),
+            'lens_type' => $request->input('variant_lens_type'),
+            'base_curve' => $request->input('variant_base_curve'),
+            'diameter' => $request->input('variant_diameter'),
             'price_adjustment' => $request->input('variant_price_adjustment'),
         ], fn ($v) => $v !== null && $v !== '');
 
@@ -168,7 +163,6 @@ class ProductController extends Controller
             'brand' => ['nullable', 'string', 'max:255'],
             'ar_model_url' => ['nullable', 'url', 'max:2048'],
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
-            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'image' => ['nullable', 'image', 'max:4096'],
             'inventory_quantity' => ['nullable', 'integer', 'min:0'],
             'inventory_reorder_level' => ['nullable', 'integer', 'min:0'],
@@ -198,22 +192,21 @@ class ProductController extends Controller
     private function updateRules(Product $product): array
     {
         return [
-            'name'                     => ['required', 'string', 'max:255'],
-            'description'              => ['nullable', 'string'],
-            'price'                    => ['required', 'numeric', 'min:0.01'],
-            'cost_per_unit'            => ['nullable', 'numeric', 'min:0'],
-            'brand'                    => ['nullable', 'string', 'max:255'],
-            'ar_model_url'             => ['nullable', 'url', 'max:2048'],
-            'category_id'              => ['nullable', 'integer', 'exists:product_categories,id'],
-            'supplier_id'              => ['nullable', 'integer', 'exists:suppliers,id'],
-            'image'                    => ['nullable', 'image', 'max:4096'],
-            'remove_image'             => ['sometimes', 'boolean'],
-            'variant_color'            => ['nullable', 'string', 'max:100'],
-            'variant_frame_size'       => ['nullable', 'string', 'max:100'],
-            'variant_material'         => ['nullable', 'string', 'max:100'],
-            'variant_lens_type'        => ['nullable', 'string', 'max:100'],
-            'variant_base_curve'       => ['nullable', 'string', 'max:100'],
-            'variant_diameter'         => ['nullable', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric', 'min:0.01'],
+            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'ar_model_url' => ['nullable', 'url', 'max:2048'],
+            'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'image' => ['nullable', 'image', 'max:4096'],
+            'remove_image' => ['sometimes', 'boolean'],
+            'variant_color' => ['nullable', 'string', 'max:100'],
+            'variant_frame_size' => ['nullable', 'string', 'max:100'],
+            'variant_material' => ['nullable', 'string', 'max:100'],
+            'variant_lens_type' => ['nullable', 'string', 'max:100'],
+            'variant_base_curve' => ['nullable', 'string', 'max:100'],
+            'variant_diameter' => ['nullable', 'string', 'max:100'],
             'variant_price_adjustment' => ['nullable', 'numeric'],
         ];
     }
@@ -242,16 +235,17 @@ class ProductController extends Controller
         $file = $request->file('image');
         $imageUrl = $this->productService->storePublicCatalogImage($file);
 
-        $variant->loadMissing('images');
+        $variant->loadMissing(['images', 'product']);
         $primaryImage = $primaryImage ?? $variant->images->first();
 
         if ($primaryImage) {
             $primaryImage->update(['image_url' => $imageUrl]);
         } else {
             $this->productService->addImage(
-                variant: $variant,
-                imageUrl: $imageUrl,
-                sortOrder: 0,
+                $variant->product,
+                $variant,
+                $imageUrl,
+                0,
             );
         }
     }

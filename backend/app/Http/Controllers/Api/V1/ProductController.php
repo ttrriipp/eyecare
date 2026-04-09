@@ -53,14 +53,13 @@ class ProductController extends Controller
         unset($validated['ar_model_url']);
 
         $product = $this->productService->create($validated);
-        $this->productService->ensureDefaultVariantIfMissing($product);
 
         if ($request->has('ar_model_url')) {
             $this->productService->applyArModelToDefaultVariant($product->fresh(), $arModelUrl);
         }
 
         $product->refresh();
-        $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
+        $product->load(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
 
         return response()->json([
             'message' => 'Product created successfully.',
@@ -82,7 +81,7 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Product updated successfully.',
-            'product' => new ProductResource($product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product'])),
+            'product' => new ProductResource($product->fresh(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product'])),
         ]);
     }
 
@@ -102,10 +101,12 @@ class ProductController extends Controller
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
+        $variant->loadMissing('product');
         $image = $this->productService->addImage(
-            variant: $variant,
-            imageUrl: $validated['image_url'],
-            sortOrder: $validated['sort_order'] ?? 0,
+            $variant->product,
+            $variant,
+            $validated['image_url'],
+            $validated['sort_order'] ?? 0,
         );
 
         return response()->json([
@@ -116,7 +117,9 @@ class ProductController extends Controller
 
     public function destroyVariantImage(ProductVariant $variant, ProductImage $image): JsonResponse
     {
-        if ($image->product_variant_id !== $variant->id) {
+        if ($image->product_id !== $variant->product_id
+            || $image->product_variant_id === null
+            || $image->product_variant_id !== $variant->id) {
             abort(404, 'Image not found for this variant.');
         }
 

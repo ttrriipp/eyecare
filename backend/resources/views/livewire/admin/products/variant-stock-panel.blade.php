@@ -18,7 +18,7 @@
 <div class="flex shrink-0 items-start gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
     {{-- Product thumbnail --}}
     @php
-        $thumbUrl = $product->defaultVariant?->primaryImage?->image_url;
+        $thumbUrl = $product->defaultVariant?->firstGalleryImage()?->image_url;
         $catSlug  = strtolower($cat?->slug ?? '');
         $iconType = match(true) {
             str_contains($catSlug, 'frame') || str_contains($catSlug, 'sunglass') => 'glasses',

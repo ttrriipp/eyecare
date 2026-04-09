@@ -124,7 +124,7 @@
                                     $stockStatus = $this->productStockStatus($product);
                                     $totalStock  = $this->productTotalStock($product);
                                     $isSelected  = $selectedProductId === $product->id;
-                                    $thumbUrl    = $product->defaultVariant?->primaryImage?->image_url;
+                                    $thumbUrl    = $product->defaultVariant?->firstGalleryImage()?->image_url;
                                     $catSlug     = strtolower($product->category?->slug ?? '');
                                     $iconType    = match(true) {
                                         str_contains($catSlug, 'frame') || str_contains($catSlug, 'sunglass') => 'glasses',

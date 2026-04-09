@@ -89,37 +89,6 @@
                                 @enderror
                             </div>
 
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Supplier') }}
-                                </label>
-                                @if(auth()->user()?->isAdmin())
-                                    <div class="mb-1">
-                                        <a href="{{ route('products.suppliers.index') }}" class="text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">
-                                            {{ __('Manage suppliers') }}
-                                        </a>
-                                    </div>
-                                @endif
-                                <flux:select
-                                    id="supplier_id"
-                                    name="supplier_id"
-                                    :label="false"
-                                >
-                                    <option value="">{{ __('No supplier selected') }}</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option
-                                            value="{{ $supplier->id }}"
-                                            @selected(old('supplier_id', $product->supplier_id) == $supplier->id)
-                                        >
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('supplier_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
                             {{-- Category (full width) --}}
                             <div class="space-y-1.5 sm:col-span-2">
                                 <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -207,7 +176,7 @@
 
                             <div class="space-y-1.5">
                                 <label for="cost_per_unit" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Cost per unit (₱)') }}
+                                    {{ __('Cost per unit — default variant (₱)') }}
                                 </label>
                                 <flux:input
                                     id="cost_per_unit"
@@ -216,7 +185,7 @@
                                     step="0.01"
                                     min="0"
                                     :label="false"
-                                    value="{{ old('cost_per_unit', $product->cost_per_unit) }}"
+                                    value="{{ old('cost_per_unit', $product->defaultVariant?->cost_per_unit) }}"
                                     placeholder="0.00"
                                 />
                                 @error('cost_per_unit')
@@ -470,7 +439,7 @@
                         {{ __('Primary image') }}
                     </h2>
 
-                    @php $primaryImage = $product->images->first(); @endphp
+                    @php $primaryImage = $product->images->sortBy('sort_order')->first(); @endphp
 
                     {{-- Preview / drop zone --}}
                     <label

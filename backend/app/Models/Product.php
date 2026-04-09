@@ -17,11 +17,9 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
-        'supplier_id',
         'name',
         'description',
         'price',
-        'cost_per_unit',
         'brand',
         'is_active',
     ];
@@ -38,7 +36,6 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
-            'cost_per_unit' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -48,26 +45,21 @@ class Product extends Model
         return $this->belongsTo(ProductCategory::class, 'category_id');
     }
 
-    public function supplier(): BelongsTo
+    /**
+     * All catalog images for this product. Rows with null `product_variant_id` are shared across variants;
+     * non-null rows are variant-specific.
+     */
+    public function images(): HasMany
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
     /**
-     * Images for the default variant only (catalog / product detail convenience).
-     * Per-variant images live on {@see ProductVariant::images()}.
+     * Product-wide gallery images (shown for every variant unless overridden by variant-specific images).
      */
-    public function images(): HasManyThrough
+    public function sharedImages(): HasMany
     {
-        return $this->hasManyThrough(
-            ProductImage::class,
-            ProductVariant::class,
-            'product_id',
-            'product_variant_id',
-            'id',
-            'id',
-        )->where('product_variants.is_default', true)
-            ->orderBy('product_images.sort_order');
+        return $this->hasMany(ProductImage::class)->whereNull('product_variant_id')->orderBy('sort_order');
     }
 
     public function variants(): HasMany

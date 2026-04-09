@@ -16,7 +16,7 @@ class OrderSeeder extends Seeder
     public function run(): void
     {
         $customer = User::where('role', 'customer')->first();
-        $staff    = User::where('role', 'staff')->first();
+        $staff = User::where('role', 'staff')->first();
 
         $products = Product::where('is_active', true)
             ->with('defaultVariant')
@@ -37,94 +37,88 @@ class OrderSeeder extends Seeder
 
             // ── Order 1: Completed — paid in cash; OR issued ──────────────────
             [
-                'user_id'         => $customer->id,
-                'processed_by'    => $staff?->id,
-                'status'          => OrderStatus::Completed,
+                'user_id' => $customer->id,
+                'processed_by' => $staff?->id,
+                'status' => OrderStatus::Completed,
                 'discount_amount' => 0.00,
-                'notes'           => 'First test order — completed.',
-                'completed_at'    => now()->subDays(5),
-                'ready_at'        => now()->subDays(6),
-                'items'           => [
+                'notes' => 'First test order — completed.',
+                'completed_at' => now()->subDays(5),
+                'ready_at' => now()->subDays(6),
+                'items' => [
                     ['product_index' => 0, 'quantity' => 1],
                     ['product_index' => 1, 'quantity' => 2],
                 ],
-                'bill_status'      => PaymentStatus::Paid,
-                'payment_method'   => PaymentMethod::Cash,
-                'or_number'        => 'OR-2026-00001',
-                'collected_by'     => $staff?->id,
-                'remarks'          => 'Full payment received at counter.',
+                'bill_status' => PaymentStatus::Paid,
+                'payment_method' => PaymentMethod::Cash,
+                'collected_by' => $staff?->id,
             ],
 
             // ── Order 2: Pending — unpaid, not yet processed ───────────────────
             [
-                'user_id'         => $customer->id,
-                'processed_by'    => null,
-                'status'          => OrderStatus::Pending,
+                'user_id' => $customer->id,
+                'processed_by' => null,
+                'status' => OrderStatus::Pending,
                 'discount_amount' => 0.00,
-                'notes'           => null,
-                'items'           => [
+                'notes' => null,
+                'items' => [
                     ['product_index' => 2, 'quantity' => 1],
                 ],
-                'bill_status'    => PaymentStatus::Unpaid,
+                'bill_status' => PaymentStatus::Unpaid,
                 'payment_method' => null,
             ],
 
             // ── Order 3: Confirmed — senior citizen discount applied ───────────
             [
-                'user_id'         => $customer->id,
-                'processed_by'    => $staff?->id,
-                'status'          => OrderStatus::Confirmed,
+                'user_id' => $customer->id,
+                'processed_by' => $staff?->id,
+                'status' => OrderStatus::Confirmed,
                 'discount_amount' => 150.00,
-                'notes'           => 'SC discount applied — 20% on frame.',
-                'items'           => [
+                'notes' => 'SC discount applied — 20% on frame.',
+                'items' => [
                     ['product_index' => 0, 'quantity' => 1],
                     ['product_index' => 3, 'quantity' => 1],
                 ],
-                'bill_status'    => PaymentStatus::Unpaid,
+                'bill_status' => PaymentStatus::Unpaid,
                 'payment_method' => null,
             ],
 
             // ── Order 4: Walk-in — ready for pickup, paid via GCash ───────────
             [
-                'user_id'         => null,
-                'walk_in_name'    => 'Maria Santos',
-                'walk_in_phone'   => '09171234567',
-                'processed_by'    => $staff?->id,
-                'status'          => OrderStatus::ReadyForPickup,
+                'user_id' => null,
+                'walk_in_name' => 'Maria Santos',
+                'walk_in_phone' => '09171234567',
+                'processed_by' => $staff?->id,
+                'status' => OrderStatus::ReadyForPickup,
                 'discount_amount' => 0.00,
-                'notes'           => 'Walk-in customer — lenses ready for fitting.',
-                'ready_at'        => now()->subDay(),
-                'items'           => [
+                'notes' => 'Walk-in customer — lenses ready for fitting.',
+                'ready_at' => now()->subDay(),
+                'items' => [
                     ['product_index' => 4, 'quantity' => 1],
                 ],
-                'bill_status'    => PaymentStatus::Paid,
+                'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::GCash,
-                'or_number'      => 'OR-2026-00002',
-                'collected_by'   => $staff?->id,
-                'remarks'        => 'GCash ref no. 12345678.',
+                'collected_by' => $staff?->id,
             ],
 
             // ── Order 5: Completed — partial then full payment (Maya) ─────────
             [
-                'user_id'         => $customer->id,
-                'processed_by'    => $staff?->id,
-                'status'          => OrderStatus::Completed,
+                'user_id' => $customer->id,
+                'processed_by' => $staff?->id,
+                'status' => OrderStatus::Completed,
                 'discount_amount' => 0.00,
-                'notes'           => null,
-                'completed_at'    => now()->subDays(2),
-                'ready_at'        => now()->subDays(3),
-                'items'           => [
+                'notes' => null,
+                'completed_at' => now()->subDays(2),
+                'ready_at' => now()->subDays(3),
+                'items' => [
                     ['product_index' => 5, 'quantity' => 1],
                 ],
-                'bill_status'    => PaymentStatus::Paid,
+                'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::Maya,
-                'or_number'      => 'OR-2026-00003',
-                'collected_by'   => $staff?->id,
-                'remarks'        => null,
+                'collected_by' => $staff?->id,
             ],
         ];
 
-        $orderSeq  = 1;
+        $orderSeq = 1;
         $invoiceSeq = 1;
 
         foreach ($orders as $orderData) {
@@ -140,32 +134,32 @@ class OrderSeeder extends Seeder
                 }
 
                 $unitPrice = (float) $variant->unitPrice();
-                $subtotal  = $unitPrice * $itemData['quantity'];
+                $subtotal = $unitPrice * $itemData['quantity'];
                 $totalAmount += $subtotal;
 
                 $itemsPayload[] = [
                     'product_variant_id' => $variant->id,
-                    'quantity'           => $itemData['quantity'],
-                    'unit_price'         => $unitPrice,
-                    'subtotal'           => $subtotal,
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $unitPrice,
+                    'subtotal' => $subtotal,
                 ];
             }
 
-            $discount    = $orderData['discount_amount'] ?? 0.00;
+            $discount = $orderData['discount_amount'] ?? 0.00;
             $finalAmount = max(0, $totalAmount - $discount);
 
             $order = Order::create([
-                'user_id'         => $orderData['user_id'],
-                'processed_by'    => $orderData['processed_by'] ?? null,
-                'walk_in_name'    => $orderData['walk_in_name'] ?? null,
-                'walk_in_phone'   => $orderData['walk_in_phone'] ?? null,
-                'order_number'    => 'ORD-'.now()->format('Ymd').'-'.str_pad($orderSeq, 5, '0', STR_PAD_LEFT),
-                'status'          => $orderData['status'],
-                'total_amount'    => $totalAmount,
+                'user_id' => $orderData['user_id'],
+                'processed_by' => $orderData['processed_by'] ?? null,
+                'walk_in_name' => $orderData['walk_in_name'] ?? null,
+                'walk_in_phone' => $orderData['walk_in_phone'] ?? null,
+                'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad($orderSeq, 5, '0', STR_PAD_LEFT),
+                'status' => $orderData['status'],
+                'total_amount' => $totalAmount,
                 'discount_amount' => $discount,
-                'notes'           => $orderData['notes'],
-                'ready_at'        => $orderData['ready_at'] ?? null,
-                'completed_at'    => $orderData['completed_at'] ?? null,
+                'notes' => $orderData['notes'],
+                'ready_at' => $orderData['ready_at'] ?? null,
+                'completed_at' => $orderData['completed_at'] ?? null,
             ]);
 
             foreach ($itemsPayload as $item) {
@@ -176,18 +170,15 @@ class OrderSeeder extends Seeder
             $isPaid = $orderData['bill_status'] === PaymentStatus::Paid;
 
             Bill::create([
-                'order_id'                 => $order->id,
-                'invoice_number'           => 'INV-'.now()->format('Ymd').'-'.str_pad($invoiceSeq, 5, '0', STR_PAD_LEFT),
-                'official_receipt_number'  => $orderData['or_number'] ?? null,
-                'amount'                   => $finalAmount,
-                'tax_amount'               => 0.00,
-                'amount_paid'              => $isPaid ? $finalAmount : 0,
-                'balance_due'              => $isPaid ? 0 : $finalAmount,
-                'payment_status'           => $orderData['bill_status'],
-                'payment_method'           => $orderData['payment_method'] ?? null,
-                'collected_by'             => $orderData['collected_by'] ?? null,
-                'remarks'                  => $orderData['remarks'] ?? null,
-                'paid_at'                  => $isPaid ? now() : null,
+                'order_id' => $order->id,
+                'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($invoiceSeq, 5, '0', STR_PAD_LEFT),
+                'amount' => $finalAmount,
+                'amount_paid' => $isPaid ? $finalAmount : 0,
+                'balance_due' => $isPaid ? 0 : $finalAmount,
+                'payment_status' => $orderData['bill_status'],
+                'payment_method' => $orderData['payment_method'] ?? null,
+                'collected_by' => $orderData['collected_by'] ?? null,
+                'paid_at' => $isPaid ? now() : null,
             ]);
 
             $orderSeq++;

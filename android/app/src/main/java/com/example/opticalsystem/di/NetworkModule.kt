@@ -6,6 +6,8 @@ import com.example.opticalsystem.data.api.FeedbackApi
 import com.example.opticalsystem.data.api.OrderApi
 import com.example.opticalsystem.data.api.ProductApi
 import com.example.opticalsystem.util.TokenManager
+import com.google.gson.GsonBuilder
+import com.google.gson.Strictness
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,7 +50,10 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                // Level.BODY reads the full response body; OkHttp still returns the same
+                // ResponseBody instance, which can leave Gson/Retrofit reading a truncated or
+                // exhausted stream (EOF at $.meta, etc.). HEADERS logs status + headers only.
+                level = HttpLoggingInterceptor.Level.HEADERS
             })
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -59,10 +64,15 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        // Gson 2.11+ uses Strictness.STRICT by default; some Laravel payloads (e.g. unescaped
+        // control characters in category.description) fail parsing until the reader is lenient.
+        val gson = GsonBuilder()
+            .setStrictness(Strictness.LENIENT)
+            .create()
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 

@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.signature.ObjectKey
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
+import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.databinding.ItemProductBinding
 
 class ProductAdapter(
@@ -42,7 +43,7 @@ class ProductAdapter(
             binding.tvProductPrice.text = "₱${formatPrice(product.price)}"
 
             // AR badge
-            binding.tvArBadge.isVisible = product.arModelUrl != null
+            binding.tvArBadge.isVisible = product.hasArTryOn()
 
             // Rating (visible once Phase F data arrives)
             val rating = product.averageRating

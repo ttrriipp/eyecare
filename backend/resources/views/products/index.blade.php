@@ -28,9 +28,6 @@
                     <flux:button variant="ghost" icon="cog-6-tooth" :href="route('products.categories.index')" wire:navigate>
                         {{ __('Category settings') }}
                     </flux:button>
-                    <flux:button variant="ghost" icon="truck" :href="route('products.suppliers.index')" wire:navigate>
-                        {{ __('Supplier settings') }}
-                    </flux:button>
                     <flux:button variant="primary" icon="plus" :href="route('products.create')" wire:navigate>
                         {{ __('Add product') }}
                     </flux:button>

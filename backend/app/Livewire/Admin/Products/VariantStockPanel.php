@@ -163,7 +163,7 @@ class VariantStockPanel extends Component
     #[Computed]
     public function product(): ?Product
     {
-        return Product::with(['category', 'variants.images', 'variants.inventory', 'defaultVariant.primaryImage'])
+        return Product::with(['category', 'variants.images', 'variants.inventory', 'defaultVariant.images', 'sharedImages'])
             ->find($this->productId);
     }
 

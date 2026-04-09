@@ -41,8 +41,6 @@ class ProductForm extends Component
 
     public string $price = '0.00';
 
-    public string $cost_per_unit = '';
-
     public bool $is_active = true;
 
     public int $low_stock_threshold = 5;
@@ -52,6 +50,9 @@ class ProductForm extends Component
 
     /** Edit mode: AR URL per variant id. */
     public array $variantArModelUrl = [];
+
+    /** Edit mode: cost per unit per variant id. */
+    public array $variantCostPerUnit = [];
 
     // ── Variant images (per sellable variant) ───────────────────────────
 
@@ -111,6 +112,8 @@ class ProductForm extends Component
 
     public string $v_price_adjustment = '0';
 
+    public string $v_cost_per_unit = '';
+
     public int $v_initial_stock = 0;
 
     /** @var array<int, array<string, mixed>> */
@@ -132,7 +135,6 @@ class ProductForm extends Component
             'brand' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:1000'],
             'price' => ['required', 'numeric', 'min:0'],
-            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'low_stock_threshold' => ['required', 'integer', 'min:1', 'max:9999'],
         ];
@@ -158,6 +160,7 @@ class ProductForm extends Component
             'v_base_curve' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
             'v_diameter' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
             'v_price_adjustment' => ['required', 'numeric'],
+            'v_cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'v_initial_stock' => ['required', 'integer', 'min:0'],
             'v_ar_model_url' => $this->cat_has_ar_support ? ['nullable', 'string', 'max:2048'] : ['nullable'],
         ]);
@@ -171,7 +174,7 @@ class ProductForm extends Component
             'brand.required' => 'Brand is required.',
             'price.required' => 'Selling price is required.',
             'price.numeric' => 'Selling price must be a number.',
-            'cost_per_unit.numeric' => 'Cost price must be a number.',
+            'v_cost_per_unit.numeric' => 'Cost per unit must be a number.',
             'pendingVariantImages.*.*.image' => 'All uploaded files must be valid images.',
             'pendingVariantImages.*.*.max' => 'Each image must be smaller than 4 MB.',
             'pendingVariantImagesEdit.*.*.image' => 'All uploaded files must be valid images.',
@@ -191,7 +194,7 @@ class ProductForm extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['name', 'brand', 'price', 'cost_per_unit', 'low_stock_threshold', 'category_id'], true)) {
+        if (in_array($property, ['name', 'brand', 'price', 'low_stock_threshold', 'category_id'], true)) {
             $this->validateOnly($property, $this->step1Rules());
         }
         if ($property === 'v_variant_images') {
@@ -228,12 +231,12 @@ class ProductForm extends Component
         $this->brand = $product->brand ?? '';
         $this->description = $product->description ?? '';
         $this->price = (string) $product->price;
-        $this->cost_per_unit = $product->cost_per_unit ? (string) $product->cost_per_unit : '';
         $this->is_active = (bool) $product->is_active;
 
         $this->existingVariantImages = [];
         $this->editVariantLabels = [];
         $this->variantArModelUrl = [];
+        $this->variantCostPerUnit = [];
 
         if ($product->category) {
             $this->applyCategory($product->category);
@@ -241,6 +244,7 @@ class ProductForm extends Component
 
         foreach ($product->variants as $variant) {
             $this->variantArModelUrl[$variant->id] = $variant->ar_model_url ?? '';
+            $this->variantCostPerUnit[$variant->id] = $variant->cost_per_unit !== null ? (string) $variant->cost_per_unit : '';
             $this->editVariantLabels[$variant->id] = $variant->sku.' · '.$this->variantLabelFromModel($variant);
             $this->existingVariantImages[$variant->id] = $variant->images
                 ->sortBy('sort_order')
@@ -368,6 +372,7 @@ class ProductForm extends Component
             'base_curve' => $this->cat_has_power_field ? $this->v_base_curve : null,
             'diameter' => $this->cat_has_power_field ? $this->v_diameter : null,
             'price_adjustment' => $this->v_price_adjustment,
+            'cost_per_unit' => filled($this->v_cost_per_unit) ? $this->v_cost_per_unit : null,
             'initial_stock' => $this->v_initial_stock,
             'label' => $this->buildVariantLabel(),
             'ar_model_url' => $this->cat_has_ar_support && filled(trim($this->v_ar_model_url))
@@ -420,6 +425,7 @@ class ProductForm extends Component
         $rules = array_merge($this->step1Rules(), $this->variantImageRules());
         if ($this->mode === 'edit') {
             $rules['variantArModelUrl.*'] = ['nullable', 'string', 'max:2048'];
+            $rules['variantCostPerUnit.*'] = ['nullable', 'numeric', 'min:0'];
         }
         $this->validate($rules, $this->messages());
 
@@ -435,7 +441,6 @@ class ProductForm extends Component
             'brand' => trim($this->brand),
             'description' => filled($this->description) ? trim($this->description) : null,
             'price' => $this->price,
-            'cost_per_unit' => filled($this->cost_per_unit) ? $this->cost_per_unit : null,
             'is_active' => $this->is_active,
         ];
 
@@ -445,7 +450,7 @@ class ProductForm extends Component
 
                 foreach ($this->pendingVariants as $idx => $v) {
                     $variantFields = array_intersect_key($v, array_flip([
-                        'color', 'frame_size', 'material', 'lens_type', 'base_curve', 'diameter', 'price_adjustment', 'ar_model_url',
+                        'color', 'frame_size', 'material', 'lens_type', 'base_curve', 'diameter', 'price_adjustment', 'cost_per_unit', 'ar_model_url',
                     ]));
                     // First variant is the default
                     if (! $product->variants()->exists()) {
@@ -484,6 +489,18 @@ class ProductForm extends Component
                         ->first();
                     if ($variant) {
                         $productService->updateVariant($variant, ['ar_model_url' => $url]);
+                    }
+                }
+
+                foreach ($this->variantCostPerUnit as $variantId => $costStr) {
+                    $variant = ProductVariant::query()
+                        ->where('product_id', $product->id)
+                        ->whereKey($variantId)
+                        ->first();
+                    if ($variant) {
+                        $productService->updateVariant($variant, [
+                            'cost_per_unit' => filled($costStr) ? $costStr : null,
+                        ]);
                     }
                 }
 
@@ -629,7 +646,7 @@ class ProductForm extends Component
     {
         foreach ($this->imagesToRemove as $imageId) {
             $img = ProductImage::query()->find($imageId);
-            if ($img && $img->variant->product_id === $product->id) {
+            if ($img && $img->product_id === $product->id) {
                 $productService->deleteImage($img);
             }
         }
@@ -656,6 +673,7 @@ class ProductForm extends Component
         $this->v_color = $this->v_frame_size = $this->v_material = $this->v_lens_type = '';
         $this->v_base_curve = $this->v_diameter = '';
         $this->v_price_adjustment = '0';
+        $this->v_cost_per_unit = '';
         $this->v_initial_stock = 0;
         $this->v_ar_model_url = '';
         $this->v_variant_images = [];
@@ -671,11 +689,11 @@ class ProductForm extends Component
         $this->brand = '';
         $this->description = '';
         $this->price = '0.00';
-        $this->cost_per_unit = '';
         $this->is_active = true;
         $this->low_stock_threshold = 5;
         $this->v_ar_model_url = '';
         $this->variantArModelUrl = [];
+        $this->variantCostPerUnit = [];
         $this->v_variant_images = [];
         $this->pendingVariantImages = [];
         $this->existingVariantImages = [];

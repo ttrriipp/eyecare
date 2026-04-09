@@ -21,19 +21,19 @@
   </nav>
   <main>
     <h1>Bills</h1>
-    <p class="note"><code>bills</code>: <code>order_id</code> XOR-style with <code>appointment_id</code> (nullable both allowed in schema but business rule: one source). Partial: <code>amount_paid</code>, <code>balance_due</code>, <code>tax_amount</code>, <code>official_receipt_number</code>, <code>collected_by</code>.</p>
+    <p class="note"><code>bills</code>: <code>order_id</code> XOR-style with <code>appointment_id</code> (nullable both allowed in schema but business rule: one source). Partial: <code>amount_paid</code>, <code>balance_due</code>, <code>collected_by</code>.</p>
     <table id="b1">
       <thead>
         <tr>
-          <th>invoice_number</th><th>source</th><th>amount</th><th>tax</th><th>paid</th><th>balance</th><th>status</th><th>method</th>
+          <th>invoice_number</th><th>source</th><th>amount</th><th>paid</th><th>balance</th><th>status</th><th>method</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>INV-2026-00901</td><td>order ORD-…142</td><td>13700</td><td>0</td><td>7000</td><td>6700</td><td>partially_paid</td><td>cash</td>
+          <td>INV-2026-00901</td><td>order ORD-…142</td><td>13700</td><td>7000</td><td>6700</td><td>partially_paid</td><td>cash</td>
         </tr>
         <tr>
-          <td>INV-2026-00900</td><td>appointment APT-42</td><td>300</td><td>0</td><td>300</td><td>0</td><td>paid</td><td>gcash recorded</td>
+          <td>INV-2026-00900</td><td>appointment APT-42</td><td>300</td><td>300</td><td>0</td><td>paid</td><td>gcash recorded</td>
         </tr>
       </tbody>
     </table>

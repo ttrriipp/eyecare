@@ -41,13 +41,25 @@ class ProductManager extends Component
 
     // ── Pagination reset on filter change ─────────────────────────────────
 
-    public function updatedSearch(): void { $this->resetPage(); }
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
 
-    public function updatedCategoryId(): void { $this->resetPage(); }
+    public function updatedCategoryId(): void
+    {
+        $this->resetPage();
+    }
 
-    public function updatedStatusFilter(): void { $this->resetPage(); }
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
 
-    public function updatedStockFilter(): void { $this->resetPage(); }
+    public function updatedStockFilter(): void
+    {
+        $this->resetPage();
+    }
 
     // ── Computed properties ───────────────────────────────────────────────
 
@@ -56,21 +68,17 @@ class ProductManager extends Component
     public function products(): LengthAwarePaginator
     {
         return Product::query()
-            ->with(['category', 'defaultVariant.primaryImage', 'variants.inventory'])
+            ->with(['category', 'defaultVariant.images', 'sharedImages', 'variants.inventory'])
             ->withCount('variants')
             ->when($this->search, fn ($q) => $q->search($this->search))
             ->when($this->category_id, fn ($q) => $q->byCategory($this->category_id))
             ->when($this->status_filter === 'active', fn ($q) => $q->active())
             ->when($this->status_filter === 'inactive', fn ($q) => $q->where('is_active', false))
-            ->when($this->stock_filter === 'low_stock', fn ($q) =>
-                $q->whereHas('variants.inventory', fn ($iq) =>
-                    $iq->whereColumn('quantity', '<=', 'reorder_level')->where('quantity', '>', 0)
-                )
+            ->when($this->stock_filter === 'low_stock', fn ($q) => $q->whereHas('variants.inventory', fn ($iq) => $iq->whereColumn('quantity', '<=', 'reorder_level')->where('quantity', '>', 0)
             )
-            ->when($this->stock_filter === 'out_of_stock', fn ($q) =>
-                $q->whereHas('variants.inventory', fn ($iq) =>
-                    $iq->where('quantity', 0)
-                )
+            )
+            ->when($this->stock_filter === 'out_of_stock', fn ($q) => $q->whereHas('variants.inventory', fn ($iq) => $iq->where('quantity', 0)
+            )
             )
             ->orderBy('name')
             ->paginate(15);

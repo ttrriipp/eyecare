@@ -22,7 +22,6 @@ class Inventory extends Model
         'reorder_quantity',
         'batch_number',
         'expires_at',
-        'storage_location',
         'notes',
     ];
 

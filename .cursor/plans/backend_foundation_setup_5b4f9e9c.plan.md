@@ -6,7 +6,7 @@ todos:
     content: Configure MySQL database connection and environment variables
     status: pending
   - id: enums
-    content: Create PHP 8.1 backed enums (UserRole with admin/staff/customer, OrderStatus, PaymentStatus, AppointmentStatus)
+    content: Create PHP 8.1 backed enums (UserRole with admin/staff/customer, OrderStatus, PaymentStatus, AppointmentStatus, ConversationStatus with open/closed)
     status: pending
   - id: migrations
     content: Create all database migrations (modify users, add categories, products, images, orders, items, bills, service_types, schedule_templates, time_slots, appointments, conversations, messages, inventory, feedbacks)
@@ -41,6 +41,8 @@ isProject: false
 # Backend Foundation for Optical Management System
 
 > **Implementation update (2026-04-09):** `ar_model_url` is stored on **`product_variants`**, not on `products`, so each sellable variant can have its own `.glb`/`.usdz` URL. Migration: `2026_04_09_160000_move_ar_model_url_to_product_variants` (copies existing product URLs onto all variants of each product, then drops `products.ar_model_url`). The API still accepts `ar_model_url` on product create/update for convenience; `ProductService` applies it to the **default variant** via `applyArModelToDefaultVariant`. `ProductVariantResource` exposes `ar_model_url`; admin Livewire flows edit AR per variant. Listing UIs treat “AR available” as **any variant** with a URL when the category has `has_ar_support`.
+>
+> **Schema update (products):** There is **no `suppliers` table** — vendor contact info is out of scope. **`cost_per_unit`** lives on **`product_variants`** (not `products`) so margin differs per material/color/SKU. **`product_images`** has optional **`product_variant_id`**: `NULL` = shared gallery for the whole product; set = image shown when that variant is selected (e.g. red vs blue frame). If migrating from `products.cost_per_unit`, copy values onto each variant (or default variant only) then drop the product column.
 
 ## Architecture Overview
 
@@ -151,21 +153,19 @@ erDiagram
         timestamp email_verified_at
     }
 
-    Supplier ||--o{ Product : supplies
     ProductCategory ||--o{ Product : contains
     Product ||--o{ ProductImage : has
     Product ||--o{ ProductVariant : has
+    ProductVariant ||--o{ ProductImage : shows
     Product ||--o{ Feedback : reviewed_in
     ProductVariant ||--o{ OrderItem : ordered_as
     ProductVariant ||--o| Inventory : tracked_in
     Product {
         bigint id PK
         bigint category_id FK
-        bigint supplier_id FK_nullable
         string name
         text description
         decimal price
-        decimal cost_per_unit
         string brand
         boolean is_active
     }
@@ -181,7 +181,9 @@ erDiagram
         string base_curve
         string diameter
         decimal price_adjustment
+        decimal cost_per_unit
         boolean is_default
+        boolean is_active
         string ar_model_url_nullable
     }
 
@@ -194,19 +196,10 @@ erDiagram
         boolean requires_expiry_tracking
     }
 
-    Supplier {
-        bigint id PK
-        string name
-        string contact_person
-        string phone
-        string email
-        text address
-        boolean is_active
-    }
-
     ProductImage {
         bigint id PK
         bigint product_id FK
+        bigint product_variant_id FK_nullable
         string image_url
         integer sort_order
     }
@@ -215,12 +208,14 @@ erDiagram
     Order {
         bigint id PK
         bigint user_id FK_nullable
+        bigint created_by FK_nullable
         string walk_in_name
         string walk_in_phone
         string order_number UK
         enum status
         decimal total_amount
         decimal discount_amount
+        string discount_reason
         text notes
     }
 
@@ -252,6 +247,7 @@ erDiagram
     ScheduleTemplate ||--o{ TimeSlot : generates
     ScheduleTemplate {
         bigint id PK
+        string name
         integer day_of_week
         time start_time
         time end_time
@@ -273,6 +269,7 @@ erDiagram
     TimeSlot ||--o{ Appointment : booked_in
     TimeSlot {
         bigint id PK
+        bigint schedule_template_id FK_nullable
         date date
         time start_time
         time end_time
@@ -283,6 +280,8 @@ erDiagram
     Appointment {
         bigint id PK
         bigint user_id FK_nullable
+        bigint staff_id FK_nullable
+        bigint created_by FK_nullable
         string walk_in_name
         string walk_in_phone
         bigint time_slot_id FK
@@ -298,6 +297,7 @@ erDiagram
         bigint id PK
         bigint customer_id FK
         string subject
+        enum status
         timestamp last_message_at
     }
 
@@ -345,15 +345,15 @@ erDiagram
 
 ## Module Behavior Summary
 
-**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price, cost per unit, supplier linkage, and brand metadata. Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
+**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price (`products.price`) and brand metadata. **Cost per unit** is stored on each **product variant** (`product_variants.cost_per_unit`) so margin can differ by material, color, or SKU. **Images** attach to a product; optional **`product_variant_id`** on `product_images` means `NULL` = shared gallery for all variants, non-null = image shown when that variant is selected (e.g. frame color). Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
-**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` (e.g., SC/PWD) which is deducted from the order total before billing. A bill is auto-generated with each order.
+**Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins; `created_by` tracks which staff member processed the order. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` with a `discount_reason` (e.g., "Senior Citizen 20%", "PWD discount") which is deducted from the order total before billing. A bill is auto-generated with each order.
 
 **Billing** -- Invoice tracking only, no payment gateway. Bills are generated for both orders and paid appointments. Admin/staff marks payments as received. Customer sees their own bills. Lifecycle: Unpaid -> Partially Paid -> Paid (or Refunded / Voided). Partial payments are tracked using `amount_paid` and `balance_due`, supporting deposit-on-order and balance-on-pickup workflows. When an order is cancelled before payment, the bill is voided. When cancelled after partial/full payment, the bill is marked refunded.
 
-**Scheduling** -- Time-slot based with predefined service types and schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates schedule templates (e.g., "Mon-Sat, 9AM-5PM, 30-min slots") and the system generates time slots for a date range based on those templates. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. One appointment per customer per time slot; multiple appointments per day allowed (e.g., eye exam morning, fitting afternoon). Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
+**Scheduling** -- Time-slot based with predefined service types and named schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates named schedule templates (e.g., "Regular Hours Mon-Fri", "Saturday Hours") and the system generates time slots for a date range based on those templates; each time slot retains a `schedule_template_id` link back to the template that generated it. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. `staff_id` records which optometrist/staff handles the appointment; `created_by` tracks who booked it (the customer themselves, or a staff member on behalf of a walk-in). One appointment per customer per time slot; multiple appointments per day allowed (e.g., eye exam morning, fitting afternoon). Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
 
-**Direct Messaging** -- Real-time team inbox using Laravel Reverb (WebSockets). Customer starts a conversation with the shop. Any staff/admin can view and respond. New messages are broadcast instantly via private channels. Messages have read tracking. REST API for history/sending, WebSocket for live delivery.
+**Direct Messaging** -- Real-time team inbox using Laravel Reverb (WebSockets). Customer starts a conversation with the shop. Conversations have a `status` (open / closed) so staff can mark resolved threads as closed. Any staff/admin can view and respond to open conversations. New messages are broadcast instantly via private channels. Messages have read tracking. REST API for history/sending, WebSocket for live delivery.
 
 **Inventory** -- Stock tracker keyed per **product variant** (default variant covers single-SKU products) with quantity, reorder level, reorder quantity, optional batch number, and optional expiry date. Category-level `requires_expiry_tracking` controls whether `expires_at` is required. Every quantity change writes an `inventory_adjustments` audit row (`before`, `after`, `delta`, `type`, `reason`, `adjusted_by`). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
 
@@ -375,15 +375,96 @@ erDiagram
 - **AR / virtual try-on**: `has_ar_support` on `product_categories` flags categories that can use AR; **`ar_model_url` on `product_variants`** stores a path/URL to the 3D model file per sellable variant. Legacy/API payloads may still send `ar_model_url` on the product; the service maps that to the **default variant**. New products automatically get a **default product variant** (and empty inventory row) so catalog entries work without manually defining variants.
 - **Expiry enforcement**: `requires_expiry_tracking` on `product_categories` controls whether inventory `expires_at` is mandatory for products in that category (e.g., contact lens solutions), while durable products (e.g., frames) can keep `expires_at` nullable.
 - **SKU**: Stored on **`product_variants`** (one unique code per sellable variant). Auto-generated on variant create when not provided (format `PRD-` + 8 random alphanumeric characters). The `Product` model exposes `sku` as the **default variant’s** SKU for convenience in lists and legacy views. Not mass-assignable; searchable via product search and variant records.
-- **Supplier linkage**: `products.supplier_id` links catalog items to vendor contacts for restocking workflows.
+- **Cost per unit**: Stored on **`product_variants`** so profit margin reflects each sellable SKU (e.g. titanium vs acetate). Not on `products`.
+- **Product images**: `product_images.product_variant_id` is nullable. Shared gallery when `NULL`; when set, the image is variant-specific and clients should prefer it when that variant is selected.
 - **Inventory audit trail**: `inventory_adjustments` stores each stock quantity change with actor and reason for accountability.
 - **Real-time messaging**: Laravel Reverb (WebSocket server) + Laravel Broadcasting for instant message delivery. Private channels per conversation, authorized via Sanctum.
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
+- **Staff attribution**: `created_by` on orders and appointments tracks which staff member processed the transaction; `staff_id` on appointments records the assigned optometrist/staff. Both are nullable (customer self-service sets `created_by` to their own ID).
+- **Discount tracking**: `discount_amount` + `discount_reason` on orders lets staff manually apply and document SC/PWD or promotional discounts without an automated discount engine.
+- **Variant lifecycle**: `is_active` on `product_variants` allows deactivating a specific color/size/material without soft-deleting the entire product.
 - **Client-side cart**: Android app manages the cart locally; backend receives all items in a single order creation call. No cart table needed.
 - **Stock validation**: Orders are blocked if any item is out of stock. Stock is checked at order creation time against the inventory table.
 - **Order cancellation**: Customers can cancel before "Ready for Pickup." After that, only staff/admin. Bill is voided (if unpaid) or refunded (if partially/fully paid).
-- **Schedule templates**: Admin defines weekly templates (day, start/end time, slot duration, capacity). System batch-generates time slots for a date range. Individual slots can be overridden.
+- **Schedule templates**: Admin defines named weekly templates (day, start/end time, slot duration, capacity). System batch-generates time slots for a date range. Each generated time slot keeps a `schedule_template_id` reference for traceability. Individual slots can be overridden.
 - **Appointment billing**: Paid appointments (fee > 0) auto-generate a bill. Free appointments do not. Bills support both orders and appointments via two nullable foreign keys.
+- **Conversation lifecycle**: Conversations have a simple `status` enum (open / closed) so staff can close resolved threads and filter the inbox.
+
+## Module Workflows: Mobile (Android) vs Web (Admin)
+
+Every module shares the same backend services — the Android app and the web admin panel are just two different interfaces calling the same business logic. Here is what each role sees and does on each platform.
+
+### Products
+
+| | Android App | Web Admin (Livewire) |
+|---|---|---|
+| **Customer** | Browse catalog with filters (category, brand, price). View product details, images, variant options. Tap "Try On" for AR-enabled variants. | N/A — customers don't use web admin. |
+| **Staff** | Same browsing as customer. Can look up products to assist walk-ins. | View product list. Cannot create, edit, or delete. |
+| **Admin** | Same browsing as customer (rarely used). | Full product CRUD: create/edit products, manage variants (color, size, material, lens type), set **`cost_per_unit` per variant**, upload shared and variant-specific images (`product_variant_id`), set prices, toggle `is_active` per variant. Category settings: toggle `has_ar_support` and `requires_expiry_tracking`. |
+
+### Inventory
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Sees "In Stock" / "Out of Stock" badge on products. No quantities shown. | N/A |
+| **Staff** | Views current stock levels per variant. Sees low-stock alerts. Cannot adjust quantities. | Same view as Android but on a wider screen with table layout. |
+| **Admin** | Same as staff view. | Adjusts stock quantities (receive shipment, damage write-off, correction). Every adjustment is logged with before/after quantities, reason, and who did it. Manages reorder levels and batch/expiry info. |
+
+### Ordering
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Adds items to local cart (stored on device). Selects variant, quantity. At checkout, submits order in one API call. Views own order history and status (Pending → Confirmed → Ready → Completed). Can cancel before "Ready for Pickup." | N/A |
+| **Staff** | Creates orders on behalf of walk-ins (enters `walk_in_name` + `walk_in_phone`) or registered customers (phone orders). Applies manual discounts with reason (e.g., "Senior Citizen 20%"). Updates order status through the lifecycle. | Same capabilities on a wider screen. Order management dashboard with filters by status, date, customer. |
+| **Admin** | Same as staff. | Full order management. Can cancel at any stage. Views all orders with staff attribution (`created_by`). |
+
+### Billing
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Views own bills (invoice number, amount, balance due, payment status). Digital receipt view. | N/A |
+| **Staff** | Records payments received (cash, GCash, etc.). Updates `amount_paid` and `balance_due`. Supports partial payments (deposit now, balance on pickup). | Same with a table view of all bills. Easier data entry on desktop. |
+| **Admin** | Same as staff. | All staff capabilities plus: void unpaid bills, mark bills as refunded, view billing reports. |
+
+### Scheduling
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Picks a service type (Eye Exam, Contact Lens Fitting, etc.), selects a date, sees available time slots, and books. Views own upcoming/past appointments. Can cancel before appointment time. | N/A |
+| **Staff** | Books appointments for walk-ins. Views daily/weekly schedule. Assigned as `staff_id` to handle specific appointments. Adds `staff_notes` after each session. | Calendar view of all appointments. Easier to manage daily schedule on desktop. |
+| **Admin** | Same as staff. | Manages service types (name, duration, fee). Creates/edits named schedule templates ("Regular Mon-Fri", "Saturday Hours"). Generates time slots for date ranges. Overrides individual slots (mark unavailable, change capacity). |
+
+### Direct Messaging
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Opens a conversation with the shop. Sends messages, sees real-time replies via WebSocket. Views conversation history. | N/A |
+| **Staff** | Team inbox: sees all open customer conversations. Responds to any thread. Messages appear in real-time. Can close resolved conversations. | Same inbox on desktop — easier to type longer responses. |
+| **Admin** | Same as staff. | Same as staff. Can reopen closed conversations if needed. |
+
+### Feedback & Ratings
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Rates a purchased product (1-5 stars + comment). One review per product. Views other customers' reviews on product pages. | N/A |
+| **Staff** | Views ratings on product pages. Cannot write reviews. | View-only access to all feedback. |
+| **Admin** | Same as staff. | Deletes inappropriate reviews. Views average ratings per product. |
+
+### Virtual Try-On (AR)
+
+| | Android App | Web Admin |
+|---|---|---|
+| **Customer** | Taps "Try On" on AR-enabled variants. AR camera overlay renders the 3D model on the user's face. All rendering is client-side (ARCore). | N/A |
+| **Staff** | Can demo AR try-on to in-store customers on a device. | N/A — no AR on web. |
+| **Admin** | N/A | Uploads/manages AR model URLs per product variant. Toggles `has_ar_support` at category level. |
+
+### Summary
+
+The Android app is the **customer-facing storefront** and the **staff field tool**. Customers browse, order, book, message, and review. Staff uses the same app to process walk-in orders, book appointments, record payments, and respond to messages.
+
+The web admin is the **back-office control panel**. Admin manages the catalog, inventory, schedules, templates, service types, and system settings. Staff can also use web admin for tasks that benefit from a larger screen (order dashboard, billing table, schedule calendar), but their permissions are the same as on mobile.
+
+Both platforms hit the same `/api/v1/` endpoints (Android via Sanctum token auth, web admin via Livewire + session auth), calling the same service layer underneath. No business logic is duplicated.
 
 ## Development Approach: Foundation + Module-by-Module
 
@@ -434,15 +515,14 @@ After this, any module can be built and tested with real auth and role checks.
 
 The first full module. Everything needed for product catalog to work:
 
-- **Migrations**: `product_categories`, `suppliers`, `products`, `product_images`, `product_variants` (variant attributes incl. optical contact-lens fields and `price_adjustment`; orders and inventory reference variants)
+- **Migrations**: `product_categories`, `products`, `product_images` (with nullable `product_variant_id`), `product_variants` (incl. `cost_per_unit`, optical fields, `price_adjustment`; orders and inventory reference variants)
 - **Models**: `ProductCategory`, `Product`, `ProductImage`, `ProductVariant` with relationships, casts, scopes (`active()`, `byCategory()`); observer ensures default variant + inventory on product create
-- **Service**: `ProductService` (list with filters/pagination, create, update, soft delete, manage images)
+- **Service**: `ProductService` (list with filters/pagination, create, update, soft delete, manage images with optional variant scope)
 - **Controller**: `ProductController` (CRUD endpoints)
 - **Form Requests**: `StoreProductRequest`, `UpdateProductRequest`
-- **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource`, `ProductVariantResource` (includes `ar_model_url` per variant)
+- **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource` (includes `product_variant_id`), `ProductVariantResource` (includes `ar_model_url`, `cost_per_unit` per variant)
 - **Policy**: `ProductPolicy` (admin: full CRUD, staff/customer: view only)
 - **Web admin settings UI**: Category settings screen for toggling `has_ar_support` and `requires_expiry_tracking`
-- **Web admin settings UI**: Supplier settings screen for maintaining supplier records used by product forms
 - **Routes**: Product endpoints within role-based route groups
 - **Seeder**: Sample categories and products for testing
 

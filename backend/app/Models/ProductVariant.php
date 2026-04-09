@@ -22,6 +22,7 @@ class ProductVariant extends Model
         'base_curve',
         'diameter',
         'price_adjustment',
+        'cost_per_unit',
         'is_default',
         'ar_model_url',
     ];
@@ -51,6 +52,7 @@ class ProductVariant extends Model
     {
         return [
             'price_adjustment' => 'decimal:2',
+            'cost_per_unit' => 'decimal:2',
             'is_default' => 'boolean',
         ];
     }
@@ -65,15 +67,33 @@ class ProductVariant extends Model
         return $this->hasOne(Inventory::class, 'product_variant_id');
     }
 
+    /**
+     * Images scoped to this variant only (excludes product-wide shared images).
+     */
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class, 'product_variant_id')->orderBy('sort_order');
     }
 
-    /** Primary (lowest sort_order) image for this variant. */
+    /**
+     * First image for this variant: variant-specific row if any, otherwise first shared product image.
+     */
+    public function firstGalleryImage(): ?ProductImage
+    {
+        $own = $this->images()->orderBy('sort_order')->first();
+        if ($own) {
+            return $own;
+        }
+
+        $product = $this->relationLoaded('product') ? $this->product : $this->product()->first();
+
+        return $product?->sharedImages()->orderBy('sort_order')->first();
+    }
+
+    /** @deprecated Use {@see firstGalleryImage()} for thumbnails; kept for eager-loading variant-only rows */
     public function primaryImage(): HasOne
     {
-        return $this->hasOne(ProductImage::class)->orderBy('sort_order');
+        return $this->hasOne(ProductImage::class, 'product_variant_id')->orderBy('sort_order');
     }
 
     public function orderItems(): HasMany

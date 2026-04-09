@@ -123,33 +123,18 @@
                     ></textarea>
                 </div>
 
-                {{-- Selling price + Cost price --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            {{ __('Selling price') }} (₱) <span class="text-red-500">*</span>
-                        </label>
-                        <input wire:model.live="price" type="number" min="0" step="0.01"
-                            placeholder="0.00"
-                            class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
-                                   {{ $errors->has('price') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
-                                   bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                        @error('price') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            {{ __('Cost price') }} (₱)
-                            <span class="text-xs font-normal text-zinc-400">({{ __('optional') }})</span>
-                        </label>
-                        <input wire:model.live="cost_per_unit" type="number" min="0" step="0.01"
-                            placeholder="0.00"
-                            class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
-                                   {{ $errors->has('cost_per_unit') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
-                                   bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                        @error('cost_per_unit') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                    </div>
+                {{-- Selling price (cost per unit is set per variant in step 2) --}}
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Selling price') }} (₱) <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model.live="price" type="number" min="0" step="0.01"
+                        placeholder="0.00"
+                        class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
+                               {{ $errors->has('price') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
+                               bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                    >
+                    @error('price') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Status --}}
@@ -232,6 +217,17 @@
                                         @endforeach
                                     </div>
                                 @endif
+
+                                <div class="mb-2">
+                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                        {{ __('Cost per unit') }} (₱)
+                                        <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                                    </label>
+                                    <input wire:model.blur="variantCostPerUnit.{{ $variantId }}" type="number" min="0" step="0.01"
+                                        placeholder="0.00"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                    >
+                                </div>
 
                                 @if($cat_has_ar_support)
                                     <div class="mb-2">
@@ -392,7 +388,7 @@
                     @endif
 
                     {{-- Always shown --}}
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
                                 {{ __('Price adjustment') }} (₱)
@@ -401,6 +397,17 @@
                                 class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
                             >
                             <p class="mt-0.5 text-[11px] text-zinc-400">{{ __('Added to base price. Use 0 if same.') }}</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                {{ __('Cost per unit') }} (₱)
+                                <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                            </label>
+                            <input wire:model="v_cost_per_unit" type="number" min="0" step="0.01"
+                                placeholder="0.00"
+                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                            >
+                            @error('v_cost_per_unit') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">

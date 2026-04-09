@@ -127,31 +127,6 @@
                                 @enderror
                             </div>
 
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="supplier_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Supplier') }}
-                                </label>
-                                <flux:select
-                                    id="supplier_id"
-                                    name="supplier_id"
-                                    :label="false"
-                                >
-                                    <option value="">{{ __('No supplier selected') }}</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option
-                                            value="{{ $supplier->id }}"
-                                            @selected(old('supplier_id') == $supplier->id)
-                                        >
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                                @error('supplier_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-
                         </div>
                     </div>
 

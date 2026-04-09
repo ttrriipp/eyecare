@@ -34,7 +34,7 @@ class InventoryService
             ->select('products.*')
             ->addSelect(DB::raw('inv_agg.qty_sum as aggregate_qty'))
             ->addSelect(DB::raw('inv_agg.inv_last_updated as inventory_last_touch'))
-            ->with(['category', 'defaultVariant.primaryImage', 'defaultVariant.inventory']);
+            ->with(['category', 'defaultVariant.images', 'sharedImages', 'defaultVariant.inventory']);
 
         if (! empty($filters['search'])) {
             $query->search($filters['search']);
@@ -217,10 +217,10 @@ class InventoryService
         );
 
         $newQuantity = match ($type) {
-            'add'    => $inventory->quantity + $quantity,
+            'add' => $inventory->quantity + $quantity,
             'remove' => max(0, $inventory->quantity - $quantity),
-            'set'    => $quantity,
-            default  => throw new \InvalidArgumentException("Unknown adjustment type: {$type}"),
+            'set' => $quantity,
+            default => throw new \InvalidArgumentException("Unknown adjustment type: {$type}"),
         };
 
         $reasonValue = filled($notes) ? "{$reason}: {$notes}" : $reason;
@@ -254,19 +254,17 @@ class InventoryService
 
         if (! empty($filters['search'])) {
             $term = $filters['search'];
-            $query->whereHas('inventory.productVariant.product', fn ($q) =>
-                $q->where('name', 'like', "%{$term}%")
+            $query->whereHas('inventory.productVariant.product', fn ($q) => $q->where('name', 'like', "%{$term}%")
             );
         }
 
         if (! empty($filters['product_id'])) {
-            $query->whereHas('inventory.productVariant', fn ($q) =>
-                $q->where('product_id', $filters['product_id'])
+            $query->whereHas('inventory.productVariant', fn ($q) => $q->where('product_id', $filters['product_id'])
             );
         }
 
         if (! empty($filters['reason'])) {
-            $query->where('reason', 'like', $filters['reason'] . '%');
+            $query->where('reason', 'like', $filters['reason'].'%');
         }
 
         if (! empty($filters['date_from'])) {
@@ -290,8 +288,7 @@ class InventoryService
     public function recentAdjustmentsForProduct(int $productId, int $limit = 5): Collection
     {
         return InventoryAdjustment::query()
-            ->whereHas('inventory.productVariant', fn ($q) =>
-                $q->where('product_id', $productId)
+            ->whereHas('inventory.productVariant', fn ($q) => $q->where('product_id', $productId)
             )
             ->with(['inventory.productVariant', 'adjustedBy'])
             ->orderByDesc('created_at')

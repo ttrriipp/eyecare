@@ -12,11 +12,9 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'category' => new ProductCategoryResource($this->whenLoaded('category')),
-            'supplier' => new SupplierResource($this->whenLoaded('supplier')),
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
-            'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
             'sku' => $this->when($request->user()?->isAdminOrStaff(), $this->sku),
             'brand' => $this->brand,
             'is_active' => $this->when($request->user()?->isAdmin(), $this->is_active),

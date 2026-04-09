@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductImage
+import com.example.opticalsystem.data.model.hasArTryOn
+import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
 import com.example.opticalsystem.ui.cart.CartViewModel
 import com.example.opticalsystem.util.Resource
@@ -319,7 +321,7 @@ class ProductDetailFragment : Fragment() {
             }
 
             // AR Try-On badge
-            tvArBadge.isVisible = product.arModelUrl != null
+            tvArBadge.isVisible = product.hasArTryOn()
 
             // Rating (visible only when Phase F data is available)
             val rating = product.averageRating
@@ -389,18 +391,37 @@ class ProductDetailFragment : Fragment() {
     }
 
     private fun setupSpecifications(product: Product) {
+        // Use default variant for specs; single-SKU products always have one
+        val variant = product.defaultVariant ?: product.selectableVariants().firstOrNull()
+        
         binding.apply {
-            if (!product.frameMaterial.isNullOrBlank()) {
-                tvSpecFrame.text = product.frameMaterial
+            // Material (frame_material → variant.material)
+            if (!variant?.material.isNullOrBlank()) {
+                tvSpecFrame.text = variant?.material
                 rowFrame.isVisible = true
-                dividerFrame.isVisible = !product.lensType.isNullOrBlank()
+                dividerFrame.isVisible = !variant?.lensType.isNullOrBlank()
+            } else {
+                rowFrame.isVisible = false
+                dividerFrame.isVisible = false
             }
-            if (!product.lensType.isNullOrBlank()) {
-                tvSpecLens.text = product.lensType
+            
+            // Lens Type
+            if (!variant?.lensType.isNullOrBlank()) {
+                tvSpecLens.text = variant?.lensType
                 rowLens.isVisible = true
                 dividerLens.isVisible = true
+            } else {
+                rowLens.isVisible = false
+                dividerLens.isVisible = false
             }
-            tvSpecSku.text = product.sku
+            
+            // SKU (from variant or product-level accessor)
+            val skuText = variant?.sku ?: product.sku
+            if (!skuText.isNullOrBlank()) {
+                tvSpecSku.text = skuText
+            } else {
+                tvSpecSku.text = "—"
+            }
         }
     }
 
