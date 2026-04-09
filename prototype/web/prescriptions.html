@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Prescriptions</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Prescriptions</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Prescriptions</h1>
+    <p><a href="prescription-edit.html?id=new">+ New prescription</a> (admin/staff after in-person exam)</p>
+    <p class="note">Links: <code>patient_user_id</code>, optional <code>appointment_id</code>, <code>prescribed_by_user_id</code>.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th><th>patient</th><th>appointment</th><th>prescribed_on</th><th>OD Sph</th><th>OS Sph</th><th>PD</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>101</td><td>Juan (user 12)</td><td>#APT-42</td><td>2026-04-08</td><td>-2.25</td><td>-1.75</td><td>62</td>
+          <td><a href="prescription-edit.html?id=101">Edit</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

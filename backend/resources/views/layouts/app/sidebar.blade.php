@@ -26,14 +26,25 @@
                     </flux:sidebar.item>
 
 
-                    <flux:sidebar.item
-                        icon="layout-grid"
-                        :href="route('products.index')"
-                        :current="request()->routeIs('products.*')"
-                        wire:navigate
-                    >
-                        {{ __('Products') }}
-                    </flux:sidebar.item>
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <flux:sidebar.item
+                            icon="layout-grid"
+                            :href="route('admin.products.index')"
+                            :current="request()->routeIs('admin.products.*')"
+                            wire:navigate
+                        >
+                            {{ __('Products') }}
+                        </flux:sidebar.item>
+                    @else
+                        <flux:sidebar.item
+                            icon="layout-grid"
+                            :href="route('products.index')"
+                            :current="request()->routeIs('products.*')"
+                            wire:navigate
+                        >
+                            {{ __('Products') }}
+                        </flux:sidebar.item>
+                    @endif
 
                     <flux:sidebar.item
                         icon="clipboard-document-list"
@@ -56,14 +67,16 @@
                     </div>
 
                     @if(auth()->user()?->isAdminOrStaff())
-                        <flux:sidebar.item
-                            icon="package"
-                            :href="route('inventory.index')"
-                            :current="request()->routeIs('inventory.*')"
-                            wire:navigate
-                        >
-                            {{ __('Inventory') }}
-                        </flux:sidebar.item>
+                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
+                            <flux:sidebar.item
+                                icon="clock"
+                                :href="route('admin.inventory.adjustments')"
+                                :current="request()->routeIs('admin.inventory.*')"
+                                wire:navigate
+                            >
+                                {{ __('Adjustment History') }}
+                            </flux:sidebar.item>
+                        </div>
 
                         <flux:sidebar.item
                             icon="star"

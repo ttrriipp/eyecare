@@ -58,6 +58,9 @@ class CategoryManager extends Component
 
     public bool $has_duration = false;
 
+    /** Filters the category table by name or description (client-side debounced input). */
+    public string $search = '';
+
     // ── Read-only context ─────────────────────────────────────────────────
 
     /** True when editing a system category — flag toggles are locked. */
@@ -117,23 +120,35 @@ class CategoryManager extends Component
     #[Computed]
     public function categories(): \Illuminate\Database\Eloquent\Collection
     {
-        return ProductCategory::withCount('products')
+        $all = ProductCategory::query()
+            ->withCount('products')
             ->orderByDesc('is_system')
             ->orderBy('name')
             ->get();
+
+        $term = mb_strtolower(trim($this->search));
+        if ($term === '') {
+            return $all;
+        }
+
+        return $all
+            ->filter(function (ProductCategory $cat) use ($term): bool {
+                if (str_contains(mb_strtolower($cat->name), $term)) {
+                    return true;
+                }
+                if ($cat->description === null || $cat->description === '') {
+                    return false;
+                }
+
+                return str_contains(mb_strtolower($cat->description), $term);
+            })
+            ->values();
     }
 
-    /** @return array{total:int, system:int, custom:int, ar:int} */
-    public function categoryStats(): array
+    #[Computed]
+    public function customCategoriesExistInDatabase(): bool
     {
-        $all = $this->categories;
-
-        return [
-            'total'  => $all->count(),
-            'system' => $all->where('is_system', true)->count(),
-            'custom' => $all->where('is_system', false)->count(),
-            'ar'     => $all->where('has_ar_support', true)->count(),
-        ];
+        return ProductCategory::where('is_system', false)->exists();
     }
 
     // ── Panel open/close ──────────────────────────────────────────────────
@@ -206,7 +221,7 @@ class CategoryManager extends Component
             $data['slug']      = $this->uniqueSlug(Str::slug($data['name']));
             $data['is_system'] = false;
             $productService->createCategory($data);
-            unset($this->categories);
+            unset($this->categories, $this->customCategoriesExistInDatabase);
             $this->closePanel();
             $this->dispatch('toast', message: 'Category created successfully.', type: 'success');
         } else {
@@ -222,7 +237,7 @@ class CategoryManager extends Component
             }
 
             $productService->updateCategory($category, $data);
-            unset($this->categories);
+            unset($this->categories, $this->customCategoriesExistInDatabase);
             $this->closePanel();
             $this->dispatch('toast', message: 'Category updated.', type: 'success');
         }
@@ -254,7 +269,7 @@ class CategoryManager extends Component
         try {
             $category = ProductCategory::findOrFail($this->editingId);
             $productService->deleteCategory($category);
-            unset($this->categories);
+            unset($this->categories, $this->customCategoriesExistInDatabase);
             $this->closePanel();
             $this->dispatch('toast', message: 'Category deleted.', type: 'success');
         } catch (HttpException $e) {

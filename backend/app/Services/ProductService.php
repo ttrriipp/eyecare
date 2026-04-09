@@ -3,13 +3,17 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Models\Supplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ProductService
@@ -27,7 +31,13 @@ class ProductService
 
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Product::with(['category', 'supplier', 'images', 'defaultVariant.product'])
+        $query = Product::with([
+            'category',
+            'supplier',
+            'defaultVariant.product',
+            'defaultVariant.primaryImage',
+            'variants:id,product_id,ar_model_url',
+        ])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count']);
 
@@ -65,7 +75,7 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product'])
+        return Product::with(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product'])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count'])
             ->findOrFail($id);
@@ -73,34 +83,54 @@ class ProductService
 
     public function create(array $data): Product
     {
-        $product = Product::create($this->normalizeArModelUrlForCategory($data));
+        unset($data['ar_model_url']);
 
-        return $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product']);
+        $product = Product::create($data);
+
+        return $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
     }
 
     public function update(Product $product, array $data): Product
     {
-        $product->update($this->normalizeArModelUrlForCategory($data, $product));
+        unset($data['ar_model_url']);
 
-        return $product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'variants.product']);
+        $product->update($data);
+
+        return $product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
     }
 
     /**
-     * Clear AR model URL when the target category does not support virtual try-on.
+     * Set AR model URL on the product's default variant (e.g. legacy API / web forms that still post `ar_model_url` on the product).
      *
+     * @param  mixed  $url
+     */
+    public function applyArModelToDefaultVariant(Product $product, $url): void
+    {
+        $product->loadMissing('defaultVariant');
+        $variant = $product->defaultVariant;
+        if (! $variant) {
+            return;
+        }
+
+        $this->updateVariant($variant, ['ar_model_url' => $url]);
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private function normalizeArModelUrlForCategory(array $data, ?Product $existing = null): array
+    private function normalizeVariantArModelUrl(Product $product, array $data): array
     {
-        $categoryId = $data['category_id'] ?? $existing?->category_id;
-        if ($categoryId === null) {
+        if (! array_key_exists('ar_model_url', $data)) {
             return $data;
         }
 
-        $category = ProductCategory::query()->find($categoryId);
-        if ($category && ! $category->has_ar_support) {
+        $product->loadMissing('category');
+        if (! $product->category?->has_ar_support) {
             $data['ar_model_url'] = null;
+        } else {
+            $v = $data['ar_model_url'];
+            $data['ar_model_url'] = filled($v) ? trim((string) $v) : null;
         }
 
         return $data;
@@ -129,20 +159,67 @@ class ProductService
             ]);
         }
 
-        // Clean up physical image files
-        foreach ($product->images as $image) {
-            $this->deletePhysicalFile($image->image_url);
+        $product->loadMissing('variants.images');
+        foreach ($product->variants as $variant) {
+            foreach ($variant->images as $image) {
+                $this->deletePhysicalFile($image->image_url);
+            }
         }
 
         $product->delete();
     }
 
-    public function addImage(Product $product, string $imageUrl, int $sortOrder = 0): ProductImage
+    public function addImage(ProductVariant $variant, string $imageUrl, int $sortOrder = 0): ProductImage
     {
-        return $product->images()->create([
+        return $variant->images()->create([
             'image_url' => $imageUrl,
             'sort_order' => $sortOrder,
         ]);
+    }
+
+    /**
+     * Save an upload under public/images/products and return its public URL.
+     * Uses {@see copy()} instead of move/rename so Livewire temp files work when the PHP temp
+     * directory and public/ are on different Windows volumes.
+     */
+    public function storePublicCatalogImage(UploadedFile $file): string
+    {
+        $dir = public_path(implode(DIRECTORY_SEPARATOR, ['images', 'products']));
+        if (! is_dir($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension() ?: '');
+        if ($ext === '') {
+            $ext = match ($file->getMimeType()) {
+                'image/jpeg', 'image/jpg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/gif' => 'gif',
+                default => 'jpg',
+            };
+        }
+
+        $filename = Str::uuid()->toString().'.'.$ext;
+        $target = $dir.DIRECTORY_SEPARATOR.$filename;
+
+        $source = $file->getRealPath();
+        if ($source === false || ! is_readable($source)) {
+            $source = $file->getPathname();
+        }
+        if (! is_readable($source)) {
+            throw ValidationException::withMessages([
+                'image' => __('Could not read the uploaded file. Please try again.'),
+            ]);
+        }
+
+        if (! @copy($source, $target)) {
+            throw ValidationException::withMessages([
+                'image' => __('Could not save the image. Check that the server can write to public/images/products.'),
+            ]);
+        }
+
+        return asset('images/products/'.$filename);
     }
 
     /**
@@ -195,6 +272,112 @@ class ProductService
         }
 
         $category->delete();
+    }
+
+    /**
+     * Create a variant for a product and seed its inventory row.
+     */
+    public function createVariant(
+        Product $product,
+        array $variantData,
+        int $initialStock = 0,
+        int $reorderLevel = 5,
+    ): ProductVariant {
+        $product->loadMissing('category');
+        $variantData = $this->normalizeVariantArModelUrl($product, $variantData);
+
+        $variant = $product->variants()->create($variantData);
+
+        Inventory::create([
+            'product_variant_id' => $variant->id,
+            'quantity'           => $initialStock,
+            'reorder_level'      => $reorderLevel,
+            'reorder_quantity'   => 0,
+        ]);
+
+        return $variant->load('inventory');
+    }
+
+    /**
+     * Ensure a default sellable variant exists (with an inventory row).
+     *
+     * Livewire admin product creation skips this by adding explicit variants after
+     * {@see create()}. Legacy web/API flows and seeders call this when a product
+     * must have exactly one default unit.
+     */
+    public function ensureDefaultVariantIfMissing(Product $product): ProductVariant
+    {
+        if ($product->variants()->exists()) {
+            $product->loadMissing('defaultVariant');
+
+            return $product->defaultVariant
+                ?? $product->variants()->orderBy('id')->firstOrFail();
+        }
+
+        return $this->createVariant(
+            $product,
+            [
+                'is_default'       => true,
+                'price_adjustment' => 0,
+            ],
+            0,
+            0,
+        );
+    }
+
+    /**
+     * Update a variant's fields.
+     */
+    public function updateVariant(ProductVariant $variant, array $data): ProductVariant
+    {
+        $variant->loadMissing('product');
+        $data = $this->normalizeVariantArModelUrl($variant->product, $data);
+        $variant->update($data);
+
+        return $variant->fresh('inventory');
+    }
+
+    /**
+     * Delete a variant after checking it has no active orders.
+     * Also zeros out and records a final inventory adjustment.
+     *
+     * @throws ValidationException if variant has active orders
+     */
+    public function deleteVariant(ProductVariant $variant, ?int $actorId = null): void
+    {
+        $hasActiveOrders = $variant->orderItems()
+            ->whereHas('order', fn ($q) => $q->whereNotIn('status', [
+                OrderStatus::Completed->value,
+                OrderStatus::Cancelled->value,
+            ]))
+            ->exists();
+
+        if ($hasActiveOrders) {
+            throw ValidationException::withMessages([
+                'variant' => __('Cannot delete this variant because it has active orders.'),
+            ]);
+        }
+
+        $inventory = $variant->inventory;
+        if ($inventory && $inventory->quantity > 0) {
+            $inventory->adjustments()->create([
+                'quantity_before' => $inventory->quantity,
+                'quantity_after'  => 0,
+                'delta'           => -$inventory->quantity,
+                'adjustment_type' => 'subtract',
+                'reason'          => 'variant_removed',
+                'adjusted_by'     => $actorId,
+            ]);
+        }
+
+        $inventory?->delete();
+
+        $variant->loadMissing('images');
+        foreach ($variant->images as $image) {
+            $this->deletePhysicalFile($image->image_url);
+        }
+
+        $variant->delete();
     }
 
     /**

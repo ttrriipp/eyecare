@@ -172,7 +172,7 @@
                                     <div class="max-w-xs font-semibold text-zinc-900 dark:text-zinc-50">
                                         {{ $product->name }}
                                     </div>
-                                    @if($product->ar_model_url)
+                                    @if($product->variants->contains(fn ($v) => filled($v->ar_model_url)))
                                         <span class="mt-0.5 inline-block text-[11px] font-medium text-sky-600 dark:text-sky-400">
                                             {{ __('AR') }}
                                         </span>
@@ -329,7 +329,7 @@
                                     </span>
                                 @endif
 
-                                @if($product->ar_model_url)
+                                @if($product->variants->contains(fn ($v) => filled($v->ar_model_url)))
                                     <span class="text-[11px] font-medium text-sky-600 dark:text-sky-400">
                                         {{ __('AR available') }}
                                     </span>

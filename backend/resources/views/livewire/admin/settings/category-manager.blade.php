@@ -1,7 +1,8 @@
 @php
-    $stats = $this->categoryStats();
     $systemCats = $this->categories->where('is_system', true)->values();
     $customCats  = $this->categories->where('is_system', false)->values();
+    $searchActive = filled(trim($this->search));
+    $tableEmpty = $systemCats->isEmpty() && $customCats->isEmpty();
 
     $variantFlagLabels = [
         'has_color'       => 'Color',
@@ -38,59 +39,16 @@
         @endif
     </div>
 
-    {{-- ── Stat chips ─────────────────────────────────────────────────────── --}}
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {{-- Total --}}
-        <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $stats['total'] }}</p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Total') }}</p>
-            </div>
-        </div>
-
-        {{-- System --}}
-        <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $stats['system'] }}</p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('System') }}</p>
-            </div>
-        </div>
-
-        {{-- Custom --}}
-        <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $stats['custom'] }}</p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Custom') }}</p>
-            </div>
-        </div>
-
-        {{-- AR --}}
-        <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $stats['ar'] }}</p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('With AR') }}</p>
-            </div>
+    {{-- Search --}}
+    <div class="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+        <div class="max-w-md">
+            <flux:input
+                wire:model.live.debounce.300ms="search"
+                placeholder="{{ __('Search by name or description…') }}"
+                icon="magnifying-glass"
+                :label="false"
+                autocomplete="off"
+            />
         </div>
     </div>
 
@@ -105,12 +63,29 @@
                     <th class="px-4 py-3.5">{{ __('Requires Rx') }}</th>
                     <th class="px-4 py-3.5">{{ __('Stock unit') }}</th>
                     <th class="px-4 py-3.5">{{ __('Variant fields') }}</th>
-                    <th class="px-4 py-3.5">{{ __('Type') }}</th>
                     <th class="px-4 py-3.5 text-right">{{ __('Actions') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
 
+                @if($tableEmpty)
+                    <tr>
+                        <td colspan="7" class="px-4 py-14 text-center">
+                            <div class="mx-auto flex max-w-xs flex-col items-center gap-2">
+                                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    @if($searchActive)
+                                        {{ __('No categories match your search.') }}
+                                    @else
+                                        {{ __('No categories yet.') }}
+                                    @endif
+                                </p>
+                                @if($searchActive)
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Try a different term or clear the search.') }}</p>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @else
                 {{-- System categories --}}
                 @foreach($systemCats as $cat)
                     @php
@@ -155,12 +130,6 @@
                             @else
                                 <span class="text-xs italic text-zinc-400 dark:text-zinc-500">{{ __('None') }}</span>
                             @endif
-                        </td>
-                        <td class="px-4 py-3.5 align-middle">
-                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" /></svg>
-                                {{ __('System') }}
-                            </span>
                         </td>
                         <td class="px-4 py-3.5 text-right align-middle">
                             @if(auth()->user()?->isAdmin())
@@ -218,9 +187,6 @@
                                     <span class="text-xs italic text-zinc-400 dark:text-zinc-500">{{ __('None') }}</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3.5 align-middle">
-                                <span class="inline-flex items-center rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ __('Custom') }}</span>
-                            </td>
                             <td class="px-4 py-3.5 text-right align-middle">
                                 @if(auth()->user()?->isAdmin())
                                     <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $cat->id }})">
@@ -230,10 +196,10 @@
                             </td>
                         </tr>
                     @endforeach
-                @else
-                    {{-- Empty state: no custom categories --}}
+                @elseif(!$searchActive && $this->customCategoriesExistInDatabase === false)
+                    {{-- Empty state: no custom categories (and not filtering them away with search) --}}
                     <tr>
-                        <td colspan="8" class="px-4 py-14 text-center">
+                        <td colspan="7" class="px-4 py-14 text-center">
                             <div class="mx-auto flex max-w-xs flex-col items-center gap-3">
                                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -246,6 +212,7 @@
                             </div>
                         </td>
                     </tr>
+                @endif
                 @endif
             </tbody>
         </table>

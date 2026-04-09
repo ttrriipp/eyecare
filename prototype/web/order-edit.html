@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Order edit</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="orders.html">← Orders</a> · <strong>Order + line items + lens + job</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Order <span class="badge">POST /api/v1/orders</span></h1>
+    <p class="note">Cart is client-side on mobile; web staff submits full payload. Stock check per <code>product_variant_id</code>.</p>
+
+    <form action="#" onsubmit="return false">
+      <fieldset>
+        <legend>orders</legend>
+        <label>user_id (nullable)</label><input value="12" />
+        <label>walk_in_name</label><input placeholder="if user_id empty" />
+        <label>walk_in_phone</label><input />
+        <label>status</label><select><option>pending</option><option>confirmed</option><option>ready</option><option>completed</option></select>
+        <label>discount_amount</label><input value="0" />
+        <label>notes</label><textarea rows="2">Deposit 7000 agreed</textarea>
+      </fieldset>
+
+      <h2>Line 1 — Frame (stock item)</h2>
+      <fieldset>
+        <legend>order_items[0]</legend>
+        <label>product_variant_id</label><input value="201" />
+        <label>quantity</label><input value="1" />
+        <label>unit_price</label><input value="5500" />
+        <label>subtotal</label><input value="5500" />
+        <label>item_notes</label><input placeholder="optional" />
+        <p class="note">No <code>order_item_lens_details</code> row required for pure frame/accessory lines.</p>
+      </fieldset>
+
+      <h2>Line 2 — Prescription lenses (lens detail + job)</h2>
+      <fieldset>
+        <legend>order_items[1]</legend>
+        <label>product_variant_id</label><input value="501" />
+        <label>quantity</label><input value="1" />
+        <label>unit_price</label><input value="8200" />
+        <label>subtotal</label><input value="8200" />
+      </fieldset>
+      <fieldset>
+        <legend>order_item_lens_details (1:1 with order_item when needed)</legend>
+        <label>prescription_id</label><input value="101" />
+        <p class="note">Validate prescription belongs to same customer as order <code>user_id</code>.</p>
+        <label>lens_material</label><input value="Hi-index 1.67" />
+        <label>lens_design</label><input value="Progressive" />
+        <label>lens_coatings</label><input value="AR + blue light" />
+        <label>fulfillment_notes</label><textarea rows="2">Lab: standard PAL</textarea>
+      </fieldset>
+      <fieldset>
+        <legend>job_orders (optional, per lens line)</legend>
+        <label>job_order_number</label><input value="JOB-2026-0088" />
+        <label>lab_name</label><input value="Essilor PH" />
+        <label>status</label><select><option>submitted</option><option>processing</option><option>ready</option><option>delivered</option><option>completed</option><option>rejected</option></select>
+        <label>expected_completion_date</label><input type="date" value="2026-04-15" />
+      </fieldset>
+
+      <p><strong>total_amount</strong> (computed): 13700 · <strong>discount_amount</strong>: 0 → bill amount 13700</p>
+      <p><button type="button">Save order (no API)</button></p>
+    </form>
+
+    <h2>Nested JSON example (conceptual)</h2>
+    <pre class="sample">{
+  "user_id": 12,
+  "walk_in_name": null,
+  "walk_in_phone": null,
+  "items": [
+    {
+      "product_variant_id": 201,
+      "quantity": 1,
+      "unit_price": "5500.00",
+      "item_notes": null
+    },
+    {
+      "product_variant_id": 501,
+      "quantity": 1,
+      "unit_price": "8200.00",
+      "lens_detail": {
+        "prescription_id": 101,
+        "lens_material": "Hi-index 1.67",
+        "lens_design": "Progressive",
+        "lens_coatings": "AR + blue light",
+        "fulfillment_notes": "…"
+      },
+      "job_order": {
+        "job_order_number": "JOB-2026-0088",
+        "lab_name": "Essilor PH",
+        "status": "processing",
+        "expected_completion_date": "2026-04-15"
+      }
+    }
+  ],
+  "discount_amount": "0.00",
+  "notes": "Deposit 7000 agreed"
+}</pre>
+  </main>
+</body>
+</html>

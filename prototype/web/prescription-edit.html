@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Prescription edit</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="prescriptions.html">← Prescriptions</a> · <strong>Prescription form</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Prescription <span class="badge">POST/PUT /api/v1/prescriptions</span></h1>
+    <form action="#" onsubmit="return false">
+      <fieldset>
+        <legend>Links</legend>
+        <label>patient_user_id</label>
+        <select><option value="12">12 — Juan Dela Cruz</option><option value="">walk-in (not allowed for Rx store — use registered patient)</option></select>
+        <label>appointment_id (optional)</label>
+        <input value="42" placeholder="nullable FK" />
+        <label>prescribed_by_user_id</label>
+        <select><option>3 — Dr. Santos (staff)</option></select>
+        <p class="note">Server sets from auth if you prefer; still store for audit.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Right eye (OD)</legend>
+        <div class="row">
+          <div><label>od_sphere</label><input value="-2.25" /></div>
+          <div><label>od_cylinder</label><input value="-0.75" /></div>
+          <div><label>od_axis</label><input value="180" /></div>
+          <div><label>od_add</label><input value="1.50" placeholder="progressive" /></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Left eye (OS)</legend>
+        <div class="row">
+          <div><label>os_sphere</label><input value="-1.75" /></div>
+          <div><label>os_cylinder</label><input value="-0.50" /></div>
+          <div><label>os_axis</label><input value="175" /></div>
+          <div><label>os_add</label><input value="1.50" /></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>PD</legend>
+        <div class="row">
+          <div><label>pd (combined mm)</label><input value="62" /></div>
+          <div><label>pd_right (optional)</label><input value="31" /></div>
+          <div><label>pd_left (optional)</label><input value="31" /></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Meta</legend>
+        <label>prescribed_on</label><input type="date" value="2026-04-08" />
+        <label>expires_on (optional)</label><input type="date" value="2027-04-08" />
+        <label>clinical_notes</label><textarea rows="3">Recommend blue light coating. Review 12 months.</textarea>
+      </fieldset>
+      <p><button type="button">Save prescription (no API)</button></p>
+    </form>
+    <h2>Example JSON body</h2>
+    <pre class="sample">{
+  "patient_user_id": 12,
+  "appointment_id": 42,
+  "prescribed_by_user_id": 3,
+  "od_sphere": -2.25,
+  "od_cylinder": -0.75,
+  "od_axis": 180,
+  "od_add": 1.50,
+  "os_sphere": -1.75,
+  "os_cylinder": -0.50,
+  "os_axis": 175,
+  "os_add": 1.50,
+  "pd": 62,
+  "pd_right": 31,
+  "pd_left": 31,
+  "prescribed_on": "2026-04-08",
+  "expires_on": "2027-04-08",
+  "clinical_notes": "…"
+}</pre>
+  </main>
+</body>
+</html>

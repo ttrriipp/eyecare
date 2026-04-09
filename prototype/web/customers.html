@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Customers</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Customers</strong> (<code>users</code> role=customer)</header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Customer records</h1>
+    <p class="note">Extended profile: <code>date_of_birth</code>, <code>address</code>, <code>customer_notes</code> (plan).</p>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th><th>name</th><th>email</th><th>phone</th><th>dob</th><th>address</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>12</td><td>Juan Dela Cruz</td><td>juan@example.com</td><td>0917…</td><td>1990-05-12</td><td>Quezon City</td>
+          <td><a href="prescriptions.html?user=12">Rx</a> · <a href="orders.html?user=12">Orders</a></td>
+        </tr>
+        <tr>
+          <td>—</td><td>Walk-in</td><td>—</td><td>0920…</td><td>—</td><td>—</td>
+          <td><span class="badge">no user_id</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Edit customer (fields)</h2>
+    <form action="#" onsubmit="return false">
+      <fieldset>
+        <legend>User (customer)</legend>
+        <label>name</label><input value="Juan Dela Cruz" />
+        <label>email</label><input type="email" value="juan@example.com" />
+        <label>phone</label><input value="09171234567" />
+        <label>date_of_birth</label><input type="date" value="1990-05-12" />
+        <label>address</label><textarea rows="2">123 Sample St., Quezon City</textarea>
+        <label>customer_notes</label><textarea rows="2">Prefers lightweight frames; SC ID on file (manual verify)</textarea>
+      </fieldset>
+      <p><button type="button">Save (no API)</button></p>
+    </form>
+  </main>
+</body>
+</html>

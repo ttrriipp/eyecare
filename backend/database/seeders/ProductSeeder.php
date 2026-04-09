@@ -7,6 +7,7 @@ use App\Enums\LensType;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Supplier;
+use App\Services\ProductService;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -141,7 +142,7 @@ class ProductSeeder extends Seeder
 
         // ── Products ──────────────────────────────────────────────────────────
         // Each entry: 'product' → Product fillable fields
-        //             'default_variant' → ProductVariant fields for the auto-created default variant
+        //             'default_variant' → optional ProductVariant fields merged onto the baseline default variant
         $products = [
 
             // ── Eyeglass Frames ───────────────────────────────────────────────
@@ -155,13 +156,13 @@ class ProductSeeder extends Seeder
                     'price'         => 1500.00,
                     'cost_per_unit' => 600.00,
                     'brand'         => 'Bolon',
-                    'ar_model_url'  => 'https://models.eyecare.test/frames/classic-full-rim.glb',
                     'is_active'     => true,
                 ],
                 'default_variant' => [
-                    'color'      => 'Black',
-                    'frame_size' => 'Medium',
-                    'material'   => FrameMaterial::Acetate->value,
+                    'color'        => 'Black',
+                    'frame_size'   => 'Medium',
+                    'material'     => FrameMaterial::Acetate->value,
+                    'ar_model_url' => 'https://models.eyecare.test/frames/classic-full-rim.glb',
                 ],
             ],
             [
@@ -174,13 +175,13 @@ class ProductSeeder extends Seeder
                     'price'         => 2800.00,
                     'cost_per_unit' => 1100.00,
                     'brand'         => 'Hangten',
-                    'ar_model_url'  => 'https://models.eyecare.test/frames/titanium-semi-rimless.glb',
                     'is_active'     => true,
                 ],
                 'default_variant' => [
-                    'color'      => 'Silver',
-                    'frame_size' => 'Medium',
-                    'material'   => FrameMaterial::Titanium->value,
+                    'color'        => 'Silver',
+                    'frame_size'   => 'Medium',
+                    'material'     => FrameMaterial::Titanium->value,
+                    'ar_model_url' => 'https://models.eyecare.test/frames/titanium-semi-rimless.glb',
                 ],
             ],
             [
@@ -193,13 +194,13 @@ class ProductSeeder extends Seeder
                     'price'         => 1200.00,
                     'cost_per_unit' => 480.00,
                     'brand'         => 'Peculiar',
-                    'ar_model_url'  => 'https://models.eyecare.test/frames/tr90-flexible.glb',
                     'is_active'     => true,
                 ],
                 'default_variant' => [
-                    'color'      => 'Blue',
-                    'frame_size' => 'Small',
-                    'material'   => FrameMaterial::TR90->value,
+                    'color'        => 'Blue',
+                    'frame_size'   => 'Small',
+                    'material'     => FrameMaterial::TR90->value,
+                    'ar_model_url' => 'https://models.eyecare.test/frames/tr90-flexible.glb',
                 ],
             ],
 
@@ -299,14 +300,14 @@ class ProductSeeder extends Seeder
                     'price'         => 2000.00,
                     'cost_per_unit' => 750.00,
                     'brand'         => 'Bolon',
-                    'ar_model_url'  => 'https://models.eyecare.test/sunglasses/polarized-uv.glb',
                     'is_active'     => true,
                 ],
                 'default_variant' => [
-                    'color'      => 'Black',
-                    'frame_size' => 'Large',
-                    'material'   => FrameMaterial::Acetate->value,
-                    'lens_type'  => LensType::Polarized->value,
+                    'color'        => 'Black',
+                    'frame_size'   => 'Large',
+                    'material'     => FrameMaterial::Acetate->value,
+                    'lens_type'    => LensType::Polarized->value,
+                    'ar_model_url' => 'https://models.eyecare.test/sunglasses/polarized-uv.glb',
                 ],
             ],
 
@@ -352,10 +353,13 @@ class ProductSeeder extends Seeder
             ],
         ];
 
+        $productService = app(ProductService::class);
+
         foreach ($products as $row) {
             $product = Product::create($row['product']);
+            $variant = $productService->ensureDefaultVariantIfMissing($product);
             if (! empty($row['default_variant'])) {
-                $product->defaultVariant->update($row['default_variant']);
+                $productService->updateVariant($variant, $row['default_variant']);
             }
         }
     }

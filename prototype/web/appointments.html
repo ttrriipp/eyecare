@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Appointments</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Appointments</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Scheduling</h1>
+    <p class="note">Entities: <code>service_types</code>, <code>schedule_templates</code>, <code>time_slots</code>, <code>appointments</code>. Fee &gt; 0 → auto <code>bills</code>.</p>
+    <h2>Service types (sample)</h2>
+    <table>
+      <thead><tr><th>id</th><th>name</th><th>default_duration_minutes</th><th>default_fee</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Eye Examination</td><td>30</td><td>300.00</td></tr>
+        <tr><td>2</td><td>Contact Lens Fitting</td><td>45</td><td>0.00</td></tr>
+      </tbody>
+    </table>
+    <h2>Time slots (sample day)</h2>
+    <table>
+      <thead><tr><th>slot id</th><th>date</th><th>start</th><th>end</th><th>capacity</th><th>available</th><th>action</th></tr></thead>
+      <tbody>
+        <tr><td>9001</td><td>2026-04-10</td><td>09:00</td><td>09:30</td><td>1</td><td>yes</td><td><a href="#">Mark unavailable</a></td></tr>
+        <tr><td>9002</td><td>2026-04-10</td><td>09:30</td><td>10:00</td><td>1</td><td>no</td><td>booked</td></tr>
+      </tbody>
+    </table>
+    <h2>Book for customer / walk-in</h2>
+    <form action="#" onsubmit="return false">
+      <label>user_id (nullable)</label><input placeholder="12 or empty + walk-in fields" />
+      <label>walk_in_name</label><input />
+      <label>walk_in_phone</label><input />
+      <label>time_slot_id</label><input value="9001" />
+      <label>service_type_id</label><input value="1" />
+      <label>fee (override)</label><input value="300" />
+      <p><button type="button">Create appointment (no API)</button></p>
+    </form>
+    <p>After exam: <a href="prescription-edit.html?id=new">attach new prescription</a> with <code>appointment_id</code>.</p>
+  </main>
+</body>
+</html>

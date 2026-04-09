@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Checkout</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="cart.html">← Cart</a> · Checkout</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Place order</h1>
+      <p class="note">One <code>POST /api/v1/orders</code> with items[]. For lens lines, include <code>lens_detail</code> + <code>prescription_id</code> (must belong to you).</p>
+      <label>prescription_id for lens lines (if any)</label>
+      <select>
+        <option value="">— none —</option>
+        <option value="101">101 — 2026-04-08 (latest)</option>
+      </select>
+      <p class="note">If your school flow is “staff only enters Rx”, customer checkout might omit lens lines and only order frames/contacts — adjust copy in paper.</p>
+      <h2>Payload preview</h2>
+      <pre id="json" class="sample" style="max-width:100%;font-size:11px;"></pre>
+      <p><button type="button" id="go">Build preview from cart (no API)</button></p>
+      <p id="done" class="note"></p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("go").onclick = function () {
+      var items = EyeCareCart.get().map(function (i) {
+        return {
+          product_variant_id: i.product_variant_id,
+          quantity: i.quantity,
+          unit_price: String(Number(i.unit_price).toFixed(2)),
+          subtotal: String((Number(i.unit_price) * i.quantity).toFixed(2)),
+        };
+      });
+      var body = {
+        user_id: 12,
+        items: items,
+        discount_amount: "0.00",
+        notes: "Mobile checkout prototype",
+      };
+      document.getElementById("json").textContent = JSON.stringify(body, null, 2);
+      document.getElementById("done").textContent =
+        "Real app: POST body + then clear cart on 201 response.";
+    };
+  </script>
+</body>
+</html>

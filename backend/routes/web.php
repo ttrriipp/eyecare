@@ -8,6 +8,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCategorySettingsController;
 use App\Http\Controllers\SupplierSettingsController;
 use App\Http\Controllers\UserManagementController;
+use App\Livewire\Admin\Inventory\AdjustmentHistory;
+use App\Livewire\Admin\Products\ProductManager;
 use App\Livewire\Admin\Settings\CategoryManager;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +84,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin,staff')->group(function () {
         Route::get('feedbacks', [FeedbackController::class, 'index'])
             ->name('feedbacks.index');
+
+        // Products admin management (admin + staff)
+        Route::livewire('admin/products', ProductManager::class)
+            ->name('admin.products.index');
+
+        Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
+            ->name('admin.inventory.adjustments');
     });
 
     Route::middleware('role:admin')->group(function () {

@@ -19,7 +19,6 @@ class ProductResource extends JsonResource
             'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
             'sku' => $this->when($request->user()?->isAdminOrStaff(), $this->sku),
             'brand' => $this->brand,
-            'ar_model_url' => $this->ar_model_url,
             'is_active' => $this->when($request->user()?->isAdmin(), $this->is_active),
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'default_variant' => new ProductVariantResource($this->whenLoaded('defaultVariant')),

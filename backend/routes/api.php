@@ -49,8 +49,8 @@ Route::prefix('v1')->group(function () {
             Route::post('products', [ProductController::class, 'store']);
             Route::put('products/{product}', [ProductController::class, 'update']);
             Route::delete('products/{product}', [ProductController::class, 'destroy']);
-            Route::post('products/{product}/images', [ProductController::class, 'storeImage']);
-            Route::delete('products/{product}/images/{image}', [ProductController::class, 'destroyImage']);
+            Route::post('product-variants/{variant}/images', [ProductController::class, 'storeVariantImage']);
+            Route::delete('product-variants/{variant}/images/{image}', [ProductController::class, 'destroyVariantImage']);
 
             // Inventory management
             Route::put('inventory/{product}', [InventoryController::class, 'update']);

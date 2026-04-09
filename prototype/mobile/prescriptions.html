@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Prescriptions</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="index.html">← Home</a> · Prescriptions</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">My prescriptions</h1>
+      <p class="note"><code>GET /api/v1/prescriptions</code> scoped to auth user. No create/edit on mobile.</p>
+      <fieldset>
+        <legend>Rx #101 · 2026-04-08</legend>
+        <p><strong>OD</strong> Sph -2.25 Cyl -0.75 Axis 180 Add 1.50</p>
+        <p><strong>OS</strong> Sph -1.75 Cyl -0.50 Axis 175 Add 1.50</p>
+        <p><strong>PD</strong> 62 mm</p>
+        <p class="note">clinical_notes: (short text)</p>
+      </fieldset>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+</body>
+</html>

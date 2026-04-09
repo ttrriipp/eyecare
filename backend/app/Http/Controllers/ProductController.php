@@ -8,7 +8,6 @@ use App\Services\InventoryService;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -47,7 +46,15 @@ class ProductController extends Controller
             ? $this->resolveIsActive($request)
             : true;
 
+        $arModelUrl = $validated['ar_model_url'] ?? null;
+        unset($validated['ar_model_url']);
+
         $product = $this->productService->create($validated);
+        $this->productService->ensureDefaultVariantIfMissing($product);
+
+        if ($request->exists('ar_model_url')) {
+            $this->productService->applyArModelToDefaultVariant($product, $arModelUrl);
+        }
         $inventory = $this->inventoryService->findByProduct($product);
         $this->inventoryService->update($inventory, [
             'quantity' => (int) $request->integer('inventory_quantity', 0),
@@ -59,7 +66,8 @@ class ProductController extends Controller
             'notes' => $request->input('inventory_notes'),
         ], $request->user()?->id);
 
-        $this->syncPrimaryImage($request, $product);
+        $variant = $product->defaultVariant ?? $this->productService->ensureDefaultVariantIfMissing($product);
+        $this->syncPrimaryImage($request, $variant);
 
         return redirect()
             ->route('products.show', $product)
@@ -98,6 +106,9 @@ class ProductController extends Controller
 
         $validated['is_active'] = $this->resolveIsActive($request);
 
+        $arModelUrl = $validated['ar_model_url'] ?? null;
+        unset($validated['ar_model_url']);
+
         $variantData = array_filter([
             'color'            => $request->input('variant_color'),
             'frame_size'       => $request->input('variant_frame_size'),
@@ -110,21 +121,23 @@ class ProductController extends Controller
 
         $this->productService->update($product, $validated);
 
-        if (! empty($variantData)) {
-            $product->loadMissing('defaultVariant');
-            $product->defaultVariant?->update($variantData);
-        }
+        $product->loadMissing('defaultVariant');
+        $defaultVariant = $product->defaultVariant ?? $this->productService->ensureDefaultVariantIfMissing($product);
 
-        $product->load('images');
-        $primaryImage = $product->images->first();
+        $variantPayload = array_merge($variantData, ['ar_model_url' => $arModelUrl]);
+        $this->productService->updateVariant($defaultVariant, $variantPayload);
+
+        $product->load('defaultVariant.images');
+        $variant = $product->defaultVariant;
+        $primaryImage = $variant?->images->first();
 
         if ($request->boolean('remove_image') && $primaryImage) {
             $this->productService->deleteImage($primaryImage);
             $primaryImage = null;
-            $product->load('images');
+            $variant->load('images');
         }
 
-        $this->syncPrimaryImage($request, $product, $primaryImage);
+        $this->syncPrimaryImage($request, $variant, $primaryImage);
 
         return redirect()
             ->route('products.show', $product)
@@ -220,32 +233,23 @@ class ProductController extends Controller
         return $value === '1' || $value === 1 || $value === true;
     }
 
-    private function syncPrimaryImage(Request $request, Product $product, ?\App\Models\ProductImage $primaryImage = null): void
+    private function syncPrimaryImage(Request $request, \App\Models\ProductVariant $variant, ?\App\Models\ProductImage $primaryImage = null): void
     {
         if (! $request->hasFile('image')) {
             return;
         }
 
         $file = $request->file('image');
-        $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
-        $destination = public_path('images/products');
+        $imageUrl = $this->productService->storePublicCatalogImage($file);
 
-        if (! is_dir($destination)) {
-            mkdir($destination, 0755, true);
-        }
-
-        $file->move($destination, $filename);
-
-        $imageUrl = asset('images/products/'.$filename);
-
-        $product->loadMissing('images');
-        $primaryImage = $primaryImage ?? $product->images->first();
+        $variant->loadMissing('images');
+        $primaryImage = $primaryImage ?? $variant->images->first();
 
         if ($primaryImage) {
             $primaryImage->update(['image_url' => $imageUrl]);
         } else {
             $this->productService->addImage(
-                product: $product,
+                variant: $variant,
                 imageUrl: $imageUrl,
                 sortOrder: 0,
             );

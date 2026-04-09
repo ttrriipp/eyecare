@@ -21,7 +21,9 @@ class ProductVariantResource extends JsonResource
             'diameter' => $this->diameter,
             'price_adjustment' => $this->price_adjustment,
             'is_default' => $this->is_default,
+            'ar_model_url' => $this->ar_model_url,
             'unit_price' => $this->when($this->relationLoaded('product'), fn () => (float) $this->unitPrice()),
+            'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'product' => new ProductResource($this->whenLoaded('product')),
         ];
     }

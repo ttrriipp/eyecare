@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Orders</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="index.html">← Home</a> · Orders</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">My orders</h1>
+      <table>
+        <thead><tr><th>#</th><th>status</th><th>total</th></tr></thead>
+        <tbody>
+          <tr><td>ORD-…142</td><td>confirmed</td><td>13700</td></tr>
+          <tr><td>ORD-…130</td><td>completed</td><td>1200</td></tr>
+        </tbody>
+      </table>
+      <h2>Detail (sample)</h2>
+      <p class="note">Line items include variant; lens lines may show linked <code>prescription_id</code> + job status in API resource.</p>
+      <ul>
+        <li>Frame variant 201 ×1 — ₱5500</li>
+        <li>Lens variant 501 ×1 — ₱8200 · Rx #101 · Job <span class="badge">processing</span></li>
+      </ul>
+      <p><button type="button">Cancel order</button> <span class="badge">only if status &lt; ready</span></p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html"><strong>Orders</strong></a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+</body>
+</html>

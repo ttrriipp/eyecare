@@ -3,9 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
-use App\Models\Product;
 use App\Models\User;
-use App\Observers\ProductObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
@@ -30,8 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-
-        Product::observe(ProductObserver::class);
 
         $this->registerUserRouteBindings();
 

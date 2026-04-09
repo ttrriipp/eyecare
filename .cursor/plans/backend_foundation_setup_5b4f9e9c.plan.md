@@ -40,6 +40,8 @@ isProject: false
 
 # Backend Foundation for Optical Management System
 
+> **Implementation update (2026-04-09):** `ar_model_url` is stored on **`product_variants`**, not on `products`, so each sellable variant can have its own `.glb`/`.usdz` URL. Migration: `2026_04_09_160000_move_ar_model_url_to_product_variants` (copies existing product URLs onto all variants of each product, then drops `products.ar_model_url`). The API still accepts `ar_model_url` on product create/update for convenience; `ProductService` applies it to the **default variant** via `applyArModelToDefaultVariant`. `ProductVariantResource` exposes `ar_model_url`; admin Livewire flows edit AR per variant. Listing UIs treat “AR available” as **any variant** with a URL when the category has `has_ar_support`.
+
 ## Architecture Overview
 
 The backend follows a **layered service architecture** where business logic lives in service classes, and delivery mechanisms (API controllers for Android, Livewire for web admin later) are thin wrappers that delegate to services.
@@ -165,7 +167,6 @@ erDiagram
         decimal price
         decimal cost_per_unit
         string brand
-        string ar_model_url
         boolean is_active
     }
 
@@ -181,6 +182,7 @@ erDiagram
         string diameter
         decimal price_adjustment
         boolean is_default
+        string ar_model_url_nullable
     }
 
     ProductCategory {
@@ -343,7 +345,7 @@ erDiagram
 
 ## Module Behavior Summary
 
-**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price, cost per unit, supplier linkage, and brand metadata. Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
+**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). Product-level fields include base selling price, cost per unit, supplier linkage, and brand metadata. Each product has one or more **product variants** (color, frame size, material, lens type, base curve, diameter, price adjustment — fields nullable when not applicable to the category). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
 **Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` (e.g., SC/PWD) which is deducted from the order total before billing. A bill is auto-generated with each order.
 
@@ -357,7 +359,7 @@ erDiagram
 
 **Feedbacks** -- Customers rate products (1-5 stars + comment). One review per customer per product. Staff/admin can view all. Admin can delete inappropriate reviews.
 
-**Virtual Try-On** -- Backend only stores AR model URL on products. All AR rendering is Android-side.
+**Virtual Try-On** -- Backend stores an optional AR model URL **per product variant** (`product_variants.ar_model_url`). Category-level `has_ar_support` gates which categories use AR. All AR rendering is client-side (e.g. Android).
 
 ## Key Decisions
 
@@ -370,7 +372,7 @@ erDiagram
 - **Business Logic**: Service classes injected into controllers via constructor -- testable, swappable
 - **Soft Deletes**: On products, orders, and users to prevent accidental data loss
 - **Database**: MySQL with proper foreign keys, indexes, and unique constraints
-- **AR / virtual try-on**: `has_ar_support` on `product_categories` flags categories that can use AR; `ar_model_url` on Product stores a path/URL to the 3D model file. New products automatically get a **default product variant** (and empty inventory row) so catalog entries work without manually defining variants.
+- **AR / virtual try-on**: `has_ar_support` on `product_categories` flags categories that can use AR; **`ar_model_url` on `product_variants`** stores a path/URL to the 3D model file per sellable variant. Legacy/API payloads may still send `ar_model_url` on the product; the service maps that to the **default variant**. New products automatically get a **default product variant** (and empty inventory row) so catalog entries work without manually defining variants.
 - **Expiry enforcement**: `requires_expiry_tracking` on `product_categories` controls whether inventory `expires_at` is mandatory for products in that category (e.g., contact lens solutions), while durable products (e.g., frames) can keep `expires_at` nullable.
 - **SKU**: Stored on **`product_variants`** (one unique code per sellable variant). Auto-generated on variant create when not provided (format `PRD-` + 8 random alphanumeric characters). The `Product` model exposes `sku` as the **default variant’s** SKU for convenience in lists and legacy views. Not mass-assignable; searchable via product search and variant records.
 - **Supplier linkage**: `products.supplier_id` links catalog items to vendor contacts for restocking workflows.
@@ -437,7 +439,7 @@ The first full module. Everything needed for product catalog to work:
 - **Service**: `ProductService` (list with filters/pagination, create, update, soft delete, manage images)
 - **Controller**: `ProductController` (CRUD endpoints)
 - **Form Requests**: `StoreProductRequest`, `UpdateProductRequest`
-- **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource`
+- **API Resources**: `ProductResource`, `ProductCategoryResource`, `ProductImageResource`, `ProductVariantResource` (includes `ar_model_url` per variant)
 - **Policy**: `ProductPolicy` (admin: full CRUD, staff/customer: view only)
 - **Web admin settings UI**: Category settings screen for toggling `has_ar_support` and `requires_expiry_tracking`
 - **Web admin settings UI**: Supplier settings screen for maintaining supplier records used by product forms
@@ -468,7 +470,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment
 - **Module 6: Scheduling** -- `AppointmentStatus` enum, service_types, schedule_templates, time_slots, appointments tables, slot generation logic, appointment billing
 - **Module 7: Direct Messaging** -- conversations, messages tables, Laravel Reverb setup, broadcast events, private channels, read tracking
-- **Module 8: Virtual Try-On AR** -- AR model file upload/storage for products, serve AR model URLs via API (rendering is Android-side)
+- **Module 8: Virtual Try-On AR** -- AR model URLs per **variant** (and/or upload/storage workflow); serve URLs via API (`ProductVariantResource`); rendering stays Android-side
 
 ## Scope and Limitations (for Capstone Paper)
 
@@ -481,7 +483,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 - Real-time direct messaging (team inbox via WebSockets)
 - Inventory management (single-branch stock tracking)
 - Customer feedback and ratings
-- AR virtual try-on (backend serves 3D model URLs, rendering is Android-side)
+- AR virtual try-on (backend stores **per-variant** 3D model URLs; rendering is Android-side)
 - Walk-in customer support (staff creates orders/appointments for non-registered customers)
 - Role-based access control (admin, staff, customer)
 - SMS notification structure for scheduling (event/listener, actual SMS integration deferred)

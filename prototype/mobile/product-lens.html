@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Lens product</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="browse.html">← Browse</a> · Lens SKU</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Progressive lens pair (catalog)</h1>
+      <p class="note">Customer picks a catalog line item; <strong>lens_detail + prescription_id</strong> are attached at checkout by API rules or staff in hybrid flow. Prototype: note only.</p>
+      <label>product_variant_id</label><input id="vid" value="501" readonly />
+      <label>unit_price</label><input id="price" value="8200" />
+      <p><button type="button" id="addBtn">Add to cart</button></p>
+      <p id="msg" class="note"></p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("addBtn").onclick = function () {
+      EyeCareCart.add({
+        product_variant_id: Number(document.getElementById("vid").value),
+        name: "Progressive lens pair",
+        unit_price: Number(document.getElementById("price").value),
+        quantity: 1,
+      });
+      document.getElementById("msg").textContent = "Added. Real app: checkout sends prescription_id + lens_detail for this line.";
+    };
+  </script>
+</body>
+</html>

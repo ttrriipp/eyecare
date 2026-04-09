@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\UpdateProductRequest;
 use App\Http\Resources\V1\ProductResource;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +48,19 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): JsonResponse
     {
-        $product = $this->productService->create($request->validated());
+        $validated = $request->validated();
+        $arModelUrl = $validated['ar_model_url'] ?? null;
+        unset($validated['ar_model_url']);
+
+        $product = $this->productService->create($validated);
+        $this->productService->ensureDefaultVariantIfMissing($product);
+
+        if ($request->has('ar_model_url')) {
+            $this->productService->applyArModelToDefaultVariant($product->fresh(), $arModelUrl);
+        }
+
+        $product->refresh();
+        $product->load(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product']);
 
         return response()->json([
             'message' => 'Product created successfully.',
@@ -57,11 +70,19 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        $product = $this->productService->update($product, $request->validated());
+        $validated = $request->validated();
+        $arModelUrl = $validated['ar_model_url'] ?? null;
+        unset($validated['ar_model_url']);
+
+        $product = $this->productService->update($product, $validated);
+
+        if ($request->has('ar_model_url')) {
+            $this->productService->applyArModelToDefaultVariant($product->fresh(), $arModelUrl);
+        }
 
         return response()->json([
             'message' => 'Product updated successfully.',
-            'product' => new ProductResource($product),
+            'product' => new ProductResource($product->fresh(['category', 'supplier', 'images', 'defaultVariant.product', 'defaultVariant.primaryImage', 'variants.images', 'variants.product'])),
         ]);
     }
 
@@ -74,7 +95,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function storeImage(Request $request, Product $product): JsonResponse
+    public function storeVariantImage(Request $request, ProductVariant $variant): JsonResponse
     {
         $validated = $request->validate([
             'image_url' => ['required', 'url', 'max:2048'],
@@ -82,7 +103,7 @@ class ProductController extends Controller
         ]);
 
         $image = $this->productService->addImage(
-            product: $product,
+            variant: $variant,
             imageUrl: $validated['image_url'],
             sortOrder: $validated['sort_order'] ?? 0,
         );
@@ -93,10 +114,10 @@ class ProductController extends Controller
         ], 201);
     }
 
-    public function destroyImage(Product $product, ProductImage $image): JsonResponse
+    public function destroyVariantImage(ProductVariant $variant, ProductImage $image): JsonResponse
     {
-        if ($image->product_id !== $product->id) {
-            abort(404, 'Image not found for this product.');
+        if ($image->product_variant_id !== $variant->id) {
+            abort(404, 'Image not found for this variant.');
         }
 
         $this->productService->deleteImage($image);

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Inventory</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Inventory</strong> (per variant)</header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Inventory rows</h1>
+    <p class="note">Table <code>inventory</code> keyed by <code>product_variant_id</code>. Adjustments → <code>inventory_adjustments</code>.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>variant_id</th><th>product</th><th>qty</th><th>reorder_level</th><th>batch</th><th>expires_at</th><th>storage_location</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>201</td><td>RB5154 Tortoise M</td><td>4</td><td>2</td><td>—</td><td>—</td><td>Shelf A2</td>
+        </tr>
+        <tr>
+          <td>310</td><td>Solution 360ml</td><td>18</td><td>6</td><td>BATCH-9</td><td>2027-01-01</td><td>Back room</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Adjust quantity (admin)</h2>
+    <form action="#" onsubmit="return false">
+      <label>inventory_id</label><input value="1" />
+      <label>new_quantity</label><input value="5" />
+      <label>adjustment_type</label><input value="correction" />
+      <label>reason</label><input value="Physical count" />
+      <p><button type="button">Record adjustment (no API)</button></p>
+    </form>
+  </main>
+</body>
+</html>

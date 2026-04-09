@@ -388,7 +388,7 @@
                                     name="ar_model_url"
                                     type="url"
                                     :label="false"
-                                    value="{{ old('ar_model_url', $product->ar_model_url) }}"
+                                    value="{{ old('ar_model_url', $product->defaultVariant?->ar_model_url) }}"
                                     placeholder="https://example.com/models/frame.glb"
                                     @disabled(! $showArPanelEdit)
                                 />

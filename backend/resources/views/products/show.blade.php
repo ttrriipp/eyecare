@@ -319,8 +319,11 @@
                         </div>
                     @endif
 
-                    {{-- AR badge --}}
-                    @if($product->ar_model_url)
+                    {{-- AR badge (any variant may supply a model URL) --}}
+                    @php
+                        $arModelDisplay = $product->variants->first(fn ($v) => filled($v->ar_model_url))?->ar_model_url;
+                    @endphp
+                    @if($arModelDisplay)
                         <div
                             class="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-900/60 dark:bg-sky-950/50"
                         >
@@ -332,7 +335,7 @@
                             </div>
                             @if(auth()->user()?->isAdmin())
                                 <p class="mt-1 break-all text-[11px] text-sky-700 dark:text-sky-400">
-                                    {{ $product->ar_model_url }}
+                                    {{ $arModelDisplay }}
                                 </p>
                             @endif
                         </div>

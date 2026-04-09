@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Product</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="browse.html">← Browse</a> · Product</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Ray-Ban RB5154</h1>
+      <p>From <code>GET /api/v1/products/{id}</code> + variants[]</p>
+      <label>product_variant_id</label>
+      <select id="variant">
+        <option value="201" data-price="5500">201 — Tortoise / Medium — ₱5500</option>
+        <option value="202" data-price="5500">202 — Black / Medium — ₱5500</option>
+      </select>
+      <p><a href="#">Open AR try-on</a> <span class="badge">Android ARCore</span></p>
+      <p><button type="button" id="addBtn">Add to cart (localStorage)</button></p>
+      <p id="msg" class="note"></p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("addBtn").onclick = function () {
+      var sel = document.getElementById("variant");
+      var opt = sel.options[sel.selectedIndex];
+      EyeCareCart.add({
+        product_variant_id: Number(opt.value),
+        name: "RB5154 " + opt.textContent,
+        unit_price: Number(opt.getAttribute("data-price")),
+        quantity: 1,
+      });
+      document.getElementById("msg").textContent = "Added. Cart uses localStorage key eyecare_proto_cart";
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Appointments</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="index.html">← Home</a> · Appointments</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Book visit</h1>
+      <form action="#" onsubmit="return false">
+        <label>service_type_id</label>
+        <select><option value="1">1 — Eye Examination (₱300)</option><option value="2">2 — Contact fitting (free)</option></select>
+        <label>time_slot_id</label>
+        <input value="9001" />
+        <p><button type="button">Book (no API)</button></p>
+      </form>
+      <h2>Upcoming</h2>
+      <table>
+        <thead><tr><th>When</th><th>Service</th><th>status</th></tr></thead>
+        <tbody>
+          <tr><td>2026-04-10 09:00</td><td>Eye Exam</td><td>scheduled</td></tr>
+        </tbody>
+      </table>
+      <p class="note">After visit, staff records Rx → appears under <a href="prescriptions.html">My prescriptions</a>.</p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html"><strong>Book</strong></a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+</body>
+</html>

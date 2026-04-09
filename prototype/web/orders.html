@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Orders</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Orders</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Orders</h1>
+    <p><a href="order-edit.html?id=new">+ New order</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>order_number</th><th>customer</th><th>status</th><th>total</th><th>discount</th><th>bill</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ORD-2026-00142</td><td>Juan (12)</td><td>confirmed</td><td>13700</td><td>0</td><td><a href="billing.html#b1">INV-…</a></td>
+        </tr>
+        <tr>
+          <td>ORD-2026-00141</td><td>walk-in</td><td>ready</td><td>1200</td><td>120 <span class="badge">SC</span></td><td><a href="#">paid</a></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">Statuses: pending → confirmed → ready → completed (cancelled). <code>processed_by</code>, <code>ready_at</code>, <code>completed_at</code> on order.</p>
+  </main>
+</body>
+</html>

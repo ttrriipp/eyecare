@@ -23,6 +23,7 @@ class ProductVariant extends Model
         'diameter',
         'price_adjustment',
         'is_default',
+        'ar_model_url',
     ];
 
     protected static function booted(): void
@@ -62,6 +63,17 @@ class ProductVariant extends Model
     public function inventory(): HasOne
     {
         return $this->hasOne(Inventory::class, 'product_variant_id');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /** Primary (lowest sort_order) image for this variant. */
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->orderBy('sort_order');
     }
 
     public function orderItems(): HasMany

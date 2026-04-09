@@ -23,7 +23,6 @@ class Product extends Model
         'price',
         'cost_per_unit',
         'brand',
-        'ar_model_url',
         'is_active',
     ];
 
@@ -54,9 +53,21 @@ class Product extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
-    public function images(): HasMany
+    /**
+     * Images for the default variant only (catalog / product detail convenience).
+     * Per-variant images live on {@see ProductVariant::images()}.
+     */
+    public function images(): HasManyThrough
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+        return $this->hasManyThrough(
+            ProductImage::class,
+            ProductVariant::class,
+            'product_id',
+            'product_variant_id',
+            'id',
+            'id',
+        )->where('product_variants.is_default', true)
+            ->orderBy('product_images.sort_order');
     }
 
     public function variants(): HasMany
