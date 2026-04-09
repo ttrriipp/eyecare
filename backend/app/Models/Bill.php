@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Bill extends Model
 {
@@ -52,6 +53,11 @@ class Bill extends Model
     public function collector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'collected_by');
+    }
+
+    public function paymentHistories(): HasMany
+    {
+        return $this->hasMany(BillingPaymentHistory::class)->orderByDesc('created_at');
     }
 
     // Appointment relationship will be added when scheduling module is built

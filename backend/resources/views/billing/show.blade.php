@@ -202,6 +202,107 @@
             </div>
         @endif
 
+        @if(auth()->user()?->isAdmin())
+            <div
+                class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <flux:heading size="lg" class="mb-1 text-zinc-900 dark:text-zinc-50">
+                    {{ __('Billing payment history') }}
+                </flux:heading>
+                <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('See all billing activity across the system, or filter by this invoice.') }}
+                </flux:text>
+                <a
+                    href="{{ route('orders.billing.payment-history.index', ['search' => $bill->invoice_number]) }}"
+                    class="inline-flex items-center gap-1 text-sm font-medium text-sky-600 underline decoration-sky-300 underline-offset-2 hover:text-sky-800 dark:text-sky-400"
+                    wire:navigate
+                >
+                    {{ __('View full billing payment history') }} ->
+                </a>
+            </div>
+        @elseif(auth()->user()?->isStaff())
+            <div
+                class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                    <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-50">
+                        {{ __('Billing payment history') }}
+                    </flux:heading>
+                    <flux:text class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                        {{ __('Payments, voids, refunds, and updates for this invoice.') }}
+                    </flux:text>
+                </div>
+                @if($bill->paymentHistories->isEmpty())
+                    <div class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ __('No billing activity recorded yet.') }}
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+                            <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
+                                <tr>
+                                    <th class="px-4 py-3">{{ __('When') }}</th>
+                                    <th class="px-4 py-3">{{ __('Actor') }}</th>
+                                    <th class="px-4 py-3">{{ __('Activity') }}</th>
+                                    <th class="px-4 py-3 text-end hidden md:table-cell">{{ __('Amount') }}</th>
+                                    <th class="px-4 py-3 hidden lg:table-cell">{{ __('From') }}</th>
+                                    <th class="px-4 py-3 hidden lg:table-cell">{{ __('To') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                @foreach($bill->paymentHistories as $row)
+                                    <tr>
+                                        <td class="whitespace-nowrap px-4 py-3 tabular-nums text-zinc-900 dark:text-zinc-100">
+                                            <time datetime="{{ $row->created_at->toIso8601String() }}">
+                                                {{ $row->created_at->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
+                                            </time>
+                                        </td>
+                                        <td class="px-4 py-3 text-zinc-900 dark:text-zinc-100">
+                                            {{ $row->actor?->name ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                                            @switch($row->action)
+                                                @case(\App\Models\BillingPaymentHistory::ACTION_PAYMENT_RECORDED)
+                                                    {{ __('Recorded payment') }}
+                                                    @break
+                                                @case(\App\Models\BillingPaymentHistory::ACTION_VOIDED)
+                                                    {{ __('Voided invoice') }}
+                                                    @break
+                                                @case(\App\Models\BillingPaymentHistory::ACTION_REFUNDED)
+                                                    {{ __('Recorded refund') }}
+                                                    @break
+                                                @case(\App\Models\BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION)
+                                                    {{ __('Updated from order cancellation') }}
+                                                    @break
+                                                @default
+                                                    {{ $row->action }}
+                                            @endswitch
+                                            @if($row->note)
+                                                <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">{{ $row->note }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100 hidden md:table-cell">
+                                            @if($row->amount !== null)
+                                                {{ \App\Support\Money::peso($row->amount) }}
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 hidden lg:table-cell text-zinc-600 dark:text-zinc-400">
+                                            {{ $row->from_payment_status?->label() ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 hidden lg:table-cell text-zinc-900 dark:text-zinc-100">
+                                            {{ $row->to_payment_status->label() }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         @if(auth()->user()?->isCustomer())
             <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
                 {{ __('Payments are recorded in-store. Contact staff if this invoice should be updated.') }}

@@ -20,7 +20,7 @@ class OrderService
     ) {}
 
     /**
-     * Staff/admin audit trail: order creation and status changes performed by staff or admin.
+     * Admin audit report: all staff order status activity (paginated).
      *
      * @return LengthAwarePaginator<int, OrderStatusHistory>
      */
@@ -218,7 +218,7 @@ class OrderService
             $this->inventoryService->restore($item->productVariant, $item->quantity);
         }
 
-        $this->billingService->handleOrderCancellation($order);
+        $this->billingService->handleOrderCancellation($order, $user);
 
         $order = $order->fresh(['items.productVariant.product', 'user', 'bill']);
 

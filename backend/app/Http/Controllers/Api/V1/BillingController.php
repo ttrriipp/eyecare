@@ -84,7 +84,7 @@ class BillingController extends Controller
             abort(403, 'Only administrators can void bills.');
         }
 
-        $bill = $this->billingService->void($bill);
+        $bill = $this->billingService->void($bill, $request->user());
 
         return response()->json([
             'message' => 'Bill voided.',
@@ -101,7 +101,7 @@ class BillingController extends Controller
             abort(403, 'Only administrators can issue refunds.');
         }
 
-        $bill = $this->billingService->refund($bill);
+        $bill = $this->billingService->refund($bill, $request->user());
 
         return response()->json([
             'message' => 'Bill refunded.',

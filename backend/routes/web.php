@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BillingPaymentHistoryController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
@@ -54,15 +55,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('orders', [OrderController::class, 'index'])
         ->name('orders.index');
-    Route::get('orders/order-status-history', [OrderStatusHistoryController::class, 'index'])
-        ->name('orders.status-history.index');
     Route::get('orders/create', [OrderController::class, 'create'])
         ->name('orders.create');
     Route::post('orders', [OrderController::class, 'store'])
         ->name('orders.store');
 
+    Route::get('orders/order-status-history', [OrderStatusHistoryController::class, 'index'])
+        ->middleware('role:admin')
+        ->name('orders.status-history.index');
+
     Route::get('orders/billing', [BillingController::class, 'index'])
         ->name('orders.billing.index');
+    Route::get('orders/billing/payment-history', [BillingPaymentHistoryController::class, 'index'])
+        ->middleware('role:admin')
+        ->name('orders.billing.payment-history.index');
     Route::get('orders/billing/{bill}', [BillingController::class, 'show'])
         ->name('orders.billing.show');
     Route::put('orders/billing/{bill}/pay', [BillingController::class, 'pay'])

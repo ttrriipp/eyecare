@@ -305,5 +305,84 @@
                 </div>
             @endif
         </div>
+
+        @if(auth()->user()?->isAdmin())
+            <div
+                class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <flux:heading size="lg" class="mb-1 text-zinc-900 dark:text-zinc-50">
+                    {{ __('Order status history') }}
+                </flux:heading>
+                <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('See all order status changes across the system, or filter by this order number.') }}
+                </flux:text>
+                <a
+                    href="{{ route('orders.status-history.index', ['search' => $order->order_number]) }}"
+                    class="inline-flex items-center gap-1 text-sm font-medium text-sky-600 underline decoration-sky-300 underline-offset-2 hover:text-sky-800 dark:text-sky-400"
+                    wire:navigate
+                >
+                    {{ __('View full order status history') }} ->
+                </a>
+            </div>
+        @elseif(auth()->user()?->isStaff())
+            <div
+                class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            >
+                <div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                    <flux:heading size="lg" class="text-zinc-900 dark:text-zinc-50">
+                        {{ __('Order status history') }}
+                    </flux:heading>
+                    <flux:text class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                        {{ __('Staff and admin actions for this order.') }}
+                    </flux:text>
+                </div>
+                @if($order->statusHistories->isEmpty())
+                    <div class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ __('No status activity recorded yet.') }}
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+                            <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
+                                <tr>
+                                    <th class="px-4 py-3">{{ __('When') }}</th>
+                                    <th class="px-4 py-3">{{ __('Staff') }}</th>
+                                    <th class="px-4 py-3">{{ __('Activity') }}</th>
+                                    <th class="px-4 py-3 hidden sm:table-cell">{{ __('From') }}</th>
+                                    <th class="px-4 py-3 hidden sm:table-cell">{{ __('To') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                @foreach($order->statusHistories as $row)
+                                    <tr>
+                                        <td class="whitespace-nowrap px-4 py-3 tabular-nums text-zinc-900 dark:text-zinc-100">
+                                            <time datetime="{{ $row->created_at->toIso8601String() }}">
+                                                {{ $row->created_at->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
+                                            </time>
+                                        </td>
+                                        <td class="px-4 py-3 text-zinc-900 dark:text-zinc-100">
+                                            {{ $row->actor?->name ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                                            @if($row->action === \App\Models\OrderStatusHistory::ACTION_CREATED)
+                                                {{ __('Created order') }}
+                                            @else
+                                                {{ __('Updated status') }}
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 hidden sm:table-cell text-zinc-600 dark:text-zinc-400">
+                                            {{ $row->from_status?->label() ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 hidden sm:table-cell text-zinc-900 dark:text-zinc-100">
+                                            {{ $row->to_status->label() }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 </x-layouts::app>

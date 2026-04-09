@@ -56,6 +56,10 @@ class BillingController extends Controller
             }
         }
 
+        if ($user->isStaff()) {
+            $bill->load(['paymentHistories.actor']);
+        }
+
         return view('billing.show', [
             'bill' => $bill,
         ]);
@@ -90,7 +94,7 @@ class BillingController extends Controller
             abort(403);
         }
 
-        $bill = $this->billingService->void($bill);
+        $bill = $this->billingService->void($bill, $request->user());
 
         return redirect()
             ->route('orders.billing.show', $bill)
@@ -106,7 +110,7 @@ class BillingController extends Controller
             abort(403);
         }
 
-        $bill = $this->billingService->refund($bill);
+        $bill = $this->billingService->refund($bill, $request->user());
 
         return redirect()
             ->route('orders.billing.show', $bill)

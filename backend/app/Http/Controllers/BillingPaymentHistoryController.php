@@ -4,18 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\User;
-use App\Services\OrderService;
+use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class OrderStatusHistoryController extends Controller
+class BillingPaymentHistoryController extends Controller
 {
     public function __construct(
-        private readonly OrderService $orderService,
+        private readonly BillingService $billingService,
     ) {}
 
     /**
-     * Global order status audit log (admin only — sidebar tab not shown to staff).
+     * Global billing payment audit log (admin only — sidebar tab not shown to staff).
      */
     public function index(Request $request): View
     {
@@ -25,7 +25,7 @@ class OrderStatusHistoryController extends Controller
 
         $filters = $request->only(['search', 'date_from', 'date_to', 'actor_user_id']);
 
-        $entries = $this->orderService->listStatusHistory(
+        $entries = $this->billingService->listPaymentHistory(
             filters: $filters,
             perPage: 20,
         );
@@ -35,7 +35,7 @@ class OrderStatusHistoryController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return view('orders.status-history', [
+        return view('billing.payment-history', [
             'entries' => $entries,
             'filters' => $filters,
             'staffUsers' => $staffUsers,

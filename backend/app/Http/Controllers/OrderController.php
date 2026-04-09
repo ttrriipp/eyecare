@@ -58,6 +58,10 @@ class OrderController extends Controller
         $order = $this->orderService->find($order->id);
         $order->loadMissing('bill');
 
+        if ($user->isStaff()) {
+            $order->load(['statusHistories.actor']);
+        }
+
         return view('orders.show', [
             'order' => $order,
         ]);

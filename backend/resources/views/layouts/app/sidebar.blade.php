@@ -66,7 +66,7 @@
                         {{ __('Orders') }}
                     </flux:sidebar.item>
 
-                    @if(auth()->user()?->isAdminOrStaff())
+                    @if(auth()->user()?->isAdmin())
                         <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
                             <flux:sidebar.item
                                 icon="arrow-path"
@@ -82,11 +82,24 @@
                     <flux:sidebar.item
                         icon="banknotes"
                         :href="route('orders.billing.index')"
-                        :current="request()->routeIs('orders.billing.*')"
+                        :current="request()->routeIs('orders.billing.index', 'orders.billing.show', 'orders.billing.payment-history.index')"
                         wire:navigate
                     >
                         {{ __('Billing') }}
                     </flux:sidebar.item>
+
+                    @if(auth()->user()?->isAdmin())
+                        <div class="ms-3 border-s border-zinc-200 ps-3 dark:border-zinc-700">
+                            <flux:sidebar.item
+                                icon="document-text"
+                                :href="route('orders.billing.payment-history.index')"
+                                :current="request()->routeIs('orders.billing.payment-history.index')"
+                                wire:navigate
+                            >
+                                {{ __('Billing Payment History') }}
+                            </flux:sidebar.item>
+                        </div>
+                    @endif
 
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item
