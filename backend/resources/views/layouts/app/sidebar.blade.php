@@ -86,6 +86,19 @@
                         </flux:sidebar.item>
                     @endif
                 </flux:sidebar.group>
+
+                @if(auth()->user()?->isAdmin())
+                    <flux:sidebar.group :heading="__('Settings')">
+                        <flux:sidebar.item
+                            icon="tag"
+                            :href="route('admin.settings.categories')"
+                            :current="request()->routeIs('admin.settings.categories')"
+                            wire:navigate
+                        >
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

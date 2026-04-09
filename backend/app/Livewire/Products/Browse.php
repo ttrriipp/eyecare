@@ -23,6 +23,10 @@ class Browse extends Component
 
     public string $listView = 'grid';
 
+    public string $sort_by = 'created_at';
+
+    public string $sort_dir = 'desc';
+
     public function mount(): void
     {
         if ($this->listView !== 'grid' && $this->listView !== 'table') {
@@ -45,11 +49,23 @@ class Browse extends Component
         $this->resetPage();
     }
 
+    public function updatedSort_by(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSort_dir(): void
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters(): void
     {
         $this->search = '';
         $this->category_id = null;
         $this->include_inactive = false;
+        $this->sort_by = 'created_at';
+        $this->sort_dir = 'desc';
         $this->resetPage();
     }
 
@@ -66,8 +82,10 @@ class Browse extends Component
     protected function filters(): array
     {
         $filters = [
-            'search' => $this->search,
+            'search'    => $this->search,
             'category_id' => filled($this->category_id) ? (int) $this->category_id : null,
+            'sort_by'   => $this->sort_by,
+            'sort_dir'  => $this->sort_dir,
         ];
 
         if (auth()->user()?->isAdmin()) {

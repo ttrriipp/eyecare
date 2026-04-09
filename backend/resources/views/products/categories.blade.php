@@ -38,6 +38,17 @@
                         @error('name')<p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
 
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300" for="create_description">{{ __('Description') }}</label>
+                        <textarea
+                            id="create_description"
+                            name="description"
+                            rows="2"
+                            placeholder="{{ __('Optional description…') }}"
+                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                        >{{ old('description') }}</textarea>
+                        @error('description')<p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
 
                     <label class="flex items-start gap-2 text-sm text-zinc-800 dark:text-zinc-200">
                         <input type="checkbox" name="has_ar_support" value="1" @checked(old('has_ar_support')) class="mt-0.5 size-4 rounded border-zinc-400 text-sky-600 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-900">
@@ -58,7 +69,7 @@
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Name') }}</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Name / Description') }}</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Slug') }}</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('AR') }}</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Expiry') }}</th>
@@ -69,7 +80,16 @@
                             @foreach($categories as $category)
                                 <tr>
                                     <td class="px-4 py-3">
-                                        <flux:input form="update-category-{{ $category->id }}" name="name" :label="false" value="{{ $category->name }}" required />
+                                        <div class="space-y-1.5">
+                                            <flux:input form="update-category-{{ $category->id }}" name="name" :label="false" value="{{ $category->name }}" required />
+                                            <textarea
+                                                form="update-category-{{ $category->id }}"
+                                                name="description"
+                                                rows="2"
+                                                placeholder="{{ __('Description…') }}"
+                                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                            >{{ $category->description }}</textarea>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
                                         {{ $category->slug }}

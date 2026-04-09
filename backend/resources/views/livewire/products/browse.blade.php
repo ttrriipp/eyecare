@@ -16,7 +16,7 @@
                 />
             </div>
 
-            <div class="w-full md:w-56">
+            <div class="w-full md:w-48">
                 <label for="category_id" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     {{ __('Category') }}
                 </label>
@@ -25,10 +25,41 @@
                     id="category_id"
                     class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                 >
-                    <option value="">{{ __('All') }}</option>
+                    <option value="">{{ __('All categories') }}</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            <div class="w-full md:w-44">
+                <label for="sort_by" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    {{ __('Sort by') }}
+                </label>
+                <select
+                    wire:model.live="sort_by"
+                    id="sort_by"
+                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                >
+                    <option value="created_at">{{ __('Newest') }}</option>
+                    <option value="name">{{ __('Name') }}</option>
+                    <option value="price">{{ __('Price') }}</option>
+                    <option value="brand">{{ __('Brand') }}</option>
+                    <option value="updated_at">{{ __('Last updated') }}</option>
+                </select>
+            </div>
+
+            <div class="w-full md:w-32">
+                <label for="sort_dir" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    {{ __('Order') }}
+                </label>
+                <select
+                    wire:model.live="sort_dir"
+                    id="sort_dir"
+                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                >
+                    <option value="desc">{{ __('Desc') }}</option>
+                    <option value="asc">{{ __('Asc') }}</option>
                 </select>
             </div>
 
@@ -59,7 +90,7 @@
     >
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                {{ __('Display') }}
+                {{ $products->total() }} {{ \Illuminate\Support\Str::plural('product', $products->total()) }}
             </flux:text>
             <div
                 class="inline-flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5 dark:border-zinc-600 dark:bg-zinc-800"
@@ -108,6 +139,7 @@
                             <th class="px-4 py-3.5">{{ __('Brand') }}</th>
                             <th class="px-4 py-3.5">{{ __('Category') }}</th>
                             <th class="px-4 py-3.5 text-end">{{ __('Price') }}</th>
+                            <th class="px-4 py-3.5">{{ __('Rating') }}</th>
                             <th class="px-4 py-3.5">{{ __('Status') }}</th>
                             <th class="px-4 py-3.5 text-end">{{ __('Actions') }}</th>
                         </tr>
@@ -159,6 +191,21 @@
                                     class="px-4 py-3 align-middle text-end text-base font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
                                 >
                                     {{ \App\Support\Money::peso($product->price ?? 0) }}
+                                </td>
+                                <td class="px-4 py-3 align-middle">
+                                    @if(($product->reviews_count ?? 0) > 0)
+                                        <div class="flex items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 shrink-0 text-amber-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            </svg>
+                                            <span class="text-xs tabular-nums text-zinc-700 dark:text-zinc-300">
+                                                {{ number_format($product->average_rating ?? 0, 1) }}
+                                            </span>
+                                            <span class="text-[11px] text-zinc-400 dark:text-zinc-500">({{ $product->reviews_count }})</span>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">—</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 align-middle">
                                     @if($product->is_active ?? true)
@@ -253,8 +300,18 @@
                                 @endif
                             </div>
 
-                            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                                {{ $product->category?->name ?? __('Uncategorized') }}
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="text-xs text-zinc-500 dark:text-zinc-500">
+                                    {{ $product->category?->name ?? __('Uncategorized') }}
+                                </div>
+                                @if(($product->reviews_count ?? 0) > 0)
+                                    <div class="flex shrink-0 items-center gap-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                        {{ number_format($product->average_rating ?? 0, 1) }}
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="mt-2 flex items-center justify-between">

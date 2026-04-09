@@ -37,6 +37,7 @@ class ProductCategorySettingsController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
             'has_ar_support' => ['nullable', 'boolean'],
             'requires_expiry_tracking' => ['nullable', 'boolean'],
         ]);
@@ -60,6 +61,7 @@ class ProductCategorySettingsController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
             'has_ar_support' => ['nullable', 'boolean'],
             'requires_expiry_tracking' => ['nullable', 'boolean'],
         ]);

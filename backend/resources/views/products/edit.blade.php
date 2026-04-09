@@ -7,9 +7,15 @@
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Edit product') }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-400">
-                    {{ __('Update product details and images for the catalog and Android app.') }}
-                </flux:text>
+                <x-app-breadcrumbs
+                    class="mt-1.5"
+                    :items="[
+                        ['label' => __('Home'), 'href' => route('dashboard')],
+                        ['label' => __('Products'), 'href' => route('products.index')],
+                        ['label' => $product->name, 'href' => route('products.show', $product)],
+                        ['label' => __('Edit')],
+                    ]"
+                />
             </div>
 
             <flux:button variant="ghost" icon="arrow-left" :href="route('products.show', $product)" wire:navigate>
@@ -217,6 +223,138 @@
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Default variant attributes ───────────────────── --}}
+                    @php $dv = $product->defaultVariant; @endphp
+                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+                        <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                            {{ __('Default variant attributes') }}
+                        </h2>
+                        <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('Attributes for the default product variant — used for filtering and order line details.') }}
+                        </p>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+
+                            <div class="space-y-1.5">
+                                <label for="variant_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Color') }}
+                                </label>
+                                <flux:input
+                                    id="variant_color"
+                                    name="variant_color"
+                                    :label="false"
+                                    value="{{ old('variant_color', $dv?->color) }}"
+                                    placeholder="e.g. Black, Tortoise"
+                                />
+                                @error('variant_color')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="variant_frame_size" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Frame size') }}
+                                </label>
+                                <flux:input
+                                    id="variant_frame_size"
+                                    name="variant_frame_size"
+                                    :label="false"
+                                    value="{{ old('variant_frame_size', $dv?->frame_size) }}"
+                                    placeholder="e.g. Small, Medium, Large"
+                                />
+                                @error('variant_frame_size')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="variant_material" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Material') }}
+                                </label>
+                                <flux:input
+                                    id="variant_material"
+                                    name="variant_material"
+                                    :label="false"
+                                    value="{{ old('variant_material', $dv?->material) }}"
+                                    placeholder="e.g. Acetate, Metal, TR-90"
+                                />
+                                @error('variant_material')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="variant_lens_type" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Lens type') }}
+                                </label>
+                                <flux:input
+                                    id="variant_lens_type"
+                                    name="variant_lens_type"
+                                    :label="false"
+                                    value="{{ old('variant_lens_type', $dv?->lens_type) }}"
+                                    placeholder="e.g. Single-vision, Progressive, Tinted"
+                                />
+                                @error('variant_lens_type')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="variant_base_curve" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Base curve') }}
+                                </label>
+                                <flux:input
+                                    id="variant_base_curve"
+                                    name="variant_base_curve"
+                                    :label="false"
+                                    value="{{ old('variant_base_curve', $dv?->base_curve) }}"
+                                    placeholder="e.g. 8.6"
+                                />
+                                @error('variant_base_curve')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="variant_diameter" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Diameter') }}
+                                </label>
+                                <flux:input
+                                    id="variant_diameter"
+                                    name="variant_diameter"
+                                    :label="false"
+                                    value="{{ old('variant_diameter', $dv?->diameter) }}"
+                                    placeholder="e.g. 14.0 mm"
+                                />
+                                @error('variant_diameter')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-1.5 sm:col-span-2">
+                                <label for="variant_price_adjustment" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Price adjustment (₱)') }}
+                                </label>
+                                <flux:input
+                                    id="variant_price_adjustment"
+                                    name="variant_price_adjustment"
+                                    type="number"
+                                    step="0.01"
+                                    :label="false"
+                                    value="{{ old('variant_price_adjustment', $dv?->price_adjustment ?? '0.00') }}"
+                                    placeholder="0.00"
+                                />
+                                <p class="text-xs text-zinc-500 dark:text-zinc-500">
+                                    {{ __('Added to the base price to determine the unit selling price. Use 0 for no adjustment.') }}
+                                </p>
+                                @error('variant_price_adjustment')
+                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                         </div>
                     </div>
 

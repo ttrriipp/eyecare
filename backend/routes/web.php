@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCategorySettingsController;
 use App\Http\Controllers\SupplierSettingsController;
 use App\Http\Controllers\UserManagementController;
+use App\Livewire\Admin\Settings\CategoryManager;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -84,6 +85,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
+        Route::livewire('admin/settings/categories', CategoryManager::class)
+            ->name('admin.settings.categories');
+
         Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
             ->name('feedbacks.destroy');
 

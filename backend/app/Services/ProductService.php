@@ -177,20 +177,21 @@ class ProductService
     }
 
     /**
-     * Delete a category, guarded against categories that still contain products.
+     * Delete a category, guarded against system categories and categories with products.
      *
-     * @throws ValidationException if category has products
+     * Aborts with 403 if the category is a system category.
+     * Aborts with 409 if the category has any products (including soft-deleted).
      */
     public function deleteCategory(\App\Models\ProductCategory $category): void
     {
-        $productsCount = $category->products()->count();
+        if ($category->is_system) {
+            abort(403, 'System categories cannot be deleted.');
+        }
 
-        if ($productsCount > 0) {
-            throw ValidationException::withMessages([
-                'category' => __('Cannot delete this category because it is currently used by :count product(s). Reassign or remove those products first.', [
-                    'count' => $productsCount,
-                ]),
-            ]);
+        $hasProducts = $category->products()->withTrashed()->exists();
+
+        if ($hasProducts) {
+            abort(409, 'Reassign or delete all products in this category first.');
         }
 
         $category->delete();

@@ -7,9 +7,14 @@
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                     {{ __('Add product') }}
                 </flux:heading>
-                <flux:text class="text-zinc-600 dark:text-zinc-400">
-                    {{ __('Create a catalog item for the shop and mobile app.') }}
-                </flux:text>
+                <x-app-breadcrumbs
+                    class="mt-1.5"
+                    :items="[
+                        ['label' => __('Home'), 'href' => route('dashboard')],
+                        ['label' => __('Products'), 'href' => route('products.index')],
+                        ['label' => __('New product')],
+                    ]"
+                />
             </div>
 
             <flux:button variant="ghost" icon="arrow-left" :href="route('products.index')" wire:navigate>
@@ -322,6 +327,65 @@
                         </div>
                     </div>
 
+                    {{-- ── Virtual try-on (AR) — shown when category supports AR ── --}}
+                    <div
+                        id="product-ar-section"
+                        class="hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+                    >
+                        <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                            {{ __('Virtual try-on (AR)') }}
+                        </h2>
+                        <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ __('Provide a publicly accessible .glb or .usdz file URL for the mobile try-on feature.') }}
+                        </p>
+
+                        <div class="space-y-1.5">
+                            <label for="ar_model_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                {{ __('AR model URL') }}
+                            </label>
+                            <flux:input
+                                id="ar_model_url"
+                                name="ar_model_url"
+                                type="url"
+                                :label="false"
+                                value="{{ old('ar_model_url') }}"
+                                placeholder="https://example.com/models/frame.glb"
+                                disabled
+                            />
+                            @error('ar_model_url')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- ── Visibility ────────────────────────────────────── --}}
+                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+                        <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                            {{ __('Visibility') }}
+                        </h2>
+
+                        <label class="inline-flex cursor-pointer items-start gap-3 text-sm text-zinc-800 dark:text-zinc-200">
+                            <input type="hidden" name="is_active" value="0">
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                value="1"
+                                @checked(filter_var(old('is_active', '1'), FILTER_VALIDATE_BOOLEAN))
+                                class="mt-0.5 size-4 shrink-0 cursor-pointer rounded border border-zinc-400 bg-white accent-sky-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-zinc-500 dark:bg-zinc-900 dark:accent-sky-500 dark:focus:ring-offset-zinc-900"
+                            >
+                            <span>
+                                {{ __('Active — visible to customers') }}
+                                <span class="block text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    {{ __('Uncheck to create this product as a draft without showing it in the catalog.') }}
+                                </span>
+                            </span>
+                        </label>
+
+                        @error('is_active')
+                            <p class="mt-2 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- ── Actions ───────────────────────────────────────── --}}
                     <div class="flex items-center justify-end gap-3">
                         <flux:button :href="route('products.index')" variant="ghost" wire:navigate>
@@ -407,6 +471,26 @@
     </div>
 
     <script>
+        (function () {
+            const categorySelect = document.getElementById('category_id');
+            const arSection = document.getElementById('product-ar-section');
+            const arInput = document.getElementById('ar_model_url');
+
+            if (categorySelect && arSection) {
+                function syncArSection(fromUserChange) {
+                    const opt = categorySelect.selectedOptions[0];
+                    const show = opt && opt.getAttribute('data-has-ar') === '1';
+                    arSection.classList.toggle('hidden', !show);
+                    if (arInput) {
+                        arInput.disabled = !show;
+                        if (!show && fromUserChange) arInput.value = '';
+                    }
+                }
+                categorySelect.addEventListener('change', () => syncArSection(true));
+                syncArSection(false);
+            }
+        })();
+
         (function () {
             const categorySelect = document.getElementById('category_id');
             const expiresInput = document.getElementById('inventory_expires_at');

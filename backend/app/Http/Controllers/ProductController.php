@@ -68,7 +68,7 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load(['category', 'images', 'defaultVariant.inventory']);
+        $product->load(['category', 'supplier', 'images', 'variants.inventory', 'defaultVariant.inventory', 'feedbacks']);
 
         return view('products.show', [
             'product' => $product,
@@ -79,7 +79,7 @@ class ProductController extends Controller
     {
         $this->authorize('update', $product);
 
-        $product->load(['category', 'images']);
+        $product->load(['category', 'images', 'defaultVariant']);
         $categories = $this->productService->listCategories();
         $suppliers = $this->productService->listSuppliers();
 
@@ -98,7 +98,22 @@ class ProductController extends Controller
 
         $validated['is_active'] = $this->resolveIsActive($request);
 
+        $variantData = array_filter([
+            'color'            => $request->input('variant_color'),
+            'frame_size'       => $request->input('variant_frame_size'),
+            'material'         => $request->input('variant_material'),
+            'lens_type'        => $request->input('variant_lens_type'),
+            'base_curve'       => $request->input('variant_base_curve'),
+            'diameter'         => $request->input('variant_diameter'),
+            'price_adjustment' => $request->input('variant_price_adjustment'),
+        ], fn ($v) => $v !== null && $v !== '');
+
         $this->productService->update($product, $validated);
+
+        if (! empty($variantData)) {
+            $product->loadMissing('defaultVariant');
+            $product->defaultVariant?->update($variantData);
+        }
 
         $product->load('images');
         $primaryImage = $product->images->first();
@@ -170,16 +185,23 @@ class ProductController extends Controller
     private function updateRules(Product $product): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0.01'],
-            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
-            'brand' => ['nullable', 'string', 'max:255'],
-            'ar_model_url' => ['nullable', 'url', 'max:2048'],
-            'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
-            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'image' => ['nullable', 'image', 'max:4096'],
-            'remove_image' => ['sometimes', 'boolean'],
+            'name'                     => ['required', 'string', 'max:255'],
+            'description'              => ['nullable', 'string'],
+            'price'                    => ['required', 'numeric', 'min:0.01'],
+            'cost_per_unit'            => ['nullable', 'numeric', 'min:0'],
+            'brand'                    => ['nullable', 'string', 'max:255'],
+            'ar_model_url'             => ['nullable', 'url', 'max:2048'],
+            'category_id'              => ['nullable', 'integer', 'exists:product_categories,id'],
+            'supplier_id'              => ['nullable', 'integer', 'exists:suppliers,id'],
+            'image'                    => ['nullable', 'image', 'max:4096'],
+            'remove_image'             => ['sometimes', 'boolean'],
+            'variant_color'            => ['nullable', 'string', 'max:100'],
+            'variant_frame_size'       => ['nullable', 'string', 'max:100'],
+            'variant_material'         => ['nullable', 'string', 'max:100'],
+            'variant_lens_type'        => ['nullable', 'string', 'max:100'],
+            'variant_base_curve'       => ['nullable', 'string', 'max:100'],
+            'variant_diameter'         => ['nullable', 'string', 'max:100'],
+            'variant_price_adjustment' => ['nullable', 'numeric'],
         ];
     }
 

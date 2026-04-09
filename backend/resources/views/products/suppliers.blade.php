@@ -52,6 +52,17 @@
                         <flux:input id="create_email" name="email" type="email" :label="false" value="{{ old('email') }}" />
                     </div>
 
+                    <div class="space-y-1.5">
+                        <label for="create_address" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('Address') }}</label>
+                        <textarea
+                            id="create_address"
+                            name="address"
+                            rows="2"
+                            placeholder="{{ __('Street, city, province…') }}"
+                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                        >{{ old('address') }}</textarea>
+                    </div>
+
                     <label class="flex items-start gap-2 text-sm text-zinc-800 dark:text-zinc-200">
                         <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="mt-0.5 size-4 rounded border-zinc-400 text-sky-600 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-900">
                         <span>{{ __('Active') }}</span>
@@ -99,7 +110,18 @@
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             @foreach($suppliers as $supplier)
                                 <tr>
-                                    <td class="px-4 py-3"><flux:input form="update-supplier-{{ $supplier->id }}" name="name" :label="false" value="{{ $supplier->name }}" required /></td>
+                                    <td class="px-4 py-3">
+                                        <div class="space-y-1.5">
+                                            <flux:input form="update-supplier-{{ $supplier->id }}" name="name" :label="false" value="{{ $supplier->name }}" required />
+                                            <textarea
+                                                form="update-supplier-{{ $supplier->id }}"
+                                                name="address"
+                                                rows="2"
+                                                placeholder="{{ __('Address…') }}"
+                                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                            >{{ $supplier->address }}</textarea>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-3"><flux:input form="update-supplier-{{ $supplier->id }}" name="contact_person" :label="false" value="{{ $supplier->contact_person }}" /></td>
                                     <td class="px-4 py-3"><flux:input form="update-supplier-{{ $supplier->id }}" name="phone" :label="false" value="{{ $supplier->phone }}" /></td>
                                     <td class="px-4 py-3"><flux:input form="update-supplier-{{ $supplier->id }}" name="email" type="email" :label="false" value="{{ $supplier->email }}" /></td>
