@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Inventory;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Supplier;
@@ -178,6 +177,22 @@ class ProductService
     }
 
     /**
+     * Persist multiple catalog image uploads for a variant (e.g. Livewire admin flows).
+     *
+     * @param  array<int, UploadedFile>  $uploads
+     */
+    public function attachUploadedImagesToVariant(ProductVariant $variant, array $uploads): void
+    {
+        $variant->loadMissing('images');
+        $nextOrder = $variant->images->isEmpty() ? 0 : ($variant->images->max('sort_order') + 1);
+
+        foreach ($uploads as $upload) {
+            $url = $this->storePublicCatalogImage($upload);
+            $this->addImage($variant, $url, $nextOrder++);
+        }
+    }
+
+    /**
      * Save an upload under public/images/products and return its public URL.
      * Uses {@see copy()} instead of move/rename so Livewire temp files work when the PHP temp
      * directory and public/ are on different Windows volumes.
@@ -290,9 +305,9 @@ class ProductService
 
         Inventory::create([
             'product_variant_id' => $variant->id,
-            'quantity'           => $initialStock,
-            'reorder_level'      => $reorderLevel,
-            'reorder_quantity'   => 0,
+            'quantity' => $initialStock,
+            'reorder_level' => $reorderLevel,
+            'reorder_quantity' => 0,
         ]);
 
         return $variant->load('inventory');
@@ -317,7 +332,7 @@ class ProductService
         return $this->createVariant(
             $product,
             [
-                'is_default'       => true,
+                'is_default' => true,
                 'price_adjustment' => 0,
             ],
             0,
@@ -362,11 +377,11 @@ class ProductService
         if ($inventory && $inventory->quantity > 0) {
             $inventory->adjustments()->create([
                 'quantity_before' => $inventory->quantity,
-                'quantity_after'  => 0,
-                'delta'           => -$inventory->quantity,
+                'quantity_after' => 0,
+                'delta' => -$inventory->quantity,
                 'adjustment_type' => 'subtract',
-                'reason'          => 'variant_removed',
-                'adjusted_by'     => $actorId,
+                'reason' => 'variant_removed',
+                'adjusted_by' => $actorId,
             ]);
         }
 

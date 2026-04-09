@@ -181,10 +181,28 @@
                     $status = $this->stockStatusForVariant($variant);
                     $label  = $this->buildVariantLabel($variant);
                     $adj    = (float) $variant->price_adjustment;
+                    $vImgs  = $variant->images;
+                    $thumbUrl = $vImgs->first()?->image_url;
+                    $extraImgCount = max(0, $vImgs->count() - 1);
                 @endphp
                 <div class="relative rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/40">
                     <div class="flex items-start justify-between gap-2">
-                        <div class="min-w-0 flex-1">
+                        <div class="flex min-w-0 flex-1 gap-3">
+                            <div class="relative shrink-0">
+                                @if($thumbUrl)
+                                    <img src="{{ $thumbUrl }}" alt="" loading="lazy" class="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-600">
+                                    @if($extraImgCount > 0)
+                                        <span class="absolute -bottom-1 -right-1 min-w-[1.125rem] rounded-full bg-zinc-800 px-1 py-px text-center text-[10px] font-semibold leading-none text-white shadow dark:bg-zinc-200 dark:text-zinc-900" title="{{ __(':count more', ['count' => $extraImgCount]) }}">+{{ $extraImgCount }}</span>
+                                    @endif
+                                @else
+                                    <div class="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800" title="{{ __('No images') }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-zinc-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008H12V8.25Z" />
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
                             <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{{ $label }}</p>
                             <p class="mt-0.5 font-mono text-[11px] text-zinc-400 dark:text-zinc-500">{{ $variant->sku }}</p>
                             @if($adj > 0)
@@ -194,6 +212,7 @@
                             @else
                                 <p class="mt-0.5 text-[11px] text-zinc-400">{{ __('Base price') }}</p>
                             @endif
+                            </div>
                         </div>
                         <div class="flex shrink-0 flex-col items-end gap-1">
                             <div class="flex items-center gap-1.5">
@@ -276,10 +295,21 @@
                     $status    = $this->stockStatusForVariant($variant);
                     $label     = $this->buildVariantLabel($variant);
                     $isAdj     = $adjustingVariantId === $variant->id;
+                    $stockThumb = $variant->images->first()?->image_url;
                 @endphp
                 <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/40">
                     <div class="px-4 py-3">
                         <div class="flex items-center justify-between gap-3">
+                            <div class="flex min-w-0 flex-1 items-start gap-2.5">
+                                @if($stockThumb)
+                                    <img src="{{ $stockThumb }}" alt="" loading="lazy" class="mt-0.5 h-10 w-10 shrink-0 rounded-md border border-zinc-200 object-cover dark:border-zinc-600">
+                                @else
+                                    <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800/80">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008H12V8.25Z" />
+                                        </svg>
+                                    </div>
+                                @endif
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ $label }}</p>
                                 {{-- Stock bar --}}
@@ -291,6 +321,7 @@
                                         'bg-emerald-500' => $status === 'healthy',
                                     ]) style="width: {{ $pct }}%"></div>
                                 </div>
+                            </div>
                             </div>
                             <div class="shrink-0 text-right">
                                 <span @class([
@@ -343,31 +374,15 @@
                             </div>
 
                             <div>
-                                <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">{{ __('Reason') }}</label>
-                                <select wire:model.live="adj_reason"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
-                                    <option value="restock">{{ __('Restock') }}</option>
-                                    <option value="sale_correction">{{ __('Sale correction') }}</option>
-                                    <option value="damaged">{{ __('Damaged') }}</option>
-                                    <option value="expired">{{ __('Expired') }}</option>
-                                    <option value="returned">{{ __('Returned') }}</option>
-                                    <option value="initial_count">{{ __('Initial count') }}</option>
-                                    <option value="other">{{ __('Other') }}</option>
-                                </select>
+                                <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+                                    {{ __('Reason') }} <span class="text-red-500">*</span>
+                                </label>
+                                <textarea wire:model="adj_reason" rows="2" maxlength="500"
+                                    placeholder="{{ __('e.g. Restock from supplier, damaged units written off…') }}"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                ></textarea>
+                                @error('adj_reason') <p class="mt-0.5 text-[11px] text-red-600">{{ $message }}</p> @enderror
                             </div>
-
-                            @if($adj_reason === 'other')
-                                <div>
-                                    <label class="mb-1 block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
-                                        {{ __('Notes') }} <span class="text-red-500">*</span>
-                                    </label>
-                                    <input wire:model="adj_notes" type="text" maxlength="300"
-                                        placeholder="{{ __('Describe the reason…') }}"
-                                        class="block w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                    >
-                                    @error('adj_notes') <p class="mt-0.5 text-[11px] text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                            @endif
 
                             <div class="flex items-center justify-between gap-2">
                                 <button type="button" wire:click="cancelAdjust"
@@ -404,7 +419,9 @@
                             <div class="flex items-center justify-between text-xs">
                                 <div class="min-w-0 flex-1 truncate text-zinc-500 dark:text-zinc-400">
                                     <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $adjLabel }}</span>
-                                    · {{ ucfirst(str_replace('_', ' ', explode(':', $adj->reason)[0])) }}
+                                    @if(filled($adj->reason))
+                                        · <span title="{{ $adj->reason }}">{{ \Illuminate\Support\Str::limit($adj->reason, 48) }}</span>
+                                    @endif
                                     · {{ $adj->adjustedBy?->name ?? __('System') }}
                                 </div>
                                 <div class="ml-2 shrink-0 font-bold tabular-nums
@@ -580,6 +597,49 @@
                         @error('v_ar_model_url') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
                 @endif
+
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Variant images') }}
+                        <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                    </label>
+                    <p class="mb-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {{ __('Photos for this variant. First saved image is the primary listing thumbnail. New uploads are appended when you save.') }}
+                    </p>
+                    @if($variantFormMode === 'edit' && count($existingVariantImagesForEdit) > 0)
+                        <div class="mb-3 flex flex-wrap gap-2">
+                            @foreach($existingVariantImagesForEdit as $saved)
+                                <div class="relative" wire:key="variant-saved-img-{{ $saved['id'] }}">
+                                    <img src="{{ $saved['url'] }}" alt="" class="h-16 w-16 rounded-lg border border-zinc-200 object-cover dark:border-zinc-600">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if(count($v_variant_images) > 0)
+                        <div class="mb-2 flex flex-wrap gap-2">
+                            @foreach($v_variant_images as $vix => $vf)
+                                <div class="group relative" wire:key="vs-vv-{{ $vix }}">
+                                    <img src="{{ $vf->temporaryUrl() }}" class="h-16 w-16 rounded-lg border border-zinc-200 object-cover dark:border-zinc-600" alt="">
+                                    @if($vix > 0)
+                                        <button type="button" wire:click="setPrimaryVVariantImage({{ $vix }})"
+                                            class="absolute bottom-1 left-1 rounded bg-black/50 px-1 py-px text-[10px] font-medium text-white hover:bg-sky-600"
+                                            title="{{ __('Set as primary') }}">★</button>
+                                    @endif
+                                    <button type="button" wire:click="removeVVariantImage({{ $vix }})"
+                                        class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    <label class="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-3 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Click to add photos') }} · {{ __('PNG, JPG, WEBP · max 4 MB · up to 10') }}</span>
+                        <input type="file" wire:model="v_variant_images" accept="image/*" multiple class="sr-only">
+                    </label>
+                    <div wire:loading wire:target="v_variant_images" class="mt-1 text-[11px] text-zinc-500">{{ __('Uploading…') }}</div>
+                    @error('v_variant_images.*') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
             </div>
 
         @else
@@ -620,12 +680,12 @@
                         {{ __('Cancel') }}
                     </button>
                     <button type="button" wire:click="saveVariant"
-                        wire:loading.attr="disabled" wire:target="saveVariant"
+                        wire:loading.attr="disabled" wire:target="saveVariant,v_variant_images"
                         class="inline-flex h-8 items-center gap-1.5 rounded-md bg-sky-600 px-3 text-xs font-medium text-white hover:bg-sky-700 disabled:opacity-60">
-                        <span wire:loading.remove wire:target="saveVariant">
+                        <span wire:loading.remove wire:target="saveVariant,v_variant_images">
                             {{ $variantFormMode === 'add' ? __('Add variant') : __('Save changes') }}
                         </span>
-                        <span wire:loading wire:target="saveVariant">
+                        <span wire:loading wire:target="saveVariant,v_variant_images">
                             <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                         </span>
                     </button>

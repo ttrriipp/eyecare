@@ -127,13 +127,13 @@ class ProductForm extends Component
         $ignoreId = $this->editingProductId;
 
         return [
-            'category_id'         => ['required', 'integer', 'exists:product_categories,id'],
-            'name'                => ['required', 'string', 'max:100'],
-            'brand'               => ['required', 'string', 'max:80'],
-            'description'         => ['nullable', 'string', 'max:1000'],
-            'price'               => ['required', 'numeric', 'min:0'],
-            'cost_per_unit'       => ['nullable', 'numeric', 'min:0'],
-            'is_active'           => ['boolean'],
+            'category_id' => ['required', 'integer', 'exists:product_categories,id'],
+            'name' => ['required', 'string', 'max:100'],
+            'brand' => ['required', 'string', 'max:80'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'cost_per_unit' => ['nullable', 'numeric', 'min:0'],
+            'is_active' => ['boolean'],
             'low_stock_threshold' => ['required', 'integer', 'min:1', 'max:9999'],
         ];
     }
@@ -142,50 +142,50 @@ class ProductForm extends Component
     protected function variantImageRules(): array
     {
         return [
-            'v_variant_images.*'             => ['image', 'max:4096'],
-            'pendingVariantImages.*.*'       => ['image', 'max:4096'],
-            'pendingVariantImagesEdit.*.*'   => ['image', 'max:4096'],
+            'v_variant_images.*' => ['image', 'max:4096'],
+            'pendingVariantImages.*.*' => ['image', 'max:4096'],
+            'pendingVariantImagesEdit.*.*' => ['image', 'max:4096'],
         ];
     }
 
     protected function step2VariantRules(): array
     {
         return array_filter([
-            'v_color'             => $this->cat_has_color       ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_frame_size'        => $this->cat_has_frame_size  ? ['required', 'string', 'max:30'] : ['nullable'],
-            'v_material'          => $this->cat_has_material    ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_lens_type'         => $this->cat_has_lens_type   ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_base_curve'        => $this->cat_has_power_field ? ['required', 'numeric']           : ['nullable'],
-            'v_diameter'          => $this->cat_has_power_field ? ['required', 'numeric']           : ['nullable'],
-            'v_price_adjustment'  => ['required', 'numeric'],
-            'v_initial_stock'     => ['required', 'integer', 'min:0'],
-            'v_ar_model_url'      => $this->cat_has_ar_support ? ['nullable', 'string', 'max:2048'] : ['nullable'],
+            'v_color' => $this->cat_has_color ? ['required', 'string', 'max:60'] : ['nullable'],
+            'v_frame_size' => $this->cat_has_frame_size ? ['required', 'string', 'max:30'] : ['nullable'],
+            'v_material' => $this->cat_has_material ? ['required', 'string', 'max:60'] : ['nullable'],
+            'v_lens_type' => $this->cat_has_lens_type ? ['required', 'string', 'max:60'] : ['nullable'],
+            'v_base_curve' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
+            'v_diameter' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
+            'v_price_adjustment' => ['required', 'numeric'],
+            'v_initial_stock' => ['required', 'integer', 'min:0'],
+            'v_ar_model_url' => $this->cat_has_ar_support ? ['nullable', 'string', 'max:2048'] : ['nullable'],
         ]);
     }
 
     protected function messages(): array
     {
         return [
-            'category_id.required'         => 'Please select a category.',
-            'name.required'                => 'Product name is required.',
-            'brand.required'               => 'Brand is required.',
-            'price.required'               => 'Selling price is required.',
-            'price.numeric'                => 'Selling price must be a number.',
-            'cost_per_unit.numeric'          => 'Cost price must be a number.',
+            'category_id.required' => 'Please select a category.',
+            'name.required' => 'Product name is required.',
+            'brand.required' => 'Brand is required.',
+            'price.required' => 'Selling price is required.',
+            'price.numeric' => 'Selling price must be a number.',
+            'cost_per_unit.numeric' => 'Cost price must be a number.',
             'pendingVariantImages.*.*.image' => 'All uploaded files must be valid images.',
-            'pendingVariantImages.*.*.max'   => 'Each image must be smaller than 4 MB.',
+            'pendingVariantImages.*.*.max' => 'Each image must be smaller than 4 MB.',
             'pendingVariantImagesEdit.*.*.image' => 'All uploaded files must be valid images.',
-            'pendingVariantImagesEdit.*.*.max'   => 'Each image must be smaller than 4 MB.',
-            'v_variant_images.*.image'       => 'All uploaded files must be valid images.',
-            'v_variant_images.*.max'         => 'Each image must be smaller than 4 MB.',
+            'pendingVariantImagesEdit.*.*.max' => 'Each image must be smaller than 4 MB.',
+            'v_variant_images.*.image' => 'All uploaded files must be valid images.',
+            'v_variant_images.*.max' => 'Each image must be smaller than 4 MB.',
             'low_stock_threshold.required' => 'Low stock threshold is required.',
-            'low_stock_threshold.min'      => 'Threshold must be at least 1.',
-            'v_color.required'             => 'Color is required for this category.',
-            'v_frame_size.required'        => 'Frame size is required for this category.',
-            'v_material.required'          => 'Material is required for this category.',
-            'v_lens_type.required'         => 'Lens type is required for this category.',
-            'v_base_curve.required'        => 'Base curve is required.',
-            'v_diameter.required'          => 'Diameter is required.',
+            'low_stock_threshold.min' => 'Threshold must be at least 1.',
+            'v_color.required' => 'Color is required for this category.',
+            'v_frame_size.required' => 'Frame size is required for this category.',
+            'v_material.required' => 'Material is required for this category.',
+            'v_lens_type.required' => 'Lens type is required for this category.',
+            'v_base_curve.required' => 'Base curve is required.',
+            'v_diameter.required' => 'Diameter is required.',
         ];
     }
 
@@ -205,9 +205,9 @@ class ProductForm extends Component
     public function open(string $mode, ?int $productId = null): void
     {
         $this->resetForm();
-        $this->mode        = $mode;
-        $this->step        = 1;
-        $this->showPanel   = true;
+        $this->mode = $mode;
+        $this->step = 1;
+        $this->showPanel = true;
 
         if ($mode === 'edit' && $productId) {
             $this->editingProductId = $productId;
@@ -223,17 +223,17 @@ class ProductForm extends Component
             'variants.images',
         ])->findOrFail($id);
 
-        $this->category_id   = $product->category_id;
-        $this->name          = $product->name;
-        $this->brand         = $product->brand ?? '';
-        $this->description   = $product->description ?? '';
-        $this->price         = (string) $product->price;
+        $this->category_id = $product->category_id;
+        $this->name = $product->name;
+        $this->brand = $product->brand ?? '';
+        $this->description = $product->description ?? '';
+        $this->price = (string) $product->price;
         $this->cost_per_unit = $product->cost_per_unit ? (string) $product->cost_per_unit : '';
-        $this->is_active     = (bool) $product->is_active;
+        $this->is_active = (bool) $product->is_active;
 
         $this->existingVariantImages = [];
-        $this->editVariantLabels     = [];
-        $this->variantArModelUrl     = [];
+        $this->editVariantLabels = [];
+        $this->variantArModelUrl = [];
 
         if ($product->category) {
             $this->applyCategory($product->category);
@@ -310,12 +310,14 @@ class ProductForm extends Component
 
         if (! $this->category_id) {
             $this->resetCategoryFlags();
+
             return;
         }
 
         $cat = ProductCategory::find($this->category_id);
         if (! $cat) {
             $this->resetCategoryFlags();
+
             return;
         }
 
@@ -325,16 +327,16 @@ class ProductForm extends Component
 
     private function applyCategory(ProductCategory $cat): void
     {
-        $this->cat_has_ar_support        = (bool) $cat->has_ar_support;
+        $this->cat_has_ar_support = (bool) $cat->has_ar_support;
         $this->cat_requires_prescription = (bool) $cat->requires_prescription;
-        $this->cat_has_color             = (bool) $cat->has_color;
-        $this->cat_has_frame_size        = (bool) $cat->has_frame_size;
-        $this->cat_has_material          = (bool) $cat->has_material;
-        $this->cat_has_lens_type         = (bool) $cat->has_lens_type;
-        $this->cat_has_power_field       = (bool) $cat->has_power_field;
-        $this->cat_has_duration          = (bool) $cat->has_duration;
-        $this->cat_stock_unit            = $cat->stock_unit ?? 'units';
-        $this->cat_name                  = $cat->name;
+        $this->cat_has_color = (bool) $cat->has_color;
+        $this->cat_has_frame_size = (bool) $cat->has_frame_size;
+        $this->cat_has_material = (bool) $cat->has_material;
+        $this->cat_has_lens_type = (bool) $cat->has_lens_type;
+        $this->cat_has_power_field = (bool) $cat->has_power_field;
+        $this->cat_has_duration = (bool) $cat->has_duration;
+        $this->cat_stock_unit = $cat->stock_unit ?? 'units';
+        $this->cat_name = $cat->name;
     }
 
     private function resetCategoryFlags(): void
@@ -359,16 +361,16 @@ class ProductForm extends Component
         );
 
         $variantData = [
-            'color'            => $this->cat_has_color       ? $this->v_color       : null,
-            'frame_size'       => $this->cat_has_frame_size  ? $this->v_frame_size  : null,
-            'material'         => $this->cat_has_material    ? $this->v_material    : null,
-            'lens_type'        => $this->cat_has_lens_type   ? $this->v_lens_type   : null,
-            'base_curve'       => $this->cat_has_power_field ? $this->v_base_curve  : null,
-            'diameter'         => $this->cat_has_power_field ? $this->v_diameter    : null,
+            'color' => $this->cat_has_color ? $this->v_color : null,
+            'frame_size' => $this->cat_has_frame_size ? $this->v_frame_size : null,
+            'material' => $this->cat_has_material ? $this->v_material : null,
+            'lens_type' => $this->cat_has_lens_type ? $this->v_lens_type : null,
+            'base_curve' => $this->cat_has_power_field ? $this->v_base_curve : null,
+            'diameter' => $this->cat_has_power_field ? $this->v_diameter : null,
             'price_adjustment' => $this->v_price_adjustment,
-            'initial_stock'    => $this->v_initial_stock,
-            'label'            => $this->buildVariantLabel(),
-            'ar_model_url'     => $this->cat_has_ar_support && filled(trim($this->v_ar_model_url))
+            'initial_stock' => $this->v_initial_stock,
+            'label' => $this->buildVariantLabel(),
+            'ar_model_url' => $this->cat_has_ar_support && filled(trim($this->v_ar_model_url))
                 ? trim($this->v_ar_model_url)
                 : null,
         ];
@@ -382,19 +384,31 @@ class ProductForm extends Component
     public function removeVariant(int $index): void
     {
         unset($this->pendingVariants[$index], $this->pendingVariantImages[$index]);
-        $this->pendingVariants      = array_values($this->pendingVariants);
+        $this->pendingVariants = array_values($this->pendingVariants);
         $this->pendingVariantImages = array_values($this->pendingVariantImages);
     }
 
     private function buildVariantLabel(): string
     {
         $parts = [];
-        if ($this->cat_has_color      && filled($this->v_color))      $parts[] = $this->v_color;
-        if ($this->cat_has_frame_size && filled($this->v_frame_size))  $parts[] = $this->v_frame_size;
-        if ($this->cat_has_material   && filled($this->v_material))    $parts[] = $this->v_material;
-        if ($this->cat_has_lens_type  && filled($this->v_lens_type))   $parts[] = $this->v_lens_type;
-        if ($this->cat_has_power_field && filled($this->v_base_curve)) $parts[] = $this->v_base_curve . ' mm BC';
-        if ($this->cat_has_power_field && filled($this->v_diameter))   $parts[] = $this->v_diameter . ' mm Ø';
+        if ($this->cat_has_color && filled($this->v_color)) {
+            $parts[] = $this->v_color;
+        }
+        if ($this->cat_has_frame_size && filled($this->v_frame_size)) {
+            $parts[] = $this->v_frame_size;
+        }
+        if ($this->cat_has_material && filled($this->v_material)) {
+            $parts[] = $this->v_material;
+        }
+        if ($this->cat_has_lens_type && filled($this->v_lens_type)) {
+            $parts[] = $this->v_lens_type;
+        }
+        if ($this->cat_has_power_field && filled($this->v_base_curve)) {
+            $parts[] = $this->v_base_curve.' mm BC';
+        }
+        if ($this->cat_has_power_field && filled($this->v_diameter)) {
+            $parts[] = $this->v_diameter.' mm Ø';
+        }
 
         return implode(' · ', $parts) ?: 'Default variant';
     }
@@ -411,17 +425,18 @@ class ProductForm extends Component
 
         if ($this->mode === 'add' && empty($this->pendingVariants)) {
             $this->variantError = 'Add at least one variant before saving.';
+
             return;
         }
 
         $productData = [
-            'category_id'  => $this->category_id,
-            'name'         => trim($this->name),
-            'brand'        => trim($this->brand),
-            'description'  => filled($this->description) ? trim($this->description) : null,
-            'price'        => $this->price,
+            'category_id' => $this->category_id,
+            'name' => trim($this->name),
+            'brand' => trim($this->brand),
+            'description' => filled($this->description) ? trim($this->description) : null,
+            'price' => $this->price,
             'cost_per_unit' => filled($this->cost_per_unit) ? $this->cost_per_unit : null,
-            'is_active'    => $this->is_active,
+            'is_active' => $this->is_active,
         ];
 
         try {
@@ -607,13 +622,7 @@ class ProductForm extends Component
 
     private function persistUploadedImagesForVariant(ProductVariant $variant, array $uploads, ProductService $productService): void
     {
-        $variant->loadMissing('images');
-        $nextOrder = $variant->images->isEmpty() ? 0 : ($variant->images->max('sort_order') + 1);
-
-        foreach ($uploads as $upload) {
-            $url = $productService->storePublicCatalogImage($upload);
-            $productService->addImage($variant, $url, $nextOrder++);
-        }
+        $productService->attachUploadedImagesToVariant($variant, $uploads);
     }
 
     private function saveVariantImageChanges(Product $product, ProductService $productService): void
@@ -655,25 +664,25 @@ class ProductForm extends Component
 
     private function resetForm(): void
     {
-        $this->editingProductId   = null;
-        $this->step               = 1;
-        $this->category_id        = null;
-        $this->name               = '';
-        $this->brand              = '';
-        $this->description        = '';
-        $this->price              = '0.00';
-        $this->cost_per_unit      = '';
-        $this->is_active          = true;
+        $this->editingProductId = null;
+        $this->step = 1;
+        $this->category_id = null;
+        $this->name = '';
+        $this->brand = '';
+        $this->description = '';
+        $this->price = '0.00';
+        $this->cost_per_unit = '';
+        $this->is_active = true;
         $this->low_stock_threshold = 5;
-        $this->v_ar_model_url               = '';
-        $this->variantArModelUrl            = [];
-        $this->v_variant_images             = [];
-        $this->pendingVariantImages         = [];
-        $this->existingVariantImages        = [];
-        $this->editVariantLabels            = [];
-        $this->pendingVariantImagesEdit     = [];
-        $this->imagesToRemove               = [];
-        $this->pendingVariants              = [];
+        $this->v_ar_model_url = '';
+        $this->variantArModelUrl = [];
+        $this->v_variant_images = [];
+        $this->pendingVariantImages = [];
+        $this->existingVariantImages = [];
+        $this->editVariantLabels = [];
+        $this->pendingVariantImagesEdit = [];
+        $this->imagesToRemove = [];
+        $this->pendingVariants = [];
         $this->resetCategoryFlags();
         $this->resetVariantForm();
         $this->resetValidation();
