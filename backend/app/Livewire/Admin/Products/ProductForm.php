@@ -561,7 +561,7 @@ class ProductForm extends Component
 
         try {
             if ($this->mode === 'add') {
-                $product = $productService->create($productData);
+                $product = $productService->create($productData, false);
 
                 foreach ($this->variantRows as $idx => $row) {
                     $variantFields = [

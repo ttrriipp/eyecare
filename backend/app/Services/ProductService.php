@@ -92,7 +92,7 @@ class ProductService
             ->findOrFail($id);
     }
 
-    public function create(array $data): Product
+    public function create(array $data, bool $ensureDefaultVariant = true): Product
     {
         unset($data['ar_model_url']);
         $hasCost = array_key_exists('cost_per_unit', $data);
@@ -100,6 +100,10 @@ class ProductService
         $price = Arr::pull($data, 'price');
 
         $product = Product::create($data);
+        if (! $ensureDefaultVariant) {
+            return $product->load(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
+        }
+
         $variant = $this->ensureDefaultVariantIfMissing($product);
 
         $variantUpdates = [];
