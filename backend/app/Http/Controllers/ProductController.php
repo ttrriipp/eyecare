@@ -13,6 +13,9 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
+    private const DURATION_OPTIONS = ['Daily', 'Bi-weekly', 'Monthly', 'Quarterly', 'Yearly'];
+    private const POWER_REGEX = '/^[+-]?\d{1,2}(?:\.\d{1,2})?$/';
+
     public function __construct(
         private readonly ProductService $productService,
         private readonly InventoryService $inventoryService,
@@ -109,8 +112,8 @@ class ProductController extends Controller
             'frame_size' => $request->input('variant_frame_size'),
             'material' => $request->input('variant_material'),
             'lens_type' => $request->input('variant_lens_type'),
-            'base_curve' => $request->input('variant_base_curve'),
-            'diameter' => $request->input('variant_diameter'),
+            'power' => $request->input('variant_power', $request->input('variant_base_curve')),
+            'duration' => $request->input('variant_duration', $request->input('variant_diameter')),
         ], fn ($v) => $v !== null && $v !== '');
 
         $this->productService->update($product, $validated);
@@ -204,7 +207,10 @@ class ProductController extends Controller
             'variant_frame_size' => ['nullable', 'string', 'max:100'],
             'variant_material' => ['nullable', 'string', 'max:100'],
             'variant_lens_type' => ['nullable', 'string', 'max:100'],
-            'variant_base_curve' => ['nullable', 'string', 'max:100'],
+            'variant_power' => ['nullable', 'string', 'max:100', 'regex:'.self::POWER_REGEX],
+            'variant_duration' => ['nullable', 'string', 'in:'.implode(',', self::DURATION_OPTIONS)],
+            // Legacy field names kept for backward compatibility.
+            'variant_base_curve' => ['nullable', 'string', 'max:100', 'regex:'.self::POWER_REGEX],
             'variant_diameter' => ['nullable', 'string', 'max:100'],
         ];
     }

@@ -10,6 +10,9 @@ use Illuminate\Support\Arr;
 
 class ProductSeeder extends Seeder
 {
+    /** @var array<int, string> */
+    private const DURATION_OPTIONS = ['Daily', 'Bi-weekly', 'Monthly', 'Quarterly', 'Yearly'];
+
     public function run(): void
     {
         // ── Categories ────────────────────────────────────────────────────────
@@ -150,7 +153,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // 3. Contacts: base curve + diameter only (category uses power fields, not lens_type)
+            // 3. Contacts: power + duration (mapped to category behavior flags)
             [
                 'product' => [
                     'category_id' => $contacts->id,
@@ -162,8 +165,8 @@ class ProductSeeder extends Seeder
                     'is_active' => true,
                 ],
                 'default_variant' => [
-                    'base_curve' => '8.5',
-                    'diameter' => '14.2',
+                    'power' => '-2.00',
+                    'duration' => 'Daily',
                     'cost_per_unit' => 480.00,
                 ],
             ],
@@ -212,12 +215,18 @@ class ProductSeeder extends Seeder
         foreach ($products as $row) {
             $productPayload = $row['product'];
             $listPrice = Arr::pull($productPayload, 'price');
-            $product = Product::create($productPayload);
+            $product = Product::query()->updateOrCreate(
+                ['name' => $productPayload['name']],
+                $productPayload,
+            );
             $variant = $productService->ensureDefaultVariantIfMissing($product);
             $variantPayload = array_merge(
                 ['price' => $listPrice],
                 $row['default_variant'] ?? [],
             );
+            if (isset($variantPayload['duration']) && ! in_array($variantPayload['duration'], self::DURATION_OPTIONS, true)) {
+                $variantPayload['duration'] = 'Monthly';
+            }
             $productService->updateVariant($variant, $variantPayload);
         }
     }

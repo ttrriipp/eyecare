@@ -6,8 +6,6 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderStatusHistoryController;
-use App\Http\Controllers\ProductCategorySettingsController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserManagementController;
 use App\Livewire\Admin\Inventory\AdjustmentHistory;
 use App\Livewire\Admin\Products\ProductManager;
@@ -20,29 +18,6 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
-
-    Route::get('products/create', [ProductController::class, 'create'])
-        ->name('products.create');
-    Route::post('products', [ProductController::class, 'store'])
-        ->name('products.store');
-    Route::get('products', [ProductController::class, 'index'])
-        ->name('products.index');
-    Route::get('products/categories', [ProductCategorySettingsController::class, 'index'])
-        ->name('products.categories.index');
-    Route::post('products/categories', [ProductCategorySettingsController::class, 'store'])
-        ->name('products.categories.store');
-    Route::put('products/categories/{category}', [ProductCategorySettingsController::class, 'update'])
-        ->name('products.categories.update');
-    Route::delete('products/categories/{category}', [ProductCategorySettingsController::class, 'destroy'])
-        ->name('products.categories.destroy');
-    Route::get('products/{product}', [ProductController::class, 'show'])
-        ->name('products.show');
-    Route::get('products/{product}/edit', [ProductController::class, 'edit'])
-        ->name('products.edit');
-    Route::put('products/{product}', [ProductController::class, 'update'])
-        ->name('products.update');
-    Route::delete('products/{product}', [ProductController::class, 'destroy'])
-        ->name('products.destroy');
 
     Route::get('orders', [OrderController::class, 'index'])
         ->name('orders.index');
@@ -86,8 +61,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('feedbacks.index');
 
         // Products admin management (admin + staff)
-        Route::livewire('admin/products', ProductManager::class)
-            ->name('admin.products.index');
+        Route::livewire('products', ProductManager::class)
+            ->name('products.index');
 
         Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
             ->name('admin.inventory.adjustments');

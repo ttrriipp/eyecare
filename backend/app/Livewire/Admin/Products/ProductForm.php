@@ -18,6 +18,9 @@ use Livewire\WithFileUploads;
 class ProductForm extends Component
 {
     use WithFileUploads;
+
+    private const DURATION_OPTIONS = ['Daily', 'Bi-weekly', 'Monthly', 'Quarterly', 'Yearly'];
+    private const POWER_REGEX = '/^[+-]?\d{1,2}(?:\.\d{1,2})?$/';
     // ── Panel visibility ──────────────────────────────────────────────────
 
     public bool $showPanel = false;
@@ -146,8 +149,12 @@ class ProductForm extends Component
             $rules[$p.'frame_size'] = $this->cat_has_frame_size ? ['required', 'string', 'max:30'] : ['nullable', 'string', 'max:30'];
             $rules[$p.'material'] = $this->cat_has_material ? ['required', 'string', 'max:60'] : ['nullable', 'string', 'max:60'];
             $rules[$p.'lens_type'] = $this->cat_has_lens_type ? ['required', 'string', 'max:60'] : ['nullable', 'string', 'max:60'];
-            $rules[$p.'base_curve'] = $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable', 'numeric'];
-            $rules[$p.'diameter'] = $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable', 'numeric'];
+            $rules[$p.'power'] = $this->cat_has_power_field
+                ? ['required', 'string', 'max:40', 'regex:'.self::POWER_REGEX]
+                : ['nullable', 'string', 'max:40', 'regex:'.self::POWER_REGEX];
+            $rules[$p.'duration'] = $this->cat_has_duration
+                ? ['required', 'string', 'in:'.implode(',', self::DURATION_OPTIONS)]
+                : ['nullable', 'string', 'in:'.implode(',', self::DURATION_OPTIONS)];
             $rules[$p.'price'] = ['required', 'numeric', 'min:0.01'];
             $rules[$p.'cost_per_unit'] = ['nullable', 'numeric', 'min:0'];
             $rules[$p.'initial_stock'] = ['required', 'integer', 'min:0'];
@@ -172,6 +179,7 @@ class ProductForm extends Component
             'brand.required' => 'Brand is required.',
             'price.required' => 'Selling price is required.',
             'price.numeric' => 'Selling price must be a number.',
+            'variantRows.*.power.regex' => 'Power must be a valid diopter value (e.g. -2.00, +1.50, 0.00).',
             'v_cost_per_unit.numeric' => 'Cost per unit must be a number.',
             'pendingVariantImagesEdit.*.*.image' => 'All uploaded files must be valid images.',
             'pendingVariantImagesEdit.*.*.max' => 'Each image must be smaller than 4 MB.',
@@ -267,12 +275,12 @@ class ProductForm extends Component
             $parts[] = $variant->lens_type;
         }
         if ($this->cat_has_power_field) {
-            if ($variant->base_curve) {
-                $parts[] = $variant->base_curve.' mm BC';
+            if ($variant->power) {
+                $parts[] = 'Power '.$variant->power;
             }
-            if ($variant->diameter) {
-                $parts[] = $variant->diameter.' mm Ø';
-            }
+        }
+        if ($this->cat_has_duration && $variant->duration) {
+            $parts[] = 'Duration '.$variant->duration;
         }
 
         return implode(' · ', $parts) ?: 'Default';
@@ -391,8 +399,8 @@ class ProductForm extends Component
             'frame_size' => '',
             'material' => '',
             'lens_type' => '',
-            'base_curve' => '',
-            'diameter' => '',
+            'power' => '',
+            'duration' => '',
             'price' => '0.01',
             'cost_per_unit' => '',
             'initial_stock' => 0,
@@ -510,12 +518,12 @@ class ProductForm extends Component
             $parts[] = (string) $row['lens_type'];
         }
         if ($this->cat_has_power_field) {
-            if (filled($row['base_curve'] ?? null)) {
-                $parts[] = $row['base_curve'].' mm BC';
+            if (filled($row['power'] ?? null)) {
+                $parts[] = 'Power '.$row['power'];
             }
-            if (filled($row['diameter'] ?? null)) {
-                $parts[] = $row['diameter'].' mm Ø';
-            }
+        }
+        if ($this->cat_has_duration && filled($row['duration'] ?? null)) {
+            $parts[] = 'Duration '.$row['duration'];
         }
 
         return implode(' · ', $parts) ?: (string) __('Default variant');
@@ -569,8 +577,8 @@ class ProductForm extends Component
                         'frame_size' => $this->cat_has_frame_size ? (filled($row['frame_size'] ?? null) ? $row['frame_size'] : null) : null,
                         'material' => $this->cat_has_material ? (filled($row['material'] ?? null) ? $row['material'] : null) : null,
                         'lens_type' => $this->cat_has_lens_type ? (filled($row['lens_type'] ?? null) ? $row['lens_type'] : null) : null,
-                        'base_curve' => $this->cat_has_power_field ? (filled($row['base_curve'] ?? null) ? $row['base_curve'] : null) : null,
-                        'diameter' => $this->cat_has_power_field ? (filled($row['diameter'] ?? null) ? $row['diameter'] : null) : null,
+                        'power' => $this->cat_has_power_field ? (filled($row['power'] ?? null) ? $row['power'] : null) : null,
+                        'duration' => $this->cat_has_duration ? (filled($row['duration'] ?? null) ? $row['duration'] : null) : null,
                         'price' => $row['price'],
                         'cost_per_unit' => filled($row['cost_per_unit'] ?? null) ? $row['cost_per_unit'] : null,
                         'ar_model_url' => $this->cat_has_ar_support && filled(trim((string) ($row['ar_model_url'] ?? '')))
@@ -796,6 +804,9 @@ class ProductForm extends Component
     {
         $categories = ProductCategory::orderBy('name')->get();
 
-        return view('livewire.admin.products.product-form', compact('categories'));
+        return view('livewire.admin.products.product-form', [
+            'categories' => $categories,
+            'durationOptions' => self::DURATION_OPTIONS,
+        ]);
     }
 }

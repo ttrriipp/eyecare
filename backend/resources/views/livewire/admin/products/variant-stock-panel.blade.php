@@ -112,8 +112,8 @@
     @if($activeTab === 'overview')
         <div class="p-4 space-y-4">
 
-            {{-- Product overview --}}
-            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            {{-- Product overview meta --}}
+            <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                 <div>
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Brand') }}</p>
                     <p class="mt-0.5 text-zinc-800 dark:text-zinc-200">{{ $product->brand ?? '—' }}</p>
@@ -128,9 +128,13 @@
                         @if($product->is_active)
                             <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Active') }}</span>
                         @else
-                            <span class="inline-flex rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ __('Inactive') }}</span>
+                            <span class="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-950/60 dark:text-red-300">{{ __('Inactive') }}</span>
                         @endif
                     </p>
+                </div>
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Base SKU') }}</p>
+                    <p class="mt-0.5 font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $product->defaultVariant?->sku ?? '—' }}</p>
                 </div>
             </div>
 
@@ -158,7 +162,7 @@
             {{-- Variants heading --}}
             <div class="flex items-center justify-between">
                 <h3 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                    {{ __('Variants') }}
+                    {{ __('Variants (:count)', ['count' => $product->variants->count()]) }}
                 </h3>
                 @if(auth()->user()?->isAdmin())
                     <button type="button" wire:click="openAddVariant"
@@ -176,11 +180,23 @@
                     $qty    = $inv?->quantity ?? 0;
                     $status = $this->stockStatusForVariant($variant);
                     $label  = $this->buildVariantLabel($variant);
+                    $sku    = $variant->sku ?? '—';
                     $vImgs  = $variant->images;
                     $thumbUrl = $vImgs->first()?->image_url;
                     $extraImgCount = max(0, $vImgs->count() - 1);
+                    $isExpanded = $this->isVariantExpanded($variant->id);
+                    $threshold = max(1, (int) ($inv?->reorder_level ?? 5));
+                    $maxRef = max(50, $threshold * 3);
+                    $pct = min(100, (int) round(($qty / $maxRef) * 100));
+                    $isLowOrOut = $qty <= $threshold;
                 @endphp
-                <div class="relative rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/40">
+                <div class="relative rounded-lg border bg-zinc-50 p-3 dark:bg-zinc-800/40 {{ $variant->is_default ? 'dark:border-sky-500/70' : 'border-zinc-200 dark:border-zinc-700' }}"
+                     style="{{ $variant->is_default ? 'border-color:#185FA5;' : '' }}">
+                    <button
+                        type="button"
+                        wire:click="toggleVariant({{ $variant->id }})"
+                        class="w-full text-left"
+                    >
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex min-w-0 flex-1 gap-3">
                             <div class="relative shrink-0">
@@ -204,32 +220,72 @@
                                         <span class="inline-flex shrink-0 items-center rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200" title="{{ __('Default variant for this product') }}">{{ __('Default') }}</span>
                                     @endif
                                 </div>
-                                <p class="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">₱{{ number_format((float) $variant->price, 2) }}</p>
+                                <p class="mt-0.5 font-mono text-[11px] text-zinc-500 dark:text-zinc-400">{{ $sku }}</p>
                             </div>
                         </div>
-                        <div class="flex shrink-0 flex-col items-end gap-1">
-                            <div class="flex items-center gap-1.5">
-                                <div @class([
-                                    'h-2 w-2 rounded-full',
-                                    'bg-red-500'    => $status === 'out',
-                                    'bg-amber-400'  => $status === 'low',
-                                    'bg-emerald-500' => $status === 'healthy',
-                                ])></div>
-                                <span @class([
-                                    'text-sm font-bold tabular-nums',
-                                    'text-red-600 dark:text-red-400'     => $status === 'out',
-                                    'text-amber-600 dark:text-amber-400' => $status === 'low',
-                                    'text-zinc-700 dark:text-zinc-300'   => $status === 'healthy',
-                                ])>{{ $qty }}</span>
-                            </div>
-                            @if(auth()->user()?->isAdmin())
-                                <button type="button" wire:click="openEditVariant({{ $variant->id }})"
-                                    class="mt-1 text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 underline">
-                                    {{ __('Edit') }}
-                                </button>
-                            @endif
+                        <div class="flex shrink-0 items-center gap-2">
+                            <div class="h-2 w-2 rounded-full" style="background-color: {{ $isLowOrOut ? '#E24B4A' : '#639922' }};"></div>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-4 w-4 text-zinc-400 transition-transform {{ $isExpanded ? 'rotate-180' : '' }}"
+                                viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.167l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.51a.75.75 0 0 1-1.08 0L5.21 8.27a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+                            </svg>
                         </div>
                     </div>
+                    </button>
+
+                    @if($isExpanded)
+                        <div class="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                            <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                                <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Price') }}:</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">₱{{ number_format((float) $variant->price, 2) }}</span></div>
+                                <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Stock quantity') }}:</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ $qty }}</span></div>
+                                <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Cost price') }}:</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ $variant->cost_per_unit !== null ? '₱'.number_format((float) $variant->cost_per_unit, 2) : '—' }}</span></div>
+
+                                @if($cat?->has_color)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Color') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->color ?: '—' }}</span></div>
+                                @endif
+
+                                @if($cat?->has_frame_size)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Frame size') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->frame_size ?: '—' }}</span></div>
+                                @endif
+
+                                @if($cat?->has_material)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Material') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->material ?: '—' }}</span></div>
+                                @endif
+
+                                @if($cat?->has_lens_type)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Lens type') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->lens_type ?: '—' }}</span></div>
+                                @endif
+
+                                @if($cat?->has_power_field)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Power') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->power ?: '—' }}</span></div>
+                                @endif
+                                @if($cat?->has_duration)
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Duration') }}:</span> <span class="text-zinc-700 dark:text-zinc-300">{{ $variant->duration ?: '—' }}</span></div>
+                                @endif
+                            </div>
+
+                            <div class="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                <div class="h-full rounded-full transition-all" style="width: {{ $pct }}%; background-color: {{ $isLowOrOut ? '#E24B4A' : '#639922' }};"></div>
+                            </div>
+                            <p class="mt-1 text-[11px] {{ $isLowOrOut ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400' }}">
+                                {{ $qty }} / {{ $maxRef }}{{ $isLowOrOut ? ' — '.__('low stock') : '' }}
+                            </p>
+
+                            @if(auth()->user()?->isAdmin())
+                                <div class="mt-2 flex items-center gap-3">
+                                    <button type="button" wire:click.stop="openEditVariant({{ $variant->id }})"
+                                        class="text-[11px] font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">
+                                        {{ __('Edit') }}
+                                    </button>
+                                    <button type="button" wire:click.stop="archiveVariant({{ $variant->id }})"
+                                        class="text-[11px] font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300">
+                                        {{ __('Archive') }}
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @empty
                 <p class="py-4 text-center text-xs text-zinc-400 dark:text-zinc-500">
@@ -568,22 +624,31 @@
                     </div>
                 @endif
 
-                @if($cat?->has_power_field)
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Base curve (mm)') }} <span class="text-red-500">*</span></label>
-                            <input wire:model="v_base_curve" type="number" step="0.1" placeholder="8.5"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                            >
-                            @error('v_base_curve') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Diameter (mm)') }} <span class="text-red-500">*</span></label>
-                            <input wire:model="v_diameter" type="number" step="0.1" placeholder="14.2"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                            >
-                            @error('v_diameter') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                @if($cat?->has_power_field || $cat?->has_duration)
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        @if($cat?->has_power_field)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Power') }} <span class="text-red-500">*</span></label>
+                                <input wire:model="v_power" type="text" maxlength="40" placeholder="-2.00"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                >
+                                @error('v_power') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+                        @if($cat?->has_duration)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Duration') }} <span class="text-red-500">*</span></label>
+                                <select wire:model="v_duration"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">{{ __('Select…') }}</option>
+                                    @foreach($durationOptions as $durationOpt)
+                                        <option value="{{ $durationOpt }}">{{ __($durationOpt) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('v_duration') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -603,6 +668,16 @@
                         @error('v_cost_per_unit') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
+
+                @if($variantFormMode === 'add')
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Initial stock') }} ({{ $cat?->stock_unit ?? 'units' }}) <span class="text-red-500">*</span></label>
+                        <input wire:model="v_initial_stock" type="number" min="0"
+                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                        @error('v_initial_stock') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                @endif
 
                 @if($cat?->requires_expiry_tracking)
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

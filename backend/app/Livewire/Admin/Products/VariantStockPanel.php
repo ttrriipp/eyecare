@@ -21,6 +21,25 @@ class VariantStockPanel extends Component
 {
     use WithFileUploads;
 
+    private const DURATION_OPTIONS = ['Daily', 'Bi-weekly', 'Monthly', 'Quarterly', 'Yearly'];
+    private const POWER_REGEX = '/^[+-]?\d{1,2}(?:\.\d{1,2})?$/';
+
+    protected array $validationAttributes = [
+        'v_color' => 'color / finish',
+        'v_frame_size' => 'frame size',
+        'v_material' => 'material',
+        'v_lens_type' => 'lens type',
+        'v_power' => 'power',
+        'v_duration' => 'duration',
+        'v_price' => 'selling price',
+        'v_cost_per_unit' => 'cost per unit',
+        'v_initial_stock' => 'initial stock',
+        'v_batch_number' => 'batch number',
+        'v_expires_at' => 'expires at',
+        'v_ar_model_url' => 'AR model URL',
+        'v_variant_images' => 'variant images',
+    ];
+
     // ── Prop from parent ──────────────────────────────────────────────────
 
     #[Locked]
@@ -30,6 +49,9 @@ class VariantStockPanel extends Component
 
     /** 'overview' | 'stock' */
     public string $activeTab = 'overview';
+
+    /** @var array<int, int> */
+    public array $expandedVariantIds = [];
 
     // ── Variant slide-over ────────────────────────────────────────────────
 
@@ -49,13 +71,15 @@ class VariantStockPanel extends Component
 
     public string $v_lens_type = '';
 
-    public string $v_base_curve = '';
+    public string $v_power = '';
 
-    public string $v_diameter = '';
+    public string $v_duration = '';
 
     public string $v_price = '0.01';
 
     public string $v_cost_per_unit = '';
+
+    public int $v_initial_stock = 0;
 
     public string $v_batch_number = '';
 
@@ -106,13 +130,21 @@ class VariantStockPanel extends Component
             'v_frame_size' => ($cat?->has_frame_size) ? ['required', 'string', 'max:30'] : ['nullable'],
             'v_material' => ($cat?->has_material) ? ['required', 'string', 'max:60'] : ['nullable'],
             'v_lens_type' => ($cat?->has_lens_type) ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_base_curve' => ($cat?->has_power_field) ? ['required', 'numeric'] : ['nullable'],
-            'v_diameter' => ($cat?->has_power_field) ? ['required', 'numeric'] : ['nullable'],
+            'v_power' => ($cat?->has_power_field)
+                ? ['required', 'string', 'max:40', 'regex:'.self::POWER_REGEX]
+                : ['nullable', 'string', 'max:40', 'regex:'.self::POWER_REGEX],
+            'v_duration' => ($cat?->has_duration)
+                ? ['required', 'string', 'in:'.implode(',', self::DURATION_OPTIONS)]
+                : ['nullable', 'string', 'in:'.implode(',', self::DURATION_OPTIONS)],
             'v_price' => ['required', 'numeric', 'min:0.01'],
             'v_cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'v_ar_model_url' => ($cat?->has_ar_support) ? ['nullable', 'string', 'max:2048'] : ['nullable'],
             'v_is_default' => ['boolean'],
         ]);
+
+        if ($this->variantFormMode === 'add') {
+            $rules['v_initial_stock'] = ['required', 'integer', 'min:0'];
+        }
 
         if ($cat?->requires_expiry_tracking) {
             $rules['v_batch_number'] = ['nullable', 'string', 'max:120'];
@@ -196,6 +228,12 @@ class VariantStockPanel extends Component
             ->get();
     }
 
+    public function mount(): void
+    {
+        $defaultVariantId = $this->product?->defaultVariant?->id;
+        $this->expandedVariantIds = $defaultVariantId ? [$defaultVariantId] : [];
+    }
+
     // ── Parent communication ──────────────────────────────────────────────
 
     public function requestClose(): void
@@ -217,6 +255,25 @@ class VariantStockPanel extends Component
             $this->adjustingVariantId = null;
             $this->adjConfirmation = null;
         }
+    }
+
+    public function toggleVariant(int $variantId): void
+    {
+        if (in_array($variantId, $this->expandedVariantIds, true)) {
+            $this->expandedVariantIds = array_values(array_filter(
+                $this->expandedVariantIds,
+                fn (int $id): bool => $id !== $variantId
+            ));
+
+            return;
+        }
+
+        $this->expandedVariantIds[] = $variantId;
+    }
+
+    public function isVariantExpanded(int $variantId): bool
+    {
+        return in_array($variantId, $this->expandedVariantIds, true);
     }
 
     // ── Variant slide-over ────────────────────────────────────────────────
@@ -241,8 +298,8 @@ class VariantStockPanel extends Component
         $this->v_frame_size = $variant->frame_size ?? '';
         $this->v_material = $variant->material ?? '';
         $this->v_lens_type = $variant->lens_type ?? '';
-        $this->v_base_curve = (string) ($variant->base_curve ?? '');
-        $this->v_diameter = (string) ($variant->diameter ?? '');
+        $this->v_power = (string) ($variant->power ?? $variant->base_curve ?? '');
+        $this->v_duration = (string) ($variant->duration ?? $variant->diameter ?? '');
         $this->v_price = (string) ($variant->price ?? '0.01');
         $this->v_cost_per_unit = $variant->cost_per_unit !== null ? (string) $variant->cost_per_unit : '';
         $this->v_batch_number = (string) ($variant->inventory?->batch_number ?? '');
@@ -255,6 +312,12 @@ class VariantStockPanel extends Component
             ->values()
             ->map(fn ($img) => ['id' => $img->id, 'url' => $img->image_url])
             ->all();
+    }
+
+    public function archiveVariant(int $variantId): void
+    {
+        $this->openEditVariant($variantId);
+        $this->confirmDeleteVariant();
     }
 
     public function closeVariantForm(): void
@@ -273,6 +336,7 @@ class VariantStockPanel extends Component
             [
                 'v_variant_images.*.image' => __('All uploaded files must be valid images.'),
                 'v_variant_images.*.max' => __('Each image must be smaller than 4 MB.'),
+                'v_power.regex' => __('Power must be a valid diopter value (e.g. -2.00, +1.50, 0.00).'),
             ],
         );
         $cat = $this->product?->category;
@@ -282,8 +346,8 @@ class VariantStockPanel extends Component
             'frame_size' => ($cat?->has_frame_size) ? $this->v_frame_size : null,
             'material' => ($cat?->has_material) ? $this->v_material : null,
             'lens_type' => ($cat?->has_lens_type) ? $this->v_lens_type : null,
-            'base_curve' => ($cat?->has_power_field) ? $this->v_base_curve : null,
-            'diameter' => ($cat?->has_power_field) ? $this->v_diameter : null,
+            'power' => ($cat?->has_power_field) ? $this->v_power : null,
+            'duration' => ($cat?->has_duration) ? $this->v_duration : null,
             'price' => $this->v_price,
             'cost_per_unit' => filled($this->v_cost_per_unit) ? $this->v_cost_per_unit : null,
             'ar_model_url' => $cat?->has_ar_support ? $this->v_ar_model_url : null,
@@ -299,7 +363,13 @@ class VariantStockPanel extends Component
                     'expires_at' => filled($this->v_expires_at) ? $this->v_expires_at : null,
                 ];
             }
-            $variant = $productService->createVariant($product, $data, 0, 5, $inventoryExtras);
+            $variant = $productService->createVariant(
+                $product,
+                $data,
+                max(0, (int) $this->v_initial_stock),
+                5,
+                $inventoryExtras,
+            );
             if ($this->v_is_default) {
                 $productService->setDefaultVariant($variant);
             } else {
@@ -433,12 +503,12 @@ class VariantStockPanel extends Component
             $parts[] = $variant->lens_type;
         }
         if ($cat?->has_power_field) {
-            if ($variant->base_curve) {
-                $parts[] = $variant->base_curve.' mm BC';
+            if ($variant->power) {
+                $parts[] = 'Power '.$variant->power;
             }
-            if ($variant->diameter) {
-                $parts[] = $variant->diameter.' mm Ø';
-            }
+        }
+        if ($cat?->has_duration && $variant->duration) {
+            $parts[] = 'Duration '.$variant->duration;
         }
 
         return implode(' · ', $parts) ?: 'Default';
@@ -484,9 +554,10 @@ class VariantStockPanel extends Component
         $this->showVariantDeleteConfirm = false;
         $this->variantDeleteStockQty = 0;
         $this->v_color = $this->v_frame_size = $this->v_material = $this->v_lens_type = '';
-        $this->v_base_curve = $this->v_diameter = '';
+        $this->v_power = $this->v_duration = '';
         $this->v_price = '0.01';
         $this->v_cost_per_unit = '';
+        $this->v_initial_stock = 0;
         $this->v_batch_number = '';
         $this->v_expires_at = '';
         $this->v_is_default = false;
@@ -500,6 +571,8 @@ class VariantStockPanel extends Component
 
     public function render(): View
     {
-        return view('livewire.admin.products.variant-stock-panel');
+        return view('livewire.admin.products.variant-stock-panel', [
+            'durationOptions' => self::DURATION_OPTIONS,
+        ]);
     }
 }

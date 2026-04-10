@@ -170,9 +170,11 @@ class AdjustmentHistory extends Component
         if ($cat?->has_frame_size && $variant->frame_size) $parts[] = $variant->frame_size;
         if ($cat?->has_material   && $variant->material)   $parts[] = $variant->material;
         if ($cat?->has_lens_type  && $variant->lens_type)  $parts[] = $variant->lens_type;
-        if ($cat?->has_power_field) {
-            if ($variant->base_curve) $parts[] = $variant->base_curve . ' mm';
-            if ($variant->diameter)   $parts[] = $variant->diameter . ' mm Ø';
+        if ($cat?->has_power_field && $variant->power) {
+            $parts[] = 'Power '.$variant->power;
+        }
+        if ($cat?->has_duration && $variant->duration) {
+            $parts[] = 'Duration '.$variant->duration;
         }
 
         return implode(' · ', $parts) ?: 'Default';

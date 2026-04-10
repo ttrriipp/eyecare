@@ -29,8 +29,8 @@
                     @if(auth()->user()?->isAdminOrStaff())
                         <flux:sidebar.item
                             icon="layout-grid"
-                            :href="route('admin.products.index')"
-                            :current="request()->routeIs('admin.products.*', 'admin.inventory.*')"
+                            :href="route('products.index')"
+                            :current="request()->routeIs('products.*', 'admin.inventory.*')"
                             wire:navigate
                         >
                             {{ __('Products') }}

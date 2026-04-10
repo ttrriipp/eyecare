@@ -386,26 +386,35 @@
                             </div>
                         @endif
 
-                        @if($cat_has_power_field)
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ __('Base curve (mm)') }} <span class="text-red-500">*</span>
-                                    </label>
-                                    <input wire:model="variantRows.{{ $vIndex }}.base_curve" type="number" step="0.1" placeholder="8.5"
-                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                    >
-                                    @error('variantRows.'.$vIndex.'.base_curve') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ __('Diameter (mm)') }} <span class="text-red-500">*</span>
-                                    </label>
-                                    <input wire:model="variantRows.{{ $vIndex }}.diameter" type="number" step="0.1" placeholder="14.2"
-                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                    >
-                                    @error('variantRows.'.$vIndex.'.diameter') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                                </div>
+                        @if($cat_has_power_field || $cat_has_duration)
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                @if($cat_has_power_field)
+                                    <div>
+                                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                            {{ __('Power') }} <span class="text-red-500">*</span>
+                                        </label>
+                                        <input wire:model="variantRows.{{ $vIndex }}.power" type="text" maxlength="40" placeholder="-2.00"
+                                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                        >
+                                        @error('variantRows.'.$vIndex.'.power') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
+                                @if($cat_has_duration)
+                                    <div>
+                                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                            {{ __('Duration') }} <span class="text-red-500">*</span>
+                                        </label>
+                                        <select wire:model="variantRows.{{ $vIndex }}.duration"
+                                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                        >
+                                            <option value="">{{ __('Select…') }}</option>
+                                            @foreach($durationOptions as $durationOpt)
+                                                <option value="{{ $durationOpt }}">{{ __($durationOpt) }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('variantRows.'.$vIndex.'.duration') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
                             </div>
                         @endif
 
