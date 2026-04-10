@@ -19,4 +19,9 @@ class OrderNotificationsViewModel @Inject constructor(
         orderStatusNotifier.markNotificationsRead()
         _notifications.value = orderStatusNotifier.getRecentNotifications()
     }
+
+    fun clearAllNotifications() {
+        orderStatusNotifier.clearAllNotifications()
+        _notifications.value = emptyList()
+    }
 }

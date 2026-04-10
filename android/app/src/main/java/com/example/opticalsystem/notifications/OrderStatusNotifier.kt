@@ -171,6 +171,13 @@ class OrderStatusNotifier @Inject constructor(
         prefs.edit().putBoolean(KEY_HAS_UNREAD, false).apply()
     }
 
+    fun clearAllNotifications() {
+        prefs.edit()
+            .remove(KEY_NOTIFICATION_HISTORY)
+            .putBoolean(KEY_HAS_UNREAD, false)
+            .apply()
+    }
+
     private fun addInAppNotification(entry: InAppNotification) {
         val existing = getRecentNotifications(limit = 200).toMutableList()
         existing.add(0, entry)

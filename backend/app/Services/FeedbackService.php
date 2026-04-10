@@ -78,8 +78,15 @@ class FeedbackService
      */
     public function create(int $userId, array $data): Feedback
     {
+        $productId = (int) $data['product_id'];
+        if (! $this->hasCompletedPurchase($userId, $productId)) {
+            throw ValidationException::withMessages([
+                'product_id' => 'You can only review products from completed orders.',
+            ]);
+        }
+
         $existing = Feedback::where('user_id', $userId)
-            ->where('product_id', $data['product_id'])
+            ->where('product_id', $productId)
             ->exists();
 
         if ($existing) {
@@ -90,10 +97,10 @@ class FeedbackService
 
         $feedback = Feedback::create([
             'user_id' => $userId,
-            'product_id' => $data['product_id'],
+            'product_id' => $productId,
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
-            'is_verified_purchase' => $this->hasCompletedPurchase($userId, (int) $data['product_id']),
+            'is_verified_purchase' => true,
         ]);
 
         return $feedback->load('user');
@@ -104,9 +111,29 @@ class FeedbackService
      */
     public function update(Feedback $feedback, array $data): Feedback
     {
+        if (! $this->hasCompletedPurchase($feedback->user_id, $feedback->product_id)) {
+            throw ValidationException::withMessages([
+                'product_id' => 'You can only review products from completed orders.',
+            ]);
+        }
+
         $feedback->update($data);
 
         return $feedback->fresh(['user']);
+    }
+
+    public function canUserReviewProduct(int $userId, int $productId): bool
+    {
+        return $this->hasCompletedPurchase($userId, $productId);
+    }
+
+    public function getUserFeedbackForProduct(int $userId, int $productId): ?Feedback
+    {
+        return Feedback::query()
+            ->with(['user'])
+            ->where('user_id', $userId)
+            ->where('product_id', $productId)
+            ->first();
     }
 
     /**

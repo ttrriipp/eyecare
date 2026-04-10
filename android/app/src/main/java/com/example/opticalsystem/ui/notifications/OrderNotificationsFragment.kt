@@ -46,11 +46,13 @@ class OrderNotificationsFragment : Fragment() {
         binding.rvNotifications.adapter = adapter
 
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.btnClearAll.setOnClickListener { viewModel.clearAllNotifications() }
 
         viewModel.notifications.observe(viewLifecycleOwner) { list ->
             adapter.submitList(list)
             binding.layoutEmpty.isVisible = list.isEmpty()
             binding.rvNotifications.isVisible = list.isNotEmpty()
+            binding.btnClearAll.isVisible = list.isNotEmpty()
         }
     }
 

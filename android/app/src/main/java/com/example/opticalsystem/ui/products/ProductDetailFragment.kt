@@ -8,6 +8,9 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,6 +34,7 @@ import androidx.core.content.ContextCompat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.util.TypedValue
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @AndroidEntryPoint
@@ -89,7 +93,7 @@ class ProductDetailFragment : Fragment() {
         viewModel.loadProduct(productId)
         observeWishlist(productId)
         setupFeedbackSection(productId)
-        viewModel.loadCurrentUser()
+        updateReviewComposerVisibility()
         viewModel.loadFeedbacks(productId)
 
         viewModel.product.observe(viewLifecycleOwner) { result ->
@@ -152,8 +156,13 @@ class ProductDetailFragment : Fragment() {
                 binding.ratingBarWrite.rating = 0f
                 binding.etReviewComment.setText("")
                 binding.btnSubmitReview.text = getString(R.string.submit_review)
-                binding.btnSubmitReview.isEnabled = false
+                binding.btnSubmitReview.isEnabled = binding.ratingBarWrite.rating >= 1f
             }
+            updateReviewComposerVisibility()
+        }
+
+        viewModel.canReview.observe(viewLifecycleOwner) {
+            updateReviewComposerVisibility()
         }
 
         viewModel.submitFeedback.observe(viewLifecycleOwner) { result ->
@@ -176,6 +185,18 @@ class ProductDetailFragment : Fragment() {
                 is Resource.Error -> {
                     showSubmitFeedbackLoading(false)
                     Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.cartItemCount.collect { count ->
+                    val badgeCount = count.coerceAtMost(99)
+                    binding.tvCartBadge.isVisible = count > 0
+                    if (count > 0) {
+                        binding.tvCartBadge.text = if (count > 99) "99+" else badgeCount.toString()
+                    }
                 }
             }
         }
@@ -223,12 +244,24 @@ class ProductDetailFragment : Fragment() {
             isNestedScrollingEnabled = false
         }
 
+        // Locked by default; only unlocked when backend says user can review.
         binding.btnSubmitReview.isEnabled = false
+        binding.ratingBarWrite.setIsIndicator(true)
+        binding.etReviewComment.isEnabled = false
         binding.ratingBarWrite.setOnRatingBarChangeListener { _, rating, _ ->
-            binding.btnSubmitReview.isEnabled = rating >= 1f
+            if (viewModel.canReview.value == true) {
+                binding.btnSubmitReview.isEnabled = rating >= 1f
+            } else {
+                binding.btnSubmitReview.isEnabled = false
+            }
         }
 
         binding.btnSubmitReview.setOnClickListener {
+            if (viewModel.canReview.value != true) {
+                Toast.makeText(requireContext(), getString(R.string.review_requires_completed_order), Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             val rating = binding.ratingBarWrite.rating.roundToInt()
             val comment = binding.etReviewComment.text?.toString()?.trim().orEmpty()
             val commentOrNull = comment.takeIf { it.isNotBlank() }
@@ -244,6 +277,24 @@ class ProductDetailFragment : Fragment() {
                 rating = rating,
                 comment = commentOrNull,
             )
+        }
+    }
+
+    private fun updateReviewComposerVisibility() {
+        val canReview = viewModel.canReview.value == true
+        val shouldShowComposer = canReview
+
+        binding.layoutReviewComposer.isVisible = shouldShowComposer
+        binding.tvReviewEligibilityHint.isVisible = false
+
+        binding.ratingBarWrite.setIsIndicator(!canReview)
+        binding.etReviewComment.isEnabled = canReview
+        binding.tilReviewComment.isEnabled = canReview
+        binding.btnSubmitReview.isEnabled = canReview && binding.ratingBarWrite.rating >= 1f
+
+        if (!shouldShowComposer) {
+            binding.ratingBarWrite.rating = 0f
+            binding.etReviewComment.setText("")
         }
     }
 

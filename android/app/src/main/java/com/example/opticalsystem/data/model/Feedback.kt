@@ -21,6 +21,10 @@ data class FeedbackListResponse(
     val data: List<Feedback>,
     @SerializedName("average_rating")
     val averageRating: Float?,
+    @SerializedName("can_review")
+    val canReview: Boolean?,
+    @SerializedName("my_feedback")
+    val myFeedback: Feedback?,
     val meta: PaginationMeta?,
 )
 

@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.opticalsystem.data.local.CartItem
 import com.example.opticalsystem.data.local.CartManager
 import com.example.opticalsystem.data.local.WishlistManager
-import com.example.opticalsystem.data.repository.AuthRepository
 import com.example.opticalsystem.data.model.Feedback
 import com.example.opticalsystem.data.model.FeedbackListResponse
 import com.example.opticalsystem.data.repository.FeedbackRepository
@@ -19,6 +18,10 @@ import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.data.repository.ProductRepository
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,10 +29,12 @@ import javax.inject.Inject
 class ProductDetailViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val feedbackRepository: FeedbackRepository,
-    private val authRepository: AuthRepository,
     private val cartManager: CartManager,
     private val wishlistManager: WishlistManager,
 ) : ViewModel() {
+    val cartItemCount: StateFlow<Int> = cartManager.cartItems
+        .map { items -> items.sumOf { it.quantity } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _product = MutableLiveData<Resource<Product>>()
     val product: LiveData<Resource<Product>> = _product
@@ -46,11 +51,12 @@ class ProductDetailViewModel @Inject constructor(
     private val _myFeedback = MutableLiveData<Feedback?>()
     val myFeedback: LiveData<Feedback?> = _myFeedback
 
+    private val _canReview = MutableLiveData(false)
+    val canReview: LiveData<Boolean> = _canReview
+
     private val _isInWishlist = MutableLiveData<Boolean>()
     val isInWishlist: LiveData<Boolean> = _isInWishlist
 
-    private var currentUserId: Int? = null
-    private var cachedFeedbacks: List<Feedback> = emptyList()
     private var currentProductId: Int? = null
 
     init {
@@ -70,26 +76,6 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
-    fun loadCurrentUser() {
-        viewModelScope.launch {
-            when (val result = authRepository.getProfile()) {
-                is Resource.Success -> currentUserId = result.data.id
-                else -> currentUserId = null
-            }
-            // If feedbacks already loaded, compute the current user's review.
-            updateMyFeedback()
-        }
-    }
-
-    private fun updateMyFeedback() {
-        val uid = currentUserId
-        if (uid == null) {
-            _myFeedback.value = null
-            return
-        }
-        _myFeedback.value = cachedFeedbacks.firstOrNull { it.userId == uid }
-    }
-
     fun loadFeedbacks(productId: Int, perPage: Int = 15) {
         _feedbacks.value = Resource.Loading
         viewModelScope.launch {
@@ -99,14 +85,14 @@ class ProductDetailViewModel @Inject constructor(
                 perPage = perPage,
             )) {
                 is Resource.Success -> {
-                    cachedFeedbacks = result.data.data
                     _feedbacks.value = result
-                    updateMyFeedback()
+                    _canReview.value = result.data.canReview == true
+                    _myFeedback.value = result.data.myFeedback
                 }
                 else -> {
                     _feedbacks.value = result
-                    cachedFeedbacks = emptyList()
-                    updateMyFeedback()
+                    _canReview.value = false
+                    _myFeedback.value = null
                 }
             }
         }
@@ -135,6 +121,11 @@ class ProductDetailViewModel @Inject constructor(
     }
 
     fun saveReview(productId: Int, rating: Int, comment: String?) {
+        if (_canReview.value != true) {
+            _submitFeedback.value = Resource.Error("Only customers with completed orders can write a review for this product.")
+            return
+        }
+
         val existing = _myFeedback.value
         if (existing != null) {
             updateExistingFeedback(

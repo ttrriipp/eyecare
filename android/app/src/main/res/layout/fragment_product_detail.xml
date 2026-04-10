@@ -48,14 +48,31 @@
             android:contentDescription="Save to wishlist"
             android:src="@drawable/ic_heart_24" />
 
-        <ImageButton
-            android:id="@+id/btnCart"
+        <FrameLayout
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/nav_cart"
-            android:src="@drawable/ic_cart_24"
-            android:tint="@color/on_primary" />
+            android:layout_height="40dp">
+
+            <ImageButton
+                android:id="@+id/btnCart"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/nav_cart"
+                android:src="@drawable/ic_cart_24"
+                android:tint="@color/on_primary" />
+
+            <TextView
+                android:id="@+id/tvCartBadge"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="top|end"
+                android:gravity="center"
+                android:background="@drawable/bg_nav_badge"
+                android:textColor="@android:color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </FrameLayout>
 
     </LinearLayout>
 
@@ -332,9 +349,11 @@
 
                     <!-- Review input -->
                     <LinearLayout
+                        android:id="@+id/layoutReviewComposer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -401,6 +420,16 @@
                             android:visibility="gone" />
 
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvReviewEligibilityHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/review_requires_completed_order"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
 
                     <View
                         android:layout_width="match_parent"

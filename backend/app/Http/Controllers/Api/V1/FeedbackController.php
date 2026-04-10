@@ -25,6 +25,7 @@ class FeedbackController extends Controller
     public function index(Request $request, Product $product): JsonResponse
     {
         $filters = $request->only(['rating', 'sort_by', 'sort_dir']);
+        $user = $request->user();
 
         $feedbacks = $this->feedbackService->listForProduct(
             productId: $product->id,
@@ -32,9 +33,19 @@ class FeedbackController extends Controller
             perPage: $request->integer('per_page', 15),
         );
 
+        $myFeedback = null;
+        $canReview = false;
+        if ($user !== null && $user->isCustomer()) {
+            $myFeedback = $this->feedbackService->getUserFeedbackForProduct($user->id, $product->id);
+            $canReview = $myFeedback !== null
+                || $this->feedbackService->canUserReviewProduct($user->id, $product->id);
+        }
+
         return response()->json([
             'data' => FeedbackResource::collection($feedbacks),
             'average_rating' => $this->feedbackService->averageRating($product->id),
+            'can_review' => $canReview,
+            'my_feedback' => $myFeedback ? new FeedbackResource($myFeedback) : null,
             'meta' => [
                 'current_page' => $feedbacks->currentPage(),
                 'last_page' => $feedbacks->lastPage(),
