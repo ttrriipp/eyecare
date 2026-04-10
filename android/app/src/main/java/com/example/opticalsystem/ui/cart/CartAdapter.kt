@@ -102,11 +102,7 @@ class CartAdapter(
 
     class CartDiffCallback : DiffUtil.ItemCallback<CartItem>() {
         override fun areItemsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
-<<<<<<< HEAD
-            oldItem.productId == newItem.productId
-=======
             oldItem.productId == newItem.productId && oldItem.productVariantId == newItem.productVariantId
->>>>>>> ec4ed21 (android: order screens)
 
         override fun areContentsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
             oldItem == newItem

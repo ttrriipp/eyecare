@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.opticalsystem.data.model.Order
 import com.example.opticalsystem.data.repository.OrderRepository
+import com.example.opticalsystem.notifications.OrderStatusNotifier
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -14,6 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
+    private val orderStatusNotifier: OrderStatusNotifier,
 ) : ViewModel() {
 
     private val _order = MutableLiveData<Resource<Order>>()
@@ -39,6 +41,10 @@ class OrderDetailViewModel @Inject constructor(
             val result = orderRepository.cancelOrder(orderId)
             _cancelResult.value = result
             if (result is Resource.Success) {
+                orderStatusNotifier.suppressNextUserInitiatedStatus(
+                    orderId = result.data.id,
+                    status = result.data.status,
+                )
                 _order.value = result
             }
         }

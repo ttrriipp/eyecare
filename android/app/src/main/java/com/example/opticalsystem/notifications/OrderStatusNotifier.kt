@@ -72,12 +72,20 @@ class OrderStatusNotifier @Inject constructor(
             val key = statusKey(order.id)
             val previous = prefs.getString(key, null)
             val current = order.status
+            val shouldSuppress = consumeUserInitiatedStatusSuppression(order.id, current)
+
+            if (shouldSuppress) {
+                editor.putString(key, current)
+                return@forEach
+            }
+
+            val currentNormalized = current.trim().lowercase()
+            val previousNormalized = previous?.trim()?.lowercase()
 
             val shouldNotify = when {
-                previous != null && previous != current -> true
-                // If this is the first time we see an order already beyond pending,
-                // notify so users still get alerted for statuses like Confirmed.
-                previous == null && current != DEFAULT_INITIAL_STATUS -> true
+                previousNormalized != null && previousNormalized != currentNormalized -> true
+                // First time seeing an order: do not notify for user-origin statuses.
+                previousNormalized == null && currentNormalized !in NON_NOTIFY_INITIAL_STATUSES -> true
                 else -> false
             }
 
@@ -105,6 +113,10 @@ class OrderStatusNotifier @Inject constructor(
 
         editor.apply()
         return changes
+    }
+
+    fun suppressNextUserInitiatedStatus(orderId: Int, status: String) {
+        prefs.edit().putString(userInitiatedSuppressionKey(orderId), status).apply()
     }
 
     private suspend fun fetchAllOrders(): List<Order> {
@@ -232,6 +244,18 @@ class OrderStatusNotifier @Inject constructor(
 
     private fun statusKey(orderId: Int): String = "order_status_$orderId"
 
+    private fun userInitiatedSuppressionKey(orderId: Int): String = "user_initiated_status_suppression_$orderId"
+
+    private fun consumeUserInitiatedStatusSuppression(orderId: Int, currentStatus: String): Boolean {
+        val key = userInitiatedSuppressionKey(orderId)
+        val suppressedStatus = prefs.getString(key, null) ?: return false
+        val shouldSuppress = suppressedStatus.equals(currentStatus, ignoreCase = true)
+        if (shouldSuppress) {
+            prefs.edit().remove(key).apply()
+        }
+        return shouldSuppress
+    }
+
     companion object {
         const val CHANNEL_ID = "order_status_updates"
         const val EXTRA_ORDER_ID = "extra_order_id"
@@ -242,5 +266,6 @@ class OrderStatusNotifier @Inject constructor(
         private const val KEY_HAS_UNREAD = "has_unread"
         private const val MAX_PAGES_TO_SCAN = 20
         private const val DEFAULT_INITIAL_STATUS = "pending"
+        private val NON_NOTIFY_INITIAL_STATUSES = setOf("pending", "requested", "cancelled")
     }
 }

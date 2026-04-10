@@ -14,6 +14,7 @@ import com.example.opticalsystem.data.model.User
 import com.example.opticalsystem.data.repository.AppointmentRepository
 import com.example.opticalsystem.data.repository.AuthRepository
 import com.example.opticalsystem.data.repository.OrderRepository
+import com.example.opticalsystem.notifications.OrderStatusNotifier
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +31,7 @@ class CheckoutViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val authRepository: AuthRepository,
     private val appointmentRepository: AppointmentRepository,
+    private val orderStatusNotifier: OrderStatusNotifier,
 ) : ViewModel() {
 
     val cartItems: StateFlow<List<CartItem>> = cartManager.cartItems
@@ -89,6 +91,10 @@ class CheckoutViewModel @Inject constructor(
             )
             val result = orderRepository.createOrder(request)
             if (result is Resource.Success) {
+                orderStatusNotifier.suppressNextUserInitiatedStatus(
+                    orderId = result.data.id,
+                    status = result.data.status,
+                )
                 cartManager.clearCart()
             }
             _orderResult.value = result
