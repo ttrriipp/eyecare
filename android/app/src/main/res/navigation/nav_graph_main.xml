@@ -49,7 +49,28 @@
     <fragment
         android:id="@+id/nav_orders"
         android:name="com.example.opticalsystem.ui.messages.MessagesFragment"
-        android:label="Chat" />
+        android:label="Chat">
+
+        <action
+            android:id="@+id/action_nav_orders_to_conversationThread"
+            app:destination="@id/conversationThreadFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Conversation Thread -->
+    <fragment
+        android:id="@+id/conversationThreadFragment"
+        android:name="com.example.opticalsystem.ui.messages.ConversationThreadFragment"
+        android:label="@string/conversation_default_title">
+
+        <argument
+            android:name="conversationId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_profile"

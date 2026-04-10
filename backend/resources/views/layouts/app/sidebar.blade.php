@@ -75,6 +75,29 @@
                         </flux:sidebar.item>
                     @endif
 
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <flux:sidebar.item
+                            icon="chat-bubble-left-right"
+                            :href="route('admin.messaging.inbox')"
+                            :current="request()->routeIs('admin.messaging.*')"
+                            wire:navigate
+                        >
+                            <div class="flex items-center justify-between w-full gap-2">
+                                <span>{{ __('Messages') }}</span>
+                                @php
+                                    $unread = \App\Services\ConversationService::class
+                                        ? app(\App\Services\ConversationService::class)->getUnreadCount(auth()->user())
+                                        : 0;
+                                @endphp
+                                @if($unread > 0)
+                                    <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-semibold text-white leading-none">
+                                        {{ $unread > 99 ? '99+' : $unread }}
+                                    </span>
+                                @endif
+                            </div>
+                        </flux:sidebar.item>
+                    @endif
+
                     @if(auth()->user()?->isAdmin())
                         <flux:sidebar.item
                             icon="users"

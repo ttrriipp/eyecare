@@ -64,4 +64,9 @@ class Conversation extends Model
     {
         return $this->status === ConversationStatus::Open;
     }
+
+    public function isClosed(): bool
+    {
+        return $this->status === ConversationStatus::Closed;
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderStatusHistoryController;
 use App\Http\Controllers\UserManagementController;
 use App\Livewire\Admin\Inventory\AdjustmentHistory;
+use App\Livewire\Admin\Messaging\MessagingInbox;
 use App\Livewire\Admin\Products\ProductManager;
 use App\Livewire\Admin\Settings\CategoryManager;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +67,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
             ->name('admin.inventory.adjustments');
+
+        // Direct Messaging inbox (admin + staff)
+        Route::livewire('admin/messaging', MessagingInbox::class)
+            ->name('admin.messaging.inbox');
     });
 
     Route::middleware('role:admin')->group(function () {

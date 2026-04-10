@@ -231,4 +231,17 @@
     <!-- Profile Menu -->
     <string name="profile_my_orders">My Orders</string>
     <string name="profile_my_bills">My Bills</string>
+    
+    <!-- Direct Messaging -->
+    <string name="messages_empty_title">No active conversations</string>
+    <string name="messages_empty_subtitle">If you have a question or need support, start a conversation with us.</string>
+    <string name="message_us">Message Us</string>
+    <string name="conversation_closed">Conversation Closed</string>
+    <string name="conversation_closed_start_new">This conversation has been closed.</string>
+    <string name="start_new_conversation">Start New Conversation</string>
+    <string name="retry">Retry</string>
+    <string name="conversation_closed_banner">This conversation is closed</string>
+    <string name="conversation_closed_banner_sub">You cannot reply to a closed conversation.</string>
+    <string name="message_hint">Type a message...</string>
+    <string name="conversation_default_title">Chat</string>
 </resources>

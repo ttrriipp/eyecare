@@ -3,6 +3,7 @@ package com.example.opticalsystem.di
 import com.example.opticalsystem.data.api.AuthApi
 import com.example.opticalsystem.data.api.AppointmentApi
 import com.example.opticalsystem.data.api.BillApi
+import com.example.opticalsystem.data.api.ConversationApi
 import com.example.opticalsystem.data.api.FeedbackApi
 import com.example.opticalsystem.data.api.OrderApi
 import com.example.opticalsystem.data.api.ProductApi
@@ -111,5 +112,11 @@ object NetworkModule {
     @Singleton
     fun provideAppointmentApi(retrofit: Retrofit): AppointmentApi {
         return retrofit.create(AppointmentApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideConversationApi(retrofit: Retrofit): ConversationApi {
+        return retrofit.create(ConversationApi::class.java)
     }
 }
