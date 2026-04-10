@@ -26,8 +26,8 @@ todos:
   - id: api-resources
     content: Create API Resource and Form Request classes for consistent validation and responses
     status: pending
-  - id: broadcasting
-    content: Install Laravel Reverb and configure real-time broadcasting with private channels for messaging
+  - id: messaging
+    content: Set up REST-based messaging (conversations + messages tables, polling-friendly endpoints, unread count tracking)
     status: pending
   - id: exception-handling
     content: Configure API exception handling for consistent JSON error responses
@@ -336,7 +336,7 @@ erDiagram
 
 **Scheduling** -- Time-slot based with predefined service types and named schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates named schedule templates (e.g., "Regular Hours Mon-Fri", "Saturday Hours") and the system generates time slots for a date range based on those templates; each time slot retains a `schedule_template_id` link back to the template that generated it. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. `staff_id` records which optometrist/staff handles the appointment. Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
 
-**Direct Messaging** -- Real-time team inbox using Laravel Reverb (WebSockets). Customer starts a conversation with the shop. Conversations have a `status` (open / closed) so staff can mark resolved threads as closed. Any staff/admin can view and respond to open conversations. New messages are broadcast instantly via private channels. Messages have read tracking. REST API for history/sending, WebSocket for live delivery.
+**Direct Messaging** -- Polling-based team inbox (no WebSockets). Customer starts a conversation with the shop. Conversations have a `status` (open / closed) so staff can mark resolved threads as closed. Any staff/admin can view and respond to open conversations. Messages have read tracking (`is_read`, `read_at`). Clients poll the unread-count endpoint on a short interval (e.g. 10 s) and fetch new messages on demand. Pure REST — no persistent connections, no extra server processes.
 
 **Inventory** -- Stock tracker keyed per **product variant** (default variant covers single-SKU products) with quantity, reorder level, reorder quantity, optional batch number, and optional expiry date. Category-level `requires_expiry_tracking` controls whether `expires_at` is required. Every quantity change writes an `inventory_adjustments` audit row (`before`, `after`, `delta`, `type`, `reason`, `adjusted_by`). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
 
@@ -361,7 +361,7 @@ erDiagram
 - **Cost per unit**: Stored on **`product_variants`** so profit margin reflects each sellable SKU (e.g. titanium vs acetate). Not on `products`.
 - **Product images**: `product_images.product_variant_id` is nullable. Shared gallery when `NULL`; when set, the image is variant-specific and clients should prefer it when that variant is selected.
 - **Inventory audit trail**: `inventory_adjustments` stores each stock quantity change with actor and reason for accountability.
-- **Real-time messaging**: Laravel Reverb (WebSocket server) + Laravel Broadcasting for instant message delivery. Private channels per conversation, authorized via Sanctum.
+- **Messaging delivery**: REST polling — no WebSockets, no Reverb, no broadcasting setup. Clients call `GET /api/v1/conversations/{id}/messages` and `GET /api/v1/conversations/unread-count` on a short interval. Keeps deployment simple (no persistent ws process).
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
 - **Staff attribution**: `orders.processed_by` tracks which staff member processed the transaction. (For scheduling, staff attribution fields will be finalized when the appointments module ships.)
 - **Discount tracking**: `discount_amount` on orders lets staff manually apply SC/PWD or promotional discounts without an automated discount engine.
@@ -421,8 +421,8 @@ Every module shares the same backend services — the Android app and the web ad
 
 | | Android App | Web Admin |
 |---|---|---|
-| **Customer** | Opens a conversation with the shop. Sends messages, sees real-time replies via WebSocket. Views conversation history. | N/A |
-| **Staff** | Team inbox: sees all open customer conversations. Responds to any thread. Messages appear in real-time. Can close resolved conversations. | Same inbox on desktop — easier to type longer responses. |
+| **Customer** | Opens a conversation with the shop. Sends messages, polls for replies. Views conversation history. | N/A |
+| **Staff** | Team inbox: sees all open customer conversations. Responds to any thread. Can close resolved conversations. App polls for new messages. | Same inbox on desktop — easier to type longer responses. |
 | **Admin** | Same as staff. | Same as staff. Can reopen closed conversations if needed. |
 
 ### Feedback & Ratings
@@ -532,7 +532,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 - **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), partial/full payment tracking (`amount_paid`, `balance_due`), void/refund logic
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment
 - **Module 6: Scheduling** -- `AppointmentStatus` enum, service_types, schedule_templates, time_slots, appointments tables, slot generation logic, appointment billing
-- **Module 7: Direct Messaging** -- conversations, messages tables, Laravel Reverb setup, broadcast events, private channels, read tracking
+- **Module 7: Direct Messaging** -- conversations, messages tables, REST CRUD endpoints, unread-count endpoint, `is_read`/`read_at` tracking, open/closed conversation status
 - **Module 8: Virtual Try-On AR** -- AR model URLs per **variant** (and/or upload/storage workflow); serve URLs via API (`ProductVariantResource`); rendering stays Android-side
 
 ## Scope and Limitations (for Capstone Paper)
@@ -543,7 +543,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 - In-store pickup ordering (no delivery/shipping)
 - Invoice/billing tracking (manual payment recording, no gateway)
 - Time-slot scheduling with predefined service types
-- Real-time direct messaging (team inbox via WebSockets)
+- Direct messaging (REST polling team inbox — no WebSockets)
 - Inventory management (single-branch stock tracking)
 - Customer feedback and ratings
 - AR virtual try-on (backend stores **per-variant** 3D model URLs; rendering is Android-side)

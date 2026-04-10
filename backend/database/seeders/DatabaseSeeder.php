@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             InventorySeeder::class,
             OrderSeeder::class,
             FeedbackSeeder::class,
+            ConversationSeeder::class,
         ]);
     }
 }

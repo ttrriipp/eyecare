@@ -91,6 +91,16 @@ class User extends Authenticatable
         return $this->hasMany(Feedback::class, 'moderated_by');
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)

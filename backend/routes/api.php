@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
+use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\FeedbackController;
 use App\Http\Controllers\Api\V1\InventoryController;
+use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -43,6 +45,15 @@ Route::prefix('v1')->group(function () {
         Route::post('products/{product}/feedbacks', [FeedbackController::class, 'store']);
         Route::put('feedbacks/{feedback}', [FeedbackController::class, 'update']);
 
+        // Direct Messaging — all authenticated users
+        // NOTE: unread-count must be registered before {conversation} to avoid
+        // the literal string being resolved as a conversation ID.
+        Route::get('conversations/unread-count', [ConversationController::class, 'unreadCount']);
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::get('conversations/{conversation}', [ConversationController::class, 'show']);
+        Route::get('conversations/{conversation}/messages', [MessageController::class, 'index']);
+        Route::post('conversations/{conversation}/messages', [MessageController::class, 'store']);
+
         // Admin-only routes
         Route::middleware('role:admin')->group(function () {
             // Product management
@@ -66,6 +77,9 @@ Route::prefix('v1')->group(function () {
 
             // Feedback moderation (admin only)
             Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
+
+            // Direct Messaging — reopen (admin only)
+            Route::patch('conversations/{conversation}/reopen', [ConversationController::class, 'reopen']);
         });
 
         // Admin + Staff routes
@@ -79,11 +93,15 @@ Route::prefix('v1')->group(function () {
 
             // Bill payment
             Route::put('bills/{bill}/pay', [BillingController::class, 'markAsPaid']);
+
+            // Direct Messaging — close (staff or admin)
+            Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);
         });
 
         // Customer-only routes
         Route::middleware('role:customer')->group(function () {
-            //
+            // Direct Messaging — only customers may open a new conversation
+            Route::post('conversations', [ConversationController::class, 'store']);
         });
     });
 });
