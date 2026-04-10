@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,6 @@ class Product extends Model
         'category_id',
         'name',
         'description',
-        'price',
         'brand',
         'is_active',
     ];
@@ -35,9 +35,28 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Display / list price from the default variant (sellable unit price lives on variants).
+     */
+    protected function price(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->relationLoaded('defaultVariant')) {
+                    $p = $this->defaultVariant?->price;
+
+                    return $p !== null ? (string) $p : null;
+                }
+
+                $raw = $this->defaultVariant()->value('price');
+
+                return $raw !== null ? (string) $raw : null;
+            },
+        );
     }
 
     public function category(): BelongsTo
@@ -119,12 +138,14 @@ class Product extends Model
 
     public function scopePriceRange(Builder $query, ?float $min, ?float $max): Builder
     {
-        if ($min !== null) {
-            $query->where('price', '>=', $min);
-        }
-        if ($max !== null) {
-            $query->where('price', '<=', $max);
-        }
+        $query->whereHas('variants', function (Builder $q) use ($min, $max) {
+            if ($min !== null) {
+                $q->where('price', '>=', $min);
+            }
+            if ($max !== null) {
+                $q->where('price', '<=', $max);
+            }
+        });
 
         return $query;
     }

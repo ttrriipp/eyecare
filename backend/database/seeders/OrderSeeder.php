@@ -20,7 +20,8 @@ class OrderSeeder extends Seeder
 
         $products = Product::where('is_active', true)
             ->with('defaultVariant')
-            ->take(6)
+            ->orderBy('id')
+            ->take(5)
             ->get();
 
         if (! $customer || $products->isEmpty()) {
@@ -90,7 +91,7 @@ class OrderSeeder extends Seeder
                 'processed_by' => $staff?->id,
                 'status' => OrderStatus::ReadyForPickup,
                 'discount_amount' => 0.00,
-                'notes' => 'Walk-in customer — lenses ready for fitting.',
+                'notes' => 'Walk-in customer — accessory ready for pickup.',
                 'ready_at' => now()->subDay(),
                 'items' => [
                     ['product_index' => 4, 'quantity' => 1],
@@ -110,7 +111,7 @@ class OrderSeeder extends Seeder
                 'completed_at' => now()->subDays(2),
                 'ready_at' => now()->subDays(3),
                 'items' => [
-                    ['product_index' => 5, 'quantity' => 1],
+                    ['product_index' => 3, 'quantity' => 1],
                 ],
                 'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::Maya,

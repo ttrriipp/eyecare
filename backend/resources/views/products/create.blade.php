@@ -159,6 +159,9 @@
                                 @error('price')
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
+                                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                                    {{ __('Saved as the default variant unit price.') }}
+                                </p>
                             </div>
 
                             <div class="space-y-1.5">
@@ -190,6 +193,17 @@
                         <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
                             {{ __('These values are saved to Inventory when the product is created.') }}
                         </p>
+
+                        <div
+                            id="initial-stock-expiry-callout"
+                            class="mb-4 hidden rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-900/50 dark:bg-amber-950/40"
+                            role="status"
+                        >
+                            <p class="text-xs font-semibold text-amber-900 dark:text-amber-200">{{ __('Expiry tracking') }}</p>
+                            <p class="mt-1 text-xs text-amber-800/95 dark:text-amber-300/90">
+                                {{ __('This category requires an expiration date on stock. Enter the expiration date (and batch / lot if you use it) below before saving.') }}
+                            </p>
+                        </div>
 
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
@@ -296,7 +310,7 @@
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                                 <p id="inventory-expires-at-help" class="text-xs text-zinc-500 dark:text-zinc-500 hidden">
-                                    {{ __('Required for the selected category.') }}
+                                    {{ __('Expiry tracking is required for the selected category.') }}
                                 </p>
                             </div>
                         </div>
@@ -472,12 +486,17 @@
             const expiresWrapper = document.getElementById('inventory-expires-at-wrapper');
             const expiresLabel = document.getElementById('inventory-expires-at-label');
             const expiresHelp = document.getElementById('inventory-expires-at-help');
+            const stockCallout = document.getElementById('initial-stock-expiry-callout');
 
             if (!categorySelect || !expiresInput || !expiresWrapper || !expiresLabel || !expiresHelp) return;
 
             function syncExpiryRequirement() {
                 const opt = categorySelect.selectedOptions[0];
                 const required = opt && opt.getAttribute('data-requires-expiry') === '1';
+
+                if (stockCallout) {
+                    stockCallout.classList.toggle('hidden', !required);
+                }
 
                 expiresWrapper.classList.toggle('hidden', !required);
                 expiresInput.required = !!required;

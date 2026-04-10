@@ -113,7 +113,7 @@
                             </span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full min-w-[36rem] text-sm">
+                            <table class="w-full min-w-[44rem] text-sm">
                                 <thead>
                                     <tr class="border-b border-zinc-100 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400">
                                         <th class="px-4 py-3">{{ __('SKU') }}</th>
@@ -123,6 +123,8 @@
                                         <th class="px-4 py-3">{{ __('Lens type') }}</th>
                                         @if(auth()->user()?->isAdminOrStaff())
                                             <th class="px-4 py-3 text-end">{{ __('Stock') }}</th>
+                                            <th class="px-4 py-3">{{ __('Batch / lot') }}</th>
+                                            <th class="px-4 py-3">{{ __('Expires') }}</th>
                                         @endif
                                         <th class="px-4 py-3">{{ __('') }}</th>
                                     </tr>
@@ -154,6 +156,39 @@
                                                         @if($variant->inventory->isLowStock())
                                                             <span class="ml-1 text-[10px] text-amber-500 dark:text-amber-400">{{ __('Low') }}</span>
                                                         @endif
+                                                    @else
+                                                        <span class="text-zinc-400 dark:text-zinc-600">—</span>
+                                                    @endif
+                                                </td>
+                                                <td class="max-w-[8rem] truncate px-4 py-3 font-mono text-xs text-zinc-700 dark:text-zinc-300" title="{{ $variant->inventory?->batch_number }}">
+                                                    {{ $variant->inventory?->batch_number ?: '—' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                                                    @php
+                                                        $inv = $variant->inventory;
+                                                        $needsExpiry = (bool) $product->category?->requires_expiry_tracking;
+                                                        $qty = $inv?->quantity ?? 0;
+                                                    @endphp
+                                                    @if($inv?->expires_at)
+                                                        @php
+                                                            $exp = $inv->expires_at->copy()->startOfDay();
+                                                            $expired = \Carbon\Carbon::today()->gt($exp);
+                                                            $soon = ! $expired && $exp->lte(\Carbon\Carbon::today()->addDays(30));
+                                                        @endphp
+                                                        <span @class([
+                                                            'font-medium',
+                                                            'text-red-600 dark:text-red-400' => $expired,
+                                                            'text-amber-600 dark:text-amber-400' => $soon,
+                                                        ])>
+                                                            {{ $inv->expires_at->toFormattedDateString() }}
+                                                        </span>
+                                                        @if($expired)
+                                                            <span class="ml-1 text-[10px] font-medium text-red-500 dark:text-red-400">{{ __('Expired') }}</span>
+                                                        @elseif($soon)
+                                                            <span class="ml-1 text-[10px] font-medium text-amber-500 dark:text-amber-400">{{ __('Soon') }}</span>
+                                                        @endif
+                                                    @elseif($needsExpiry && $qty > 0)
+                                                        <span class="font-medium text-red-600 dark:text-red-400">{{ __('Missing') }}</span>
                                                     @else
                                                         <span class="text-zinc-400 dark:text-zinc-600">—</span>
                                                     @endif
@@ -235,6 +270,17 @@
                                 {{ $product->category?->name ?? __('Uncategorized') }}
                             </dd>
                         </div>
+
+                        @if(auth()->user()?->isAdminOrStaff() && $product->category?->requires_expiry_tracking)
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-zinc-500 dark:text-zinc-500">{{ __('Expiry tracking') }}</dt>
+                                <dd class="text-end">
+                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950/80 dark:text-amber-200">
+                                        {{ __('Required') }}
+                                    </span>
+                                </dd>
+                            </div>
+                        @endif
 
                         @if(auth()->user()?->isAdminOrStaff() && $product->defaultVariant?->cost_per_unit !== null)
                             <div class="flex justify-between gap-4">

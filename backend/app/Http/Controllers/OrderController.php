@@ -85,7 +85,7 @@ class OrderController extends Controller
             ->active()
             ->with('defaultVariant')
             ->orderBy('name')
-            ->get(['id', 'name', 'price']);
+            ->get(['id', 'name']);
 
         return view('orders.create', [
             'customers' => $customers,

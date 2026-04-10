@@ -67,7 +67,19 @@ class ProductService
             ? $filters['sort_by']
             : 'created_at';
         $sortDir = ($filters['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sortBy, $sortDir);
+
+        if ($sortBy === 'price') {
+            $query->orderBy(
+                ProductVariant::query()
+                    ->select('price')
+                    ->whereColumn('product_variants.product_id', 'products.id')
+                    ->where('product_variants.is_default', true)
+                    ->limit(1),
+                $sortDir
+            );
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
 
         return $query->paginate($perPage);
     }
@@ -85,11 +97,20 @@ class ProductService
         unset($data['ar_model_url']);
         $hasCost = array_key_exists('cost_per_unit', $data);
         $cost = Arr::pull($data, 'cost_per_unit');
+        $price = Arr::pull($data, 'price');
 
         $product = Product::create($data);
         $variant = $this->ensureDefaultVariantIfMissing($product);
+
+        $variantUpdates = [];
+        if ($price !== null) {
+            $variantUpdates['price'] = $price;
+        }
         if ($hasCost) {
-            $variant->update(['cost_per_unit' => $cost]);
+            $variantUpdates['cost_per_unit'] = $cost;
+        }
+        if ($variantUpdates !== []) {
+            $variant->update($variantUpdates);
         }
 
         return $product->load(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
@@ -100,12 +121,20 @@ class ProductService
         unset($data['ar_model_url']);
         $hasCost = array_key_exists('cost_per_unit', $data);
         $cost = Arr::pull($data, 'cost_per_unit');
+        $price = Arr::pull($data, 'price');
 
         $product->update($data);
 
+        $variantUpdates = [];
+        if ($price !== null) {
+            $variantUpdates['price'] = $price;
+        }
         if ($hasCost) {
+            $variantUpdates['cost_per_unit'] = $cost;
+        }
+        if ($variantUpdates !== []) {
             $product->loadMissing('defaultVariant');
-            $product->defaultVariant?->update(['cost_per_unit' => $cost]);
+            $product->defaultVariant?->update($variantUpdates);
         }
 
         return $product->fresh(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product']);
@@ -301,22 +330,32 @@ class ProductService
     /**
      * Create a variant for a product and seed its inventory row.
      */
+    /**
+     * @param  array<string, mixed>  $inventoryExtras  Optional keys: batch_number, expires_at (date string), reorder_quantity
+     */
     public function createVariant(
         Product $product,
         array $variantData,
         int $initialStock = 0,
         int $reorderLevel = 5,
+        array $inventoryExtras = [],
     ): ProductVariant {
         $product->loadMissing('category');
         $variantData = $this->normalizeVariantArModelUrl($product, $variantData);
 
         $variant = $product->variants()->create($variantData);
 
+        $batch = $inventoryExtras['batch_number'] ?? null;
+        $expires = $inventoryExtras['expires_at'] ?? null;
+        $reorderQty = (int) ($inventoryExtras['reorder_quantity'] ?? 0);
+
         Inventory::create([
             'product_variant_id' => $variant->id,
             'quantity' => $initialStock,
             'reorder_level' => $reorderLevel,
-            'reorder_quantity' => 0,
+            'reorder_quantity' => $reorderQty,
+            'batch_number' => filled($batch) ? $batch : null,
+            'expires_at' => filled($expires) ? $expires : null,
         ]);
 
         return $variant->load('inventory');
@@ -342,7 +381,7 @@ class ProductService
             $product,
             [
                 'is_default' => true,
-                'price_adjustment' => 0,
+                'price' => '0.01',
             ],
             0,
             0,
@@ -359,6 +398,64 @@ class ProductService
         $variant->update($data);
 
         return $variant->fresh('inventory');
+    }
+
+    /**
+     * Mark this variant as the product's default and clear the flag on siblings.
+     */
+    public function setDefaultVariant(ProductVariant $variant): void
+    {
+        $variant->loadMissing('product');
+        ProductVariant::query()
+            ->where('product_id', $variant->product_id)
+            ->whereKeyNot($variant->id)
+            ->update(['is_default' => false]);
+        $variant->update(['is_default' => true]);
+    }
+
+    /**
+     * If no variant is marked default, set the lowest-id variant as default.
+     */
+    public function ensureProductHasDefaultVariant(Product $product): void
+    {
+        $product->load('variants');
+        if ($product->variants->contains(fn (ProductVariant $v) => $v->is_default)) {
+            return;
+        }
+        $first = $product->variants()->orderBy('id')->first();
+        if ($first) {
+            $first->update(['is_default' => true]);
+        }
+    }
+
+    /**
+     * Update inventory batch / expiry for a variant (used when category tracks expiry).
+     *
+     * @param  array<string, mixed>|null  $extras  Keys: batch_number, expires_at (Y-m-d). If category does not require tracking, batch/expiry are cleared.
+     */
+    public function syncVariantInventoryExtras(ProductVariant $variant, ?array $extras): void
+    {
+        $variant->loadMissing('product.category', 'inventory');
+        $inv = $variant->inventory;
+        if (! $inv) {
+            return;
+        }
+
+        $requires = (bool) $variant->product->category?->requires_expiry_tracking;
+
+        if (! $requires) {
+            $inv->update([
+                'batch_number' => null,
+                'expires_at' => null,
+            ]);
+
+            return;
+        }
+
+        $inv->update([
+            'batch_number' => filled($extras['batch_number'] ?? null) ? trim((string) $extras['batch_number']) : null,
+            'expires_at' => filled($extras['expires_at'] ?? null) ? $extras['expires_at'] : null,
+        ]);
     }
 
     /**
@@ -401,7 +498,13 @@ class ProductService
             $this->deletePhysicalFile($image->image_url);
         }
 
+        $productId = $variant->product_id;
         $variant->delete();
+
+        $product = Product::find($productId);
+        if ($product) {
+            $this->ensureProductHasDefaultVariant($product);
+        }
     }
 
     /**

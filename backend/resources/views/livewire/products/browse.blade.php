@@ -11,7 +11,7 @@
                     wire:model.live.debounce.300ms="search"
                     id="search"
                     :label="false"
-                    placeholder="{{ __('Search by name, brand, or SKU') }}"
+                    placeholder="{{ __('Search by name or brand') }}"
                     autocomplete="off"
                 />
             </div>
@@ -128,14 +128,13 @@
             </div>
         @elseif($listView === 'table')
             <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <table class="w-full min-w-[60rem] text-left text-sm">
+                <table class="w-full min-w-[52rem] text-left text-sm">
                     <thead>
                         <tr
                             class="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-400"
                         >
                             <th class="px-4 py-3.5">{{ __('Image') }}</th>
                             <th class="px-4 py-3.5">{{ __('Product') }}</th>
-                            <th class="px-4 py-3.5">{{ __('SKU') }}</th>
                             <th class="px-4 py-3.5">{{ __('Brand') }}</th>
                             <th class="px-4 py-3.5">{{ __('Category') }}</th>
                             <th class="px-4 py-3.5 text-end">{{ __('Price') }}</th>
@@ -177,9 +176,6 @@
                                             {{ __('AR') }}
                                         </span>
                                     @endif
-                                </td>
-                                <td class="px-4 py-3 align-middle font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                                    {{ $product->sku ?? '—' }}
                                 </td>
                                 <td class="px-4 py-3 align-middle text-zinc-700 dark:text-zinc-300">
                                     {{ $product->brand ?? '—' }}
@@ -292,12 +288,6 @@
                                 <div class="text-xs text-zinc-600 dark:text-zinc-400">
                                     {{ $product->brand ?? '—' }}
                                 </div>
-                                @if($product->sku)
-                                    <div class="text-[11px] leading-tight text-zinc-400 dark:text-zinc-500">
-                                        <span class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('SKU') }}:</span>
-                                        {{ $product->sku }}
-                                    </div>
-                                @endif
                             </div>
 
                             <div class="flex items-center justify-between gap-2">

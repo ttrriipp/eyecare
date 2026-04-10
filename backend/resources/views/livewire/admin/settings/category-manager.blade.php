@@ -61,6 +61,7 @@
                     <th class="px-4 py-3.5 text-center">{{ __('Products') }}</th>
                     <th class="px-4 py-3.5">{{ __('AR try-on') }}</th>
                     <th class="px-4 py-3.5">{{ __('Requires Rx') }}</th>
+                    <th class="px-4 py-3.5">{{ __('Expiry tracking') }}</th>
                     <th class="px-4 py-3.5">{{ __('Stock unit') }}</th>
                     <th class="px-4 py-3.5">{{ __('Variant fields') }}</th>
                     <th class="px-4 py-3.5 text-right">{{ __('Actions') }}</th>
@@ -70,7 +71,7 @@
 
                 @if($tableEmpty)
                     <tr>
-                        <td colspan="7" class="px-4 py-14 text-center">
+                        <td colspan="8" class="px-4 py-14 text-center">
                             <div class="mx-auto flex max-w-xs flex-col items-center gap-2">
                                 <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                     @if($searchActive)
@@ -113,6 +114,13 @@
                         <td class="px-4 py-3.5 align-middle">
                             @if($cat->requires_prescription)
                                 <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Required') }}</span>
+                            @else
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3.5 align-middle">
+                            @if($cat->requires_expiry_tracking)
+                                <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{{ __('Required') }}</span>
                             @else
                                 <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
                             @endif
@@ -166,40 +174,47 @@
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3.5 align-middle">
-                                @if($cat->requires_prescription)
-                                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Required') }}</span>
-                                @else
-                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3.5 align-middle text-sm text-zinc-700 capitalize dark:text-zinc-300">
-                                {{ $cat->stock_unit ?? 'units' }}
-                            </td>
-                            <td class="px-4 py-3.5 align-middle">
-                                @if($flags->isNotEmpty())
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach($flags as $label)
-                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ $label }}</span>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-xs italic text-zinc-400 dark:text-zinc-500">{{ __('None') }}</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3.5 text-right align-middle">
-                                @if(auth()->user()?->isAdmin())
-                                    <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $cat->id }})">
-                                        {{ __('Edit') }}
-                                    </flux:button>
-                                @endif
-                            </td>
+                        <td class="px-4 py-3.5 align-middle">
+                            @if($cat->requires_prescription)
+                                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Required') }}</span>
+                            @else
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3.5 align-middle">
+                            @if($cat->requires_expiry_tracking)
+                                <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{{ __('Required') }}</span>
+                            @else
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('No') }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3.5 align-middle text-sm text-zinc-700 capitalize dark:text-zinc-300">
+                            {{ $cat->stock_unit ?? 'units' }}
+                        </td>
+                        <td class="px-4 py-3.5 align-middle">
+                            @if($flags->isNotEmpty())
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($flags as $label)
+                                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ $label }}</span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-xs italic text-zinc-400 dark:text-zinc-500">{{ __('None') }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3.5 text-right align-middle">
+                            @if(auth()->user()?->isAdmin())
+                                <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $cat->id }})">
+                                    {{ __('Edit') }}
+                                </flux:button>
+                            @endif
+                        </td>
                         </tr>
                     @endforeach
                 @elseif(!$searchActive && $this->customCategoriesExistInDatabase === false)
                     {{-- Empty state: no custom categories (and not filtering them away with search) --}}
                     <tr>
-                        <td colspan="7" class="px-4 py-14 text-center">
+                        <td colspan="8" class="px-4 py-14 text-center">
                             <div class="mx-auto flex max-w-xs flex-col items-center gap-3">
                                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">

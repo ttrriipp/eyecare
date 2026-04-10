@@ -106,7 +106,7 @@
                                     name="category_id"
                                     :label="false"
                                 >
-                                    <option value="" data-has-ar="0">{{ __('Uncategorized') }}</option>
+                                    <option value="" data-has-ar="0" data-requires-expiry="0">{{ __('Uncategorized') }}</option>
                                     @foreach($categories as $category)
                                         <option
                                             value="{{ $category->id }}"
@@ -149,13 +149,13 @@
                             {{ __('Pricing') }}
                         </h2>
                         <p class="mb-4 text-xs text-zinc-500 dark:text-zinc-500">
-                            {{ __('Set the product pricing and cost details.') }}
+                            {{ __('Selling price applies to the default variant SKU. Other variants can be priced from admin product detail → Variants.') }}
                         </p>
 
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
                                 <label for="price" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Selling price (₱)') }}
+                                    {{ __('Selling price — default variant (₱)') }}
                                     <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
                                 </label>
                                 <flux:input
@@ -165,7 +165,7 @@
                                     step="0.01"
                                     min="0.01"
                                     :label="false"
-                                    value="{{ old('price', $product->price) }}"
+                                    value="{{ old('price', $product->defaultVariant?->price) }}"
                                     placeholder="0.00"
                                     required
                                 />
@@ -299,27 +299,6 @@
                                     placeholder="e.g. 14.0 mm"
                                 />
                                 @error('variant_diameter')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="variant_price_adjustment" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Price adjustment (₱)') }}
-                                </label>
-                                <flux:input
-                                    id="variant_price_adjustment"
-                                    name="variant_price_adjustment"
-                                    type="number"
-                                    step="0.01"
-                                    :label="false"
-                                    value="{{ old('variant_price_adjustment', $dv?->price_adjustment ?? '0.00') }}"
-                                    placeholder="0.00"
-                                />
-                                <p class="text-xs text-zinc-500 dark:text-zinc-500">
-                                    {{ __('Added to the base price to determine the unit selling price. Use 0 for no adjustment.') }}
-                                </p>
-                                @error('variant_price_adjustment')
                                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -509,6 +488,93 @@
                     @endif
                 </div>
 
+                {{-- Stock & expiry snapshot --}}
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
+                    <h2 class="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {{ __('Stock & expiry') }}
+                    </h2>
+                    <div
+                        id="edit-expiry-requirement-note"
+                        class="mb-3 hidden rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/50 dark:bg-amber-950/40"
+                        role="status"
+                    >
+                        <p class="text-xs font-semibold text-amber-900 dark:text-amber-200">{{ __('Expiry tracking') }}</p>
+                        <p class="mt-0.5 text-xs text-amber-800/95 dark:text-amber-300/90">
+                            {{ __('The selected category requires an expiration date on inventory. Set or update it from Adjust stock.') }}
+                        </p>
+                    </div>
+                    @if($product->variants->isNotEmpty())
+                        <div class="overflow-x-auto rounded-lg border border-zinc-100 dark:border-zinc-800">
+                            <table class="w-full min-w-[14rem] text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-zinc-100 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400">
+                                        <th class="px-2 py-2 font-semibold">{{ __('SKU') }}</th>
+                                        <th class="px-2 py-2 text-end font-semibold">{{ __('Qty') }}</th>
+                                        <th class="px-2 py-2 font-semibold">{{ __('Expires') }}</th>
+                                        <th class="px-2 py-2 font-semibold">{{ __('Batch') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                    @foreach($product->variants as $variant)
+                                        @php
+                                            $inv = $variant->inventory;
+                                            $needsExpiry = (bool) $product->category?->requires_expiry_tracking;
+                                            $qty = $inv?->quantity ?? 0;
+                                        @endphp
+                                        <tr class="bg-white dark:bg-zinc-900">
+                                            <td class="px-2 py-2 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
+                                                {{ $variant->sku }}
+                                            </td>
+                                            <td class="px-2 py-2 text-end tabular-nums text-zinc-800 dark:text-zinc-200">
+                                                {{ $inv ? $inv->quantity : '—' }}
+                                            </td>
+                                            <td class="px-2 py-2 text-zinc-800 dark:text-zinc-200">
+                                                @if($inv?->expires_at)
+                                                    @php
+                                                        $exp = $inv->expires_at->copy()->startOfDay();
+                                                        $expired = \Carbon\Carbon::today()->gt($exp);
+                                                        $soon = ! $expired && $exp->lte(\Carbon\Carbon::today()->addDays(30));
+                                                    @endphp
+                                                    <span @class([
+                                                        'font-medium',
+                                                        'text-red-600 dark:text-red-400' => $expired,
+                                                        'text-amber-600 dark:text-amber-400' => $soon,
+                                                    ])>
+                                                        {{ $inv->expires_at->toFormattedDateString() }}
+                                                    </span>
+                                                    @if($expired)
+                                                        <span class="ml-1 text-[10px] font-medium text-red-500 dark:text-red-400">{{ __('Expired') }}</span>
+                                                    @elseif($soon)
+                                                        <span class="ml-1 text-[10px] font-medium text-amber-500 dark:text-amber-400">{{ __('Soon') }}</span>
+                                                    @endif
+                                                @elseif($needsExpiry && $qty > 0)
+                                                    <span class="font-medium text-red-600 dark:text-red-400">{{ __('Missing') }}</span>
+                                                @else
+                                                    <span class="text-zinc-400 dark:text-zinc-600">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="max-w-[6rem] truncate px-2 py-2 text-zinc-600 dark:text-zinc-400" title="{{ $inv?->batch_number }}">
+                                                {{ $inv?->batch_number ?: '—' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-xs text-zinc-500 dark:text-zinc-500">{{ __('No variants yet.') }}</p>
+                    @endif
+                    <flux:button
+                        class="mt-3 w-full"
+                        size="sm"
+                        variant="ghost"
+                        :href="route('inventory.edit', $product)"
+                        wire:navigate
+                    >
+                        {{ __('Adjust stock') }}
+                    </flux:button>
+                </div>
+
                 {{-- Tips card --}}
                 <div class="rounded-xl border border-sky-100 bg-sky-50 p-4 dark:border-sky-900/40 dark:bg-sky-950/30">
                     <p class="text-xs font-semibold text-sky-800 dark:text-sky-300">{{ __('Tips') }}</p>
@@ -587,6 +653,20 @@
                 }
                 categorySelect.addEventListener('change', () => syncArSection(true));
                 syncArSection(false);
+            }
+        })();
+
+        (function () {
+            const categorySelect = document.getElementById('category_id');
+            const expiryNote = document.getElementById('edit-expiry-requirement-note');
+            if (categorySelect && expiryNote) {
+                function syncEditExpiryNote() {
+                    const opt = categorySelect.selectedOptions[0];
+                    const required = opt && opt.getAttribute('data-requires-expiry') === '1';
+                    expiryNote.classList.toggle('hidden', !required);
+                }
+                categorySelect.addEventListener('change', syncEditExpiryNote);
+                syncEditExpiryNote();
             }
         })();
 

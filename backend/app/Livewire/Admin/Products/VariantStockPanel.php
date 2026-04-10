@@ -53,7 +53,15 @@ class VariantStockPanel extends Component
 
     public string $v_diameter = '';
 
-    public string $v_price_adjustment = '0';
+    public string $v_price = '0.01';
+
+    public string $v_cost_per_unit = '';
+
+    public string $v_batch_number = '';
+
+    public string $v_expires_at = '';
+
+    public bool $v_is_default = false;
 
     public string $v_ar_model_url = '';
 
@@ -93,16 +101,25 @@ class VariantStockPanel extends Component
     {
         $cat = $this->product?->category;
 
-        return array_filter([
+        $rules = array_filter([
             'v_color' => ($cat?->has_color) ? ['required', 'string', 'max:60'] : ['nullable'],
             'v_frame_size' => ($cat?->has_frame_size) ? ['required', 'string', 'max:30'] : ['nullable'],
             'v_material' => ($cat?->has_material) ? ['required', 'string', 'max:60'] : ['nullable'],
             'v_lens_type' => ($cat?->has_lens_type) ? ['required', 'string', 'max:60'] : ['nullable'],
             'v_base_curve' => ($cat?->has_power_field) ? ['required', 'numeric'] : ['nullable'],
             'v_diameter' => ($cat?->has_power_field) ? ['required', 'numeric'] : ['nullable'],
-            'v_price_adjustment' => ['required', 'numeric'],
+            'v_price' => ['required', 'numeric', 'min:0.01'],
+            'v_cost_per_unit' => ['nullable', 'numeric', 'min:0'],
             'v_ar_model_url' => ($cat?->has_ar_support) ? ['nullable', 'string', 'max:2048'] : ['nullable'],
+            'v_is_default' => ['boolean'],
         ]);
+
+        if ($cat?->requires_expiry_tracking) {
+            $rules['v_batch_number'] = ['nullable', 'string', 'max:120'];
+            $rules['v_expires_at'] = ['required', 'date'];
+        }
+
+        return $rules;
     }
 
     /**
@@ -213,7 +230,7 @@ class VariantStockPanel extends Component
 
     public function openEditVariant(int $variantId): void
     {
-        $variant = ProductVariant::with('images')->findOrFail($variantId);
+        $variant = ProductVariant::with(['images', 'inventory'])->findOrFail($variantId);
         $this->resetVariantForm();
         $this->editingVariantId = $variantId;
         $this->variantFormMode = 'edit';
@@ -226,7 +243,11 @@ class VariantStockPanel extends Component
         $this->v_lens_type = $variant->lens_type ?? '';
         $this->v_base_curve = (string) ($variant->base_curve ?? '');
         $this->v_diameter = (string) ($variant->diameter ?? '');
-        $this->v_price_adjustment = (string) ($variant->price_adjustment ?? '0');
+        $this->v_price = (string) ($variant->price ?? '0.01');
+        $this->v_cost_per_unit = $variant->cost_per_unit !== null ? (string) $variant->cost_per_unit : '';
+        $this->v_batch_number = (string) ($variant->inventory?->batch_number ?? '');
+        $this->v_expires_at = $variant->inventory?->expires_at?->format('Y-m-d') ?? '';
+        $this->v_is_default = (bool) $variant->is_default;
         $this->v_ar_model_url = $variant->ar_model_url ?? '';
 
         $this->existingVariantImagesForEdit = $variant->images
@@ -263,20 +284,46 @@ class VariantStockPanel extends Component
             'lens_type' => ($cat?->has_lens_type) ? $this->v_lens_type : null,
             'base_curve' => ($cat?->has_power_field) ? $this->v_base_curve : null,
             'diameter' => ($cat?->has_power_field) ? $this->v_diameter : null,
-            'price_adjustment' => $this->v_price_adjustment,
+            'price' => $this->v_price,
+            'cost_per_unit' => filled($this->v_cost_per_unit) ? $this->v_cost_per_unit : null,
             'ar_model_url' => $cat?->has_ar_support ? $this->v_ar_model_url : null,
         ];
 
         if ($this->variantFormMode === 'add') {
             $product = Product::findOrFail($this->productId);
-            $variant = $productService->createVariant($product, $data, 0, 5);
+            $data['is_default'] = false;
+            $inventoryExtras = [];
+            if ($cat?->requires_expiry_tracking) {
+                $inventoryExtras = [
+                    'batch_number' => filled($this->v_batch_number) ? trim($this->v_batch_number) : null,
+                    'expires_at' => filled($this->v_expires_at) ? $this->v_expires_at : null,
+                ];
+            }
+            $variant = $productService->createVariant($product, $data, 0, 5, $inventoryExtras);
+            if ($this->v_is_default) {
+                $productService->setDefaultVariant($variant);
+            } else {
+                $productService->ensureProductHasDefaultVariant($product->fresh());
+            }
             if ($pendingUploads !== []) {
-                $productService->attachUploadedImagesToVariant($variant, $pendingUploads);
+                $productService->attachUploadedImagesToVariant($variant->fresh(), $pendingUploads);
             }
             $message = 'Variant added.';
         } else {
             $variant = ProductVariant::findOrFail($this->editingVariantId);
             $productService->updateVariant($variant, $data);
+            $variant->refresh();
+            $product = Product::findOrFail($this->productId);
+            $productService->syncVariantInventoryExtras($variant, [
+                'batch_number' => $this->v_batch_number,
+                'expires_at' => $this->v_expires_at,
+            ]);
+            if ($this->v_is_default) {
+                $productService->setDefaultVariant($variant->fresh());
+            } else {
+                $variant->update(['is_default' => false]);
+                $productService->ensureProductHasDefaultVariant($product);
+            }
             if ($pendingUploads !== []) {
                 $productService->attachUploadedImagesToVariant($variant->fresh(), $pendingUploads);
             }
@@ -438,7 +485,11 @@ class VariantStockPanel extends Component
         $this->variantDeleteStockQty = 0;
         $this->v_color = $this->v_frame_size = $this->v_material = $this->v_lens_type = '';
         $this->v_base_curve = $this->v_diameter = '';
-        $this->v_price_adjustment = '0';
+        $this->v_price = '0.01';
+        $this->v_cost_per_unit = '';
+        $this->v_batch_number = '';
+        $this->v_expires_at = '';
+        $this->v_is_default = false;
         $this->v_ar_model_url = '';
         $this->v_variant_images = [];
         $this->existingVariantImagesForEdit = [];

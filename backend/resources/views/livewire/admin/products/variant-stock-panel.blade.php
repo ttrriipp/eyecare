@@ -119,12 +119,8 @@
                     <p class="mt-0.5 text-zinc-800 dark:text-zinc-200">{{ $product->brand ?? '—' }}</p>
                 </div>
                 <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('SKU') }}</p>
-                    <p class="mt-0.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">{{ $product->defaultVariant?->sku ?? '—' }}</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Base price') }}</p>
-                    <p class="mt-0.5 font-semibold text-emerald-600 dark:text-emerald-400">₱{{ number_format((float) $product->price, 2) }}</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Selling price') }}</p>
+                    <p class="mt-0.5 font-semibold text-emerald-600 dark:text-emerald-400">₱{{ number_format((float) ($product->defaultVariant?->price ?? 0), 2) }}</p>
                 </div>
                 <div>
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Status') }}</p>
@@ -180,7 +176,6 @@
                     $qty    = $inv?->quantity ?? 0;
                     $status = $this->stockStatusForVariant($variant);
                     $label  = $this->buildVariantLabel($variant);
-                    $adj    = (float) $variant->price_adjustment;
                     $vImgs  = $variant->images;
                     $thumbUrl = $vImgs->first()?->image_url;
                     $extraImgCount = max(0, $vImgs->count() - 1);
@@ -203,15 +198,13 @@
                                 @endif
                             </div>
                             <div class="min-w-0 flex-1">
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{{ $label }}</p>
-                            <p class="mt-0.5 font-mono text-[11px] text-zinc-400 dark:text-zinc-500">{{ $variant->sku }}</p>
-                            @if($adj > 0)
-                                <p class="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">+₱{{ number_format($adj, 2) }}</p>
-                            @elseif($adj < 0)
-                                <p class="mt-0.5 text-[11px] font-medium text-red-500 dark:text-red-400">₱{{ number_format($adj, 2) }}</p>
-                            @else
-                                <p class="mt-0.5 text-[11px] text-zinc-400">{{ __('Base price') }}</p>
-                            @endif
+                                <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+                                    <p class="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ $label }}</p>
+                                    @if($variant->is_default)
+                                        <span class="inline-flex shrink-0 items-center rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200" title="{{ __('Default variant for this product') }}">{{ __('Default') }}</span>
+                                    @endif
+                                </div>
+                                <p class="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">₱{{ number_format((float) $variant->price, 2) }}</p>
                             </div>
                         </div>
                         <div class="flex shrink-0 flex-col items-end gap-1">
@@ -311,7 +304,12 @@
                                     </div>
                                 @endif
                             <div class="min-w-0 flex-1">
-                                <p class="truncate text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ $label }}</p>
+                                <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+                                    <p class="truncate text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ $label }}</p>
+                                    @if($variant->is_default)
+                                        <span class="inline-flex shrink-0 items-center rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200" title="{{ __('Default variant for this product') }}">{{ __('Default') }}</span>
+                                    @endif
+                                </div>
                                 {{-- Stock bar --}}
                                 <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
                                     <div @class([
@@ -589,12 +587,52 @@
                     </div>
                 @endif
 
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Price adjustment') }} (₱)</label>
-                    <input wire:model="v_price_adjustment" type="number" step="0.01"
-                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                    >
-                    <p class="mt-0.5 text-[11px] text-zinc-400">{{ __('Added to base price. Use 0 if same.') }}</p>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Selling price') }} (₱) <span class="text-red-500">*</span></label>
+                        <input wire:model="v_price" type="number" min="0.01" step="0.01"
+                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                        @error('v_price') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Cost per unit') }} (₱) <span class="font-normal text-zinc-400">({{ __('optional') }})</span></label>
+                        <input wire:model="v_cost_per_unit" type="number" min="0" step="0.01" placeholder="0.00"
+                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                        @error('v_cost_per_unit') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                @if($cat?->requires_expiry_tracking)
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Expires at') }} <span class="text-red-500">*</span></label>
+                            <input wire:model="v_expires_at" type="date"
+                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                            >
+                            @error('v_expires_at') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ __('Batch number') }} <span class="font-normal text-zinc-400">({{ __('optional') }})</span></label>
+                            <input wire:model="v_batch_number" type="text" maxlength="120"
+                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                            >
+                            @error('v_batch_number') <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('Expiry is required for this category. Batch is optional.') }}</p>
+                @endif
+
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/40">
+                    <div class="min-w-0 pr-2">
+                        <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">{{ __('Default variant') }}</p>
+                        <p class="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('Shown for catalog price and as the primary option when multiple variants exist.') }}</p>
+                    </div>
+                    <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+                        <input type="checkbox" wire:model="v_is_default" class="peer sr-only">
+                        <span class="peer h-6 w-11 rounded-full bg-zinc-300 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all peer-checked:bg-sky-600 peer-checked:after:translate-x-5 dark:bg-zinc-600 dark:after:bg-zinc-200"></span>
+                    </label>
                 </div>
 
                 @if($cat?->has_ar_support)

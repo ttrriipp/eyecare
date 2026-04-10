@@ -84,7 +84,7 @@ class ProductController extends Controller
     {
         $this->authorize('update', $product);
 
-        $product->load(['category', 'images', 'defaultVariant']);
+        $product->load(['category', 'images', 'defaultVariant', 'variants.inventory']);
         $categories = $this->productService->listCategories();
 
         return view('products.edit', [
@@ -111,7 +111,6 @@ class ProductController extends Controller
             'lens_type' => $request->input('variant_lens_type'),
             'base_curve' => $request->input('variant_base_curve'),
             'diameter' => $request->input('variant_diameter'),
-            'price_adjustment' => $request->input('variant_price_adjustment'),
         ], fn ($v) => $v !== null && $v !== '');
 
         $this->productService->update($product, $validated);
@@ -207,7 +206,6 @@ class ProductController extends Controller
             'variant_lens_type' => ['nullable', 'string', 'max:100'],
             'variant_base_curve' => ['nullable', 'string', 'max:100'],
             'variant_diameter' => ['nullable', 'string', 'max:100'],
-            'variant_price_adjustment' => ['nullable', 'numeric'],
         ];
     }
 

@@ -1,7 +1,5 @@
 package com.example.opticalsystem.data.model
 
-import java.util.Locale
-
 /** Variants to show in pickers: prefer explicit list, else default-only product. */
 fun Product.selectableVariants(): List<ProductVariant> {
     val list = variants.orEmpty()
@@ -31,14 +29,13 @@ fun ProductVariant.displayLabel(): String {
 }
 
 /**
- * Line-item price for this variant. Uses API [ProductVariant.unitPrice] when present,
- * otherwise base product price + adjustment.
+ * Line-item price for this variant. Uses API [ProductVariant.unitPrice], then variant [ProductVariant.price],
+ * then product list [Product.price] (default variant) as fallback.
  */
 fun ProductVariant.displayUnitPrice(product: Product): String {
     unitPrice?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
-    val base = product.price.toDoubleOrNull() ?: 0.0
-    val adj = priceAdjustment?.toDoubleOrNull() ?: 0.0
-    return String.format(Locale.US, "%.2f", base + adj)
+    price?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+    return product.price.trim().takeIf { it.isNotEmpty() } ?: "0.00"
 }
 
 fun ProductVariant.primaryImageUrl(): String? =

@@ -14,9 +14,12 @@
 <div
     role="dialog"
     aria-modal="true"
-    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[520px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out
-           dark:bg-zinc-900 sm:border-l sm:border-zinc-200 dark:sm:border-zinc-700
-           {{ $showPanel ? 'translate-x-0' : 'translate-x-full' }}"
+    @class([
+        'fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-zinc-900 sm:border-l sm:border-zinc-200 dark:sm:border-zinc-700',
+        'max-w-[520px]' => $mode === 'edit',
+        'max-w-3xl' => $mode === 'add',
+        $showPanel ? 'translate-x-0' : 'translate-x-full',
+    ])
 >
     {{-- Panel header --}}
     <div class="flex shrink-0 items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
@@ -26,8 +29,14 @@
             </h2>
             @if($mode === 'add')
                 <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                    {{ __('Step') }} {{ $step }} {{ __('of') }} 2 —
-                    {{ $step === 1 ? __('Product details') : __('Add variants') }}
+                    {{ __('Step') }} {{ $step }} {{ __('of') }} 3 —
+                    @if($step === 1)
+                        {{ __('Basics') }}
+                    @elseif($step === 2)
+                        {{ __('Variants') }}
+                    @else
+                        {{ __('Review') }}
+                    @endif
                 </p>
             @endif
         </div>
@@ -41,10 +50,13 @@
     @if($mode === 'add')
         <div class="flex shrink-0 border-b border-zinc-200 dark:border-zinc-700">
             <div @class(['flex-1 py-1.5 text-center text-xs font-medium transition', 'bg-sky-600 text-white' => $step === 1, 'text-zinc-500 dark:text-zinc-400' => $step !== 1])>
-                1. {{ __('Details') }}
+                1. {{ __('Basics') }}
             </div>
             <div @class(['flex-1 py-1.5 text-center text-xs font-medium transition', 'bg-sky-600 text-white' => $step === 2, 'text-zinc-500 dark:text-zinc-400' => $step !== 2])>
                 2. {{ __('Variants') }}
+            </div>
+            <div @class(['flex-1 py-1.5 text-center text-xs font-medium transition', 'bg-sky-600 text-white' => $step === 3, 'text-zinc-500 dark:text-zinc-400' => $step !== 3])>
+                3. {{ __('Review') }}
             </div>
         </div>
     @endif
@@ -55,7 +67,7 @@
         {{-- ══════════════════════════════════════════════════════
              STEP 1 — Product details
              ══════════════════════════════════════════════════════ --}}
-        @if($step === 1)
+        @if(($mode === 'add' && $step === 1) || $mode === 'edit')
             <div class="space-y-4 p-5">
 
                 {{-- Category --}}
@@ -123,50 +135,52 @@
                     ></textarea>
                 </div>
 
-                {{-- Selling price (cost per unit is set per variant in step 2) --}}
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {{ __('Selling price') }} (₱) <span class="text-red-500">*</span>
-                    </label>
-                    <input wire:model.live="price" type="number" min="0" step="0.01"
-                        placeholder="0.00"
-                        class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
-                               {{ $errors->has('price') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
-                               bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                    >
-                    @error('price') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Status --}}
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('Status') }}</label>
-                    <div class="flex gap-4 pt-1">
-                        <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                            <input type="radio" wire:model="is_active" value="1" class="text-sky-600 focus:ring-sky-500">
-                            {{ __('Active') }}
+                @if($mode === 'edit')
+                    {{-- Default variant selling price (other SKUs: Variants tab) --}}
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Selling price (default SKU)') }} (₱) <span class="text-red-500">*</span>
                         </label>
-                        <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                            <input type="radio" wire:model="is_active" value="0" class="text-sky-600 focus:ring-sky-500">
-                            {{ __('Inactive') }}
-                        </label>
+                        <input wire:model.live="price" type="number" min="0.01" step="0.01"
+                            placeholder="0.00"
+                            class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
+                                   {{ $errors->has('price') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
+                                   bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Applies to the default variant. Set other SKUs under Variants.') }}</p>
+                        @error('price') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                     </div>
+                @endif
+
+                {{-- Active toggle --}}
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/40">
+                    <div>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ __('Active') }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Inactive products are hidden from the storefront.') }}</p>
+                    </div>
+                    <label class="relative inline-flex cursor-pointer items-center">
+                        <input type="checkbox" wire:model.live="is_active" class="peer sr-only">
+                        <span class="peer h-6 w-11 rounded-full bg-zinc-300 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all peer-checked:bg-sky-600 peer-checked:after:translate-x-5 dark:bg-zinc-600 dark:after:bg-zinc-200"></span>
+                    </label>
                 </div>
 
-                {{-- Low stock threshold --}}
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {{ __('Low stock threshold') }} <span class="text-red-500">*</span>
-                    </label>
-                    <input wire:model.live="low_stock_threshold" type="number" min="1" max="9999"
-                        class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
-                               {{ $errors->has('low_stock_threshold') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
-                               bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                    >
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __("You'll be alerted when any variant's stock falls below this number.") }}
-                    </p>
-                    @error('low_stock_threshold') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                </div>
+                @if($mode === 'edit')
+                    {{-- Low stock threshold (applies to all variant inventory rows) --}}
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Low stock threshold') }} <span class="text-red-500">*</span>
+                        </label>
+                        <input wire:model.live="low_stock_threshold" type="number" min="1" max="9999"
+                            class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1
+                                   {{ $errors->has('low_stock_threshold') ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-zinc-300 focus:border-sky-500 focus:ring-sky-500 dark:border-zinc-600' }}
+                                   bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                            {{ __("You'll be alerted when any variant's stock falls below this number.") }}
+                        </p>
+                        @error('low_stock_threshold') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                    </div>
+                @endif
 
                 {{-- Variant images (edit mode): each sellable variant has its own gallery --}}
                 @if($mode === 'edit' && auth()->user()?->isAdmin())
@@ -257,268 +271,342 @@
         @endif
 
         {{-- ══════════════════════════════════════════════════════
-             STEP 2 — Add variants (add mode only)
+             STEP 2 — Variants (add mode only)
              ══════════════════════════════════════════════════════ --}}
-        @if($step === 2)
+        @if($mode === 'add' && $step === 2)
             <div class="space-y-5 p-5">
-
                 <div>
                     <h3 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                        {{ __('Add variants for') }} <span class="text-sky-600 dark:text-sky-400">{{ $name }}</span>
+                        {{ __('Variants for') }} <span class="text-sky-600 dark:text-sky-400">{{ $name }}</span>
                     </h3>
                     <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __('Add at least one variant. You can add more later from the product detail panel.') }}
+                        {{ __('Each block is one sellable SKU. Add more rows for additional colors, sizes, or lens options.') }}
                     </p>
                 </div>
 
-                {{-- Dynamic variant form fields --}}
-                <div class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
-
-                    @if($cat_has_color)
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Color / finish') }} <span class="text-red-500">*</span>
-                            </label>
-                            <input wire:model="v_color" type="text" maxlength="60"
-                                placeholder="{{ __('e.g. Gold, Matte Black, Havana Brown') }}"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                            >
-                            @error('v_color') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    @endif
-
-                    @if($cat_has_frame_size)
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Frame size') }} <span class="text-red-500">*</span>
-                            </label>
-                            <select wire:model="v_frame_size"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                                <option value="">{{ __('Select…') }}</option>
-                                <option value="Small (50mm)">{{ __('Small (50mm)') }}</option>
-                                <option value="Medium (54mm)">{{ __('Medium (54mm)') }}</option>
-                                <option value="Large (56mm)">{{ __('Large (56mm)') }}</option>
-                                <option value="XL (58mm)">{{ __('XL (58mm)') }}</option>
-                            </select>
-                            @error('v_frame_size') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    @endif
-
-                    @if($cat_has_material)
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Material') }} <span class="text-red-500">*</span>
-                            </label>
-                            <select wire:model="v_material"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                                <option value="">{{ __('Select…') }}</option>
-                                <option value="Acetate">Acetate</option>
-                                <option value="Titanium">Titanium</option>
-                                <option value="Metal">Metal</option>
-                                <option value="TR-90">TR-90</option>
-                                <option value="Polycarbonate">Polycarbonate</option>
-                                <option value="High-index">High-index</option>
-                                <option value="CR-39 Plastic">CR-39 Plastic</option>
-                                <option value="Stainless Steel">Stainless Steel</option>
-                            </select>
-                            @error('v_material') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    @endif
-
-                    @if($cat_has_lens_type)
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Lens type') }} <span class="text-red-500">*</span>
-                            </label>
-                            <select wire:model="v_lens_type"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                                <option value="">{{ __('Select…') }}</option>
-                                @if(str_contains(strtolower($cat_name), 'sunglass'))
-                                    <option value="Classic tint">Classic tint</option>
-                                    <option value="Polarized">Polarized</option>
-                                    <option value="Mirrored">Mirrored</option>
-                                    <option value="Gradient">Gradient</option>
-                                @elseif(str_contains(strtolower($cat_name), 'prescription lenses') || str_contains(strtolower($cat_name), 'prescription lens'))
-                                    <option value="Single Vision">Single Vision</option>
-                                    <option value="Bifocal">Bifocal</option>
-                                    <option value="Progressive">Progressive</option>
-                                    <option value="Reading">Reading</option>
-                                @elseif(str_contains(strtolower($cat_name), 'contact'))
-                                    <option value="Daily">Daily</option>
-                                    <option value="Bi-weekly">Bi-weekly</option>
-                                    <option value="Monthly">Monthly</option>
-                                    <option value="Quarterly">Quarterly</option>
-                                @else
-                                    <option value="Clear">Clear</option>
-                                    <option value="Blue light filter">Blue light filter</option>
-                                    <option value="Photochromic">Photochromic</option>
-                                    <option value="Anti-radiation">Anti-radiation</option>
-                                @endif
-                            </select>
-                            @error('v_lens_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    @endif
-
-                    @if($cat_has_power_field)
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Base curve (mm)') }} <span class="text-red-500">*</span>
-                                </label>
-                                <input wire:model="v_base_curve" type="number" step="0.1"
-                                    placeholder="8.5"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                >
-                                @error('v_base_curve') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Diameter (mm)') }} <span class="text-red-500">*</span>
-                                </label>
-                                <input wire:model="v_diameter" type="number" step="0.1"
-                                    placeholder="14.2"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                >
-                                @error('v_diameter') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Always shown --}}
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Price adjustment') }} (₱)
-                            </label>
-                            <input wire:model="v_price_adjustment" type="number" step="0.01"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                            <p class="mt-0.5 text-[11px] text-zinc-400">{{ __('Added to base price. Use 0 if same.') }}</p>
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Cost per unit') }} (₱)
-                                <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
-                            </label>
-                            <input wire:model="v_cost_per_unit" type="number" min="0" step="0.01"
-                                placeholder="0.00"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                            @error('v_cost_per_unit') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('Initial stock') }} ({{ $cat_stock_unit }})
-                            </label>
-                            <input wire:model="v_initial_stock" type="number" min="0"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                        </div>
-                    </div>
-
-                    @if($cat_has_ar_support)
-                        <div>
-                            <label class="mb-1 flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ __('AR model URL') }}
-                                <span class="inline-flex items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">AR</span>
-                                <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
-                            </label>
-                            <input wire:model="v_ar_model_url" type="url"
-                                placeholder="https://…/model.glb"
-                                class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                            >
-                            <p class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-                                {{ __('Applies to this variant row only. Add the variant to the list, then set another URL for the next row if needed.') }}
+                @foreach($variantRows as $vIndex => $vRow)
+                    <div wire:key="variant-row-{{ $vIndex }}" class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
+                        <div class="flex items-start justify-between gap-2 border-b border-zinc-200 pb-2 dark:border-zinc-600">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                {{ __('Variant') }} {{ $vIndex + 1 }}
                             </p>
-                            @error('v_ar_model_url') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                            @if(count($variantRows) > 1)
+                                <button type="button" wire:click="removeVariantRow({{ $vIndex }})"
+                                    class="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                    {{ __('Remove') }}
+                                </button>
+                            @endif
                         </div>
-                    @endif
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                            {{ __('Variant images') }} <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
-                        </label>
-                        <p class="mb-2 text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('These photos apply to the variant you are about to add. You can add more later when editing the product.') }}</p>
-                        @if(count($v_variant_images) > 0)
-                            <div class="mb-2 flex flex-wrap gap-2">
-                                @foreach($v_variant_images as $vix => $vf)
-                                    <div class="group relative" wire:key="vv-{{ $vix }}">
-                                        <img src="{{ $vf->temporaryUrl() }}" class="h-16 w-16 rounded-lg border border-zinc-200 object-cover dark:border-zinc-600" alt="">
-                                        @if($vix > 0)
-                                            <button type="button" wire:click="setPrimaryVVariantImage({{ $vix }})"
-                                                class="absolute bottom-1 left-1 rounded bg-black/50 px-1 py-px text-[10px] font-medium text-white hover:bg-sky-600">★</button>
-                                        @endif
-                                        <button type="button" wire:click="removeVVariantImage({{ $vix }})"
-                                            class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
-                                        </button>
-                                    </div>
-                                @endforeach
+                        @if($cat_has_color)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Color / finish') }} <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.color" type="text" maxlength="60"
+                                    placeholder="{{ __('e.g. Gold, Matte Black, Havana Brown') }}"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                >
+                                @error('variantRows.'.$vIndex.'.color') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
                         @endif
-                        <label class="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-3 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
-                            <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Click to add photos') }} · {{ __('PNG, JPG, WEBP · max 4 MB') }}</span>
-                            <input type="file" wire:model="v_variant_images" accept="image/*" multiple class="sr-only">
-                        </label>
-                        <div wire:loading wire:target="v_variant_images" class="mt-1 text-[11px] text-zinc-500">{{ __('Uploading…') }}</div>
+
+                        @if($cat_has_frame_size)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Frame size') }} <span class="text-red-500">*</span>
+                                </label>
+                                <select wire:model="variantRows.{{ $vIndex }}.frame_size"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">{{ __('Select…') }}</option>
+                                    <option value="Small (50mm)">{{ __('Small (50mm)') }}</option>
+                                    <option value="Medium (54mm)">{{ __('Medium (54mm)') }}</option>
+                                    <option value="Large (56mm)">{{ __('Large (56mm)') }}</option>
+                                    <option value="XL (58mm)">{{ __('XL (58mm)') }}</option>
+                                </select>
+                                @error('variantRows.'.$vIndex.'.frame_size') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
+                        @if($cat_has_material)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Material') }} <span class="text-red-500">*</span>
+                                </label>
+                                <select wire:model="variantRows.{{ $vIndex }}.material"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">{{ __('Select…') }}</option>
+                                    <option value="Acetate">Acetate</option>
+                                    <option value="Titanium">Titanium</option>
+                                    <option value="Metal">Metal</option>
+                                    <option value="TR-90">TR-90</option>
+                                    <option value="Polycarbonate">Polycarbonate</option>
+                                    <option value="High-index">High-index</option>
+                                    <option value="CR-39 Plastic">CR-39 Plastic</option>
+                                    <option value="Stainless Steel">Stainless Steel</option>
+                                </select>
+                                @error('variantRows.'.$vIndex.'.material') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
+                        @if($cat_has_lens_type)
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Lens type') }} <span class="text-red-500">*</span>
+                                </label>
+                                <select wire:model="variantRows.{{ $vIndex }}.lens_type"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">{{ __('Select…') }}</option>
+                                    @if(str_contains(strtolower($cat_name), 'sunglass'))
+                                        <option value="Classic tint">Classic tint</option>
+                                        <option value="Polarized">Polarized</option>
+                                        <option value="Mirrored">Mirrored</option>
+                                        <option value="Gradient">Gradient</option>
+                                    @elseif(str_contains(strtolower($cat_name), 'prescription lenses') || str_contains(strtolower($cat_name), 'prescription lens'))
+                                        <option value="Single Vision">Single Vision</option>
+                                        <option value="Bifocal">Bifocal</option>
+                                        <option value="Progressive">Progressive</option>
+                                        <option value="Reading">Reading</option>
+                                    @elseif(str_contains(strtolower($cat_name), 'contact'))
+                                        <option value="Daily">Daily</option>
+                                        <option value="Bi-weekly">Bi-weekly</option>
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Quarterly">Quarterly</option>
+                                    @else
+                                        <option value="Clear">Clear</option>
+                                        <option value="Blue light filter">Blue light filter</option>
+                                        <option value="Photochromic">Photochromic</option>
+                                        <option value="Anti-radiation">Anti-radiation</option>
+                                    @endif
+                                </select>
+                                @error('variantRows.'.$vIndex.'.lens_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
+                        @if($cat_has_power_field)
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                        {{ __('Base curve (mm)') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input wire:model="variantRows.{{ $vIndex }}.base_curve" type="number" step="0.1" placeholder="8.5"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                    >
+                                    @error('variantRows.'.$vIndex.'.base_curve') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                        {{ __('Diameter (mm)') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input wire:model="variantRows.{{ $vIndex }}.diameter" type="number" step="0.1" placeholder="14.2"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                    >
+                                    @error('variantRows.'.$vIndex.'.diameter') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Price') }} (₱) <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.price" type="number" min="0.01" step="0.01"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                @error('variantRows.'.$vIndex.'.price') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Cost') }} (₱) <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.cost_per_unit" type="number" min="0" step="0.01" placeholder="0.00"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                @error('variantRows.'.$vIndex.'.cost_per_unit') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Stock quantity') }} ({{ $cat_stock_unit }}) <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.initial_stock" type="number" min="0"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                @error('variantRows.'.$vIndex.'.initial_stock') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('Low stock threshold') }} <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.reorder_level" type="number" min="1" max="9999"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                @error('variantRows.'.$vIndex.'.reorder_level') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        @if($cat_requires_expiry_tracking)
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                        {{ __('Expires at') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input wire:model="variantRows.{{ $vIndex }}.expires_at" type="date"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                    >
+                                    @error('variantRows.'.$vIndex.'.expires_at') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                        {{ __('Batch number') }} <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                                    </label>
+                                    <input wire:model="variantRows.{{ $vIndex }}.batch_number" type="text" maxlength="120"
+                                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                    >
+                                    @error('variantRows.'.$vIndex.'.batch_number') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('Expiry is required for this category. Batch is optional.') }}</p>
+                        @endif
+
+                        @if($cat_has_ar_support)
+                            <div>
+                                <label class="mb-1 flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    {{ __('AR model URL') }}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">AR</span>
+                                    <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                                </label>
+                                <input wire:model="variantRows.{{ $vIndex }}.ar_model_url" type="url" placeholder="https://…/model.glb"
+                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                >
+                                @error('variantRows.'.$vIndex.'.ar_model_url') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                {{ __('Variant images') }} <span class="font-normal text-zinc-400">({{ __('optional') }})</span>
+                            </label>
+                            @php $rowImgs = $variantRowImages[$vIndex] ?? []; @endphp
+                            @if(count($rowImgs) > 0)
+                                <div class="mb-2 flex flex-wrap gap-2">
+                                    @foreach($rowImgs as $rix => $rf)
+                                        <div class="group relative" wire:key="vr-{{ $vIndex }}-{{ $rix }}">
+                                            <img src="{{ $rf->temporaryUrl() }}" class="h-16 w-16 rounded-lg border border-zinc-200 object-cover dark:border-zinc-600" alt="">
+                                            @if($rix > 0)
+                                                <button type="button" wire:click="setPrimaryVariantRowImage({{ $vIndex }}, {{ $rix }})"
+                                                    class="absolute bottom-1 left-1 rounded bg-black/50 px-1 py-px text-[10px] font-medium text-white hover:bg-sky-600">★</button>
+                                            @endif
+                                            <button type="button" wire:click="removeVariantRowImage({{ $vIndex }}, {{ $rix }})"
+                                                class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                            <label class="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-3 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Click to add photos') }} · {{ __('PNG, JPG, WEBP · max 4 MB') }}</span>
+                                <input type="file" wire:model="variantRowImages.{{ $vIndex }}" accept="image/*" multiple class="sr-only">
+                            </label>
+                            <div wire:loading wire:target="variantRowImages.{{ $vIndex }}" class="mt-1 text-[11px] text-zinc-500">{{ __('Uploading…') }}</div>
+                        </div>
                     </div>
+                @endforeach
 
-                    @if($variantError)
-                        <p class="text-xs text-red-600 dark:text-red-400">{{ $variantError }}</p>
-                    @endif
+                @if($variantError)
+                    <p class="text-xs text-red-600 dark:text-red-400">{{ $variantError }}</p>
+                @endif
 
-                    <flux:button type="button" wire:click="addVariant" variant="ghost" icon="plus" class="w-full">
-                        {{ __('Add this variant to list') }}
-                    </flux:button>
+                <button type="button" wire:click="addVariantRow"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-white py-3 text-sm font-medium text-zinc-600 hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 dark:border-zinc-600 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:border-sky-500 dark:hover:bg-sky-950/30 dark:hover:text-sky-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
+                    {{ __('Add another variant') }}
+                </button>
+            </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════════
+             STEP 3 — Review (add mode only)
+             ══════════════════════════════════════════════════════ --}}
+        @if($mode === 'add' && $step === 3)
+            <div class="space-y-6 p-5">
+                <div>
+                    <h3 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{{ __('Review before saving') }}</h3>
+                    <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Confirm details below. Use Edit to jump back and fix anything.') }}</p>
                 </div>
 
-                {{-- Pending variants list --}}
-                @if(!empty($pendingVariants))
-                    <div class="space-y-2">
-                        <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                            {{ __('Variants to add') }} ({{ count($pendingVariants) }})
-                        </h4>
-                        @foreach($pendingVariants as $i => $v)
-                            <div class="flex items-start justify-between gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-700 dark:bg-zinc-800">
-                                <div class="flex min-w-0 flex-1 gap-2">
-                                    @php $pimgs = $pendingVariantImages[$i] ?? []; @endphp
-                                    @if(count($pimgs) > 0)
-                                        <div class="flex shrink-0 flex-wrap gap-1">
-                                            @foreach($pimgs as $pi => $pfile)
-                                                <div class="group relative" wire:key="pv-{{ $i }}-{{ $pi }}">
-                                                    <img src="{{ $pfile->temporaryUrl() }}" class="h-12 w-12 rounded-md border border-zinc-200 object-cover dark:border-zinc-600" alt="">
-                                                    @if($pi > 0)
-                                                        <button type="button" wire:click="setPrimaryPendingVariantImage({{ $i }}, {{ $pi }})" class="absolute bottom-0 left-0 rounded bg-black/50 px-0.5 text-[9px] text-white opacity-0 group-hover:opacity-100">★</button>
-                                                    @endif
-                                                    <button type="button" wire:click="removePendingVariantImage({{ $i }}, {{ $pi }})" class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
-                                                    </button>
-                                                </div>
+                <section class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
+                    <div class="mb-3 flex items-center justify-between gap-2">
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Product') }}</h4>
+                        <button type="button" wire:click="goToStep(1)" class="text-xs font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">{{ __('Edit') }}</button>
+                    </div>
+                    <dl class="space-y-1.5 text-sm text-zinc-800 dark:text-zinc-200">
+                        <div class="flex justify-between gap-2"><dt class="text-zinc-500 dark:text-zinc-400">{{ __('Name') }}</dt><dd class="text-right font-medium">{{ $name }}</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-zinc-500 dark:text-zinc-400">{{ __('Category') }}</dt><dd class="text-right font-medium">{{ $this->reviewCategoryLabel() }}</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-zinc-500 dark:text-zinc-400">{{ __('Brand') }}</dt><dd class="text-right font-medium">{{ $brand }}</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-zinc-500 dark:text-zinc-400">{{ __('Status') }}</dt><dd class="text-right font-medium">{{ $is_active ? __('Active') : __('Inactive') }}</dd></div>
+                    </dl>
+                </section>
+
+                <section class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Variants') }} ({{ count($variantRows) }})</h4>
+                        <button type="button" wire:click="goToStep(2)" class="text-xs font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300">{{ __('Edit') }}</button>
+                    </div>
+                    <p class="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+                        {{ __('Images uploaded') }}: {{ $this->reviewTotalVariantImages() }}
+                    </p>
+                    <div class="space-y-3">
+                        @foreach($variantRows as $rvIndex => $rv)
+                            @php $flags = $this->variantReviewFlags($rvIndex); @endphp
+                            <div class="rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-600 dark:bg-zinc-900/50">
+                                <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
+                                    <div>
+                                        <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{{ $this->variantRowLabel($rvIndex) }}</p>
+                                    </div>
+                                    @if(count($flags) > 0)
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($flags as $flag)
+                                                @if($flag === 'price_below_cost')
+                                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">{{ __('Price below cost') }}</span>
+                                                @elseif($flag === 'zero_stock')
+                                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">{{ __('Zero stock') }}</span>
+                                                @elseif($flag === 'missing_expiry')
+                                                    <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-800 dark:bg-red-950/60 dark:text-red-200">{{ __('Expiry missing') }}</span>
+                                                @endif
                                             @endforeach
                                         </div>
                                     @endif
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ $v['label'] }}</p>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                                            {{ (float)$v['price_adjustment'] > 0 ? '+₱' . number_format((float)$v['price_adjustment'], 2) : ((float)$v['price_adjustment'] < 0 ? '₱' . number_format((float)$v['price_adjustment'], 2) : 'Base price') }}
-                                            · {{ $v['initial_stock'] }} {{ $cat_stock_unit }}
-                                            @if($cat_has_ar_support && !empty($v['ar_model_url'] ?? null))
-                                                · <span class="font-medium text-purple-600 dark:text-purple-400">{{ __('AR') }}</span>
-                                            @endif
-                                        </p>
-                                    </div>
                                 </div>
-                                <button type="button" wire:click="removeVariant({{ $i }})"
-                                    class="ml-1 shrink-0 text-zinc-400 hover:text-red-500 dark:hover:text-red-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
-                                </button>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Price') }}</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">₱{{ number_format((float) ($rv['price'] ?? 0), 2) }}</span></div>
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Cost') }}</span>
+                                        <span class="font-medium text-zinc-800 dark:text-zinc-200">
+                                            @if(filled($rv['cost_per_unit'] ?? null)) ₱{{ number_format((float) $rv['cost_per_unit'], 2) }} @else — @endif
+                                        </span>
+                                    </div>
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Stock') }}</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ (int) ($rv['initial_stock'] ?? 0) }} {{ $cat_stock_unit }}</span></div>
+                                    <div><span class="text-zinc-500 dark:text-zinc-400">{{ __('Low stock at') }}</span> <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ (int) ($rv['reorder_level'] ?? 0) }}</span></div>
+                                </div>
+                                @if($cat_requires_expiry_tracking)
+                                    @if(filled($rv['expires_at'] ?? null))
+                                        <p class="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('Expires') }}: {{ $rv['expires_at'] }}</p>
+                                    @endif
+                                    @if(filled($rv['batch_number'] ?? null))
+                                        <p class="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">{{ __('Batch') }}: {{ $rv['batch_number'] }}</p>
+                                    @endif
+                                @endif
                             </div>
                         @endforeach
                     </div>
-                @endif
+                </section>
             </div>
         @endif
 
@@ -535,7 +623,7 @@
                 <button type="button" wire:click="nextStep"
                     wire:loading.attr="disabled" wire:target="nextStep"
                     class="inline-flex h-9 items-center gap-2 rounded-md bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60">
-                    <span wire:loading.remove wire:target="nextStep">{{ __('Next: Add variants →') }}</span>
+                    <span wire:loading.remove wire:target="nextStep">{{ __('Next: Variants →') }}</span>
                     <span wire:loading wire:target="nextStep" class="flex items-center gap-2">
                         <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                     </span>
@@ -543,6 +631,22 @@
             </div>
 
         @elseif($mode === 'add' && $step === 2)
+            <div class="flex items-center justify-between gap-2">
+                <button type="button" wire:click="prevStep"
+                    class="inline-flex h-9 items-center gap-1 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                    ← {{ __('Back') }}
+                </button>
+                <button type="button" wire:click="nextStep"
+                    wire:loading.attr="disabled" wire:target="nextStep"
+                    class="inline-flex h-9 items-center gap-2 rounded-md bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60">
+                    <span wire:loading.remove wire:target="nextStep">{{ __('Next: Review →') }}</span>
+                    <span wire:loading wire:target="nextStep" class="flex items-center gap-2">
+                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    </span>
+                </button>
+            </div>
+
+        @elseif($mode === 'add' && $step === 3)
             <div class="flex items-center justify-between gap-2">
                 <button type="button" wire:click="prevStep"
                     class="inline-flex h-9 items-center gap-1 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">

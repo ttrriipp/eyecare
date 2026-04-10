@@ -45,9 +45,6 @@ class ProductForm extends Component
 
     public int $low_stock_threshold = 5;
 
-    /** AR model URL for the variant row being composed (add flow, step 2). */
-    public string $v_ar_model_url = '';
-
     /** Edit mode: AR URL per variant id. */
     public array $variantArModelUrl = [];
 
@@ -56,11 +53,12 @@ class ProductForm extends Component
 
     // ── Variant images (per sellable variant) ───────────────────────────
 
-    /** Images for the variant row currently being composed (add flow, step 2). */
-    public $v_variant_images = [];
-
-    /** Pending uploads per variant index (aligned with {@see $pendingVariants}). */
-    public array $pendingVariantImages = [];
+    /**
+     * Add flow: pending uploads keyed by variant row index (same keys as {@see $variantRows}).
+     *
+     * @var array<int, array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile>>
+     */
+    public array $variantRowImages = [];
 
     /** Edit mode: existing DB images keyed by variant id. */
     public array $existingVariantImages = [];
@@ -96,28 +94,14 @@ class ProductForm extends Component
 
     public string $cat_name = '';
 
-    // ── Step 2 — Variant builder ──────────────────────────────────────────
+    public bool $cat_requires_expiry_tracking = false;
 
-    public string $v_color = '';
-
-    public string $v_frame_size = '';
-
-    public string $v_material = '';
-
-    public string $v_lens_type = '';
-
-    public string $v_base_curve = '';
-
-    public string $v_diameter = '';
-
-    public string $v_price_adjustment = '0';
-
-    public string $v_cost_per_unit = '';
-
-    public int $v_initial_stock = 0;
-
-    /** @var array<int, array<string, mixed>> */
-    public array $pendingVariants = [];
+    /**
+     * Add flow: one associative array per variant row (step 2).
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    public array $variantRows = [];
 
     // ── Error state ───────────────────────────────────────────────────────
 
@@ -127,43 +111,57 @@ class ProductForm extends Component
 
     protected function step1Rules(): array
     {
-        $ignoreId = $this->editingProductId;
-
-        return [
+        $rules = [
             'category_id' => ['required', 'integer', 'exists:product_categories,id'],
             'name' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
-            'low_stock_threshold' => ['required', 'integer', 'min:1', 'max:9999'],
         ];
+
+        if ($this->mode === 'edit') {
+            $rules['low_stock_threshold'] = ['required', 'integer', 'min:1', 'max:9999'];
+            $rules['price'] = ['required', 'numeric', 'min:0.01'];
+        }
+
+        return $rules;
     }
 
     /** @return array<string, array<int, string>> */
     protected function variantImageRules(): array
     {
         return [
-            'v_variant_images.*' => ['image', 'max:4096'],
-            'pendingVariantImages.*.*' => ['image', 'max:4096'],
+            'variantRowImages.*.*' => ['image', 'max:4096'],
             'pendingVariantImagesEdit.*.*' => ['image', 'max:4096'],
         ];
     }
 
-    protected function step2VariantRules(): array
+    /** @return array<string, array<int, string>> */
+    protected function variantRowsValidationRules(): array
     {
-        return array_filter([
-            'v_color' => $this->cat_has_color ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_frame_size' => $this->cat_has_frame_size ? ['required', 'string', 'max:30'] : ['nullable'],
-            'v_material' => $this->cat_has_material ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_lens_type' => $this->cat_has_lens_type ? ['required', 'string', 'max:60'] : ['nullable'],
-            'v_base_curve' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
-            'v_diameter' => $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable'],
-            'v_price_adjustment' => ['required', 'numeric'],
-            'v_cost_per_unit' => ['nullable', 'numeric', 'min:0'],
-            'v_initial_stock' => ['required', 'integer', 'min:0'],
-            'v_ar_model_url' => $this->cat_has_ar_support ? ['nullable', 'string', 'max:2048'] : ['nullable'],
-        ]);
+        $rules = [];
+        foreach (array_keys($this->variantRows) as $i) {
+            $p = "variantRows.$i.";
+            $rules[$p.'color'] = $this->cat_has_color ? ['required', 'string', 'max:60'] : ['nullable', 'string', 'max:60'];
+            $rules[$p.'frame_size'] = $this->cat_has_frame_size ? ['required', 'string', 'max:30'] : ['nullable', 'string', 'max:30'];
+            $rules[$p.'material'] = $this->cat_has_material ? ['required', 'string', 'max:60'] : ['nullable', 'string', 'max:60'];
+            $rules[$p.'lens_type'] = $this->cat_has_lens_type ? ['required', 'string', 'max:60'] : ['nullable', 'string', 'max:60'];
+            $rules[$p.'base_curve'] = $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable', 'numeric'];
+            $rules[$p.'diameter'] = $this->cat_has_power_field ? ['required', 'numeric'] : ['nullable', 'numeric'];
+            $rules[$p.'price'] = ['required', 'numeric', 'min:0.01'];
+            $rules[$p.'cost_per_unit'] = ['nullable', 'numeric', 'min:0'];
+            $rules[$p.'initial_stock'] = ['required', 'integer', 'min:0'];
+            $rules[$p.'reorder_level'] = ['required', 'integer', 'min:1', 'max:9999'];
+            if ($this->cat_requires_expiry_tracking) {
+                $rules[$p.'batch_number'] = ['nullable', 'string', 'max:120'];
+                $rules[$p.'expires_at'] = ['required', 'date'];
+            } else {
+                $rules[$p.'expires_at'] = ['nullable', 'date'];
+            }
+            $rules[$p.'ar_model_url'] = $this->cat_has_ar_support ? ['nullable', 'string', 'max:2048'] : ['nullable'];
+        }
+
+        return $rules;
     }
 
     protected function messages(): array
@@ -175,30 +173,24 @@ class ProductForm extends Component
             'price.required' => 'Selling price is required.',
             'price.numeric' => 'Selling price must be a number.',
             'v_cost_per_unit.numeric' => 'Cost per unit must be a number.',
-            'pendingVariantImages.*.*.image' => 'All uploaded files must be valid images.',
-            'pendingVariantImages.*.*.max' => 'Each image must be smaller than 4 MB.',
             'pendingVariantImagesEdit.*.*.image' => 'All uploaded files must be valid images.',
             'pendingVariantImagesEdit.*.*.max' => 'Each image must be smaller than 4 MB.',
-            'v_variant_images.*.image' => 'All uploaded files must be valid images.',
-            'v_variant_images.*.max' => 'Each image must be smaller than 4 MB.',
+            'variantRowImages.*.*.image' => 'All uploaded files must be valid images.',
+            'variantRowImages.*.*.max' => 'Each image must be smaller than 4 MB.',
             'low_stock_threshold.required' => 'Low stock threshold is required.',
             'low_stock_threshold.min' => 'Threshold must be at least 1.',
-            'v_color.required' => 'Color is required for this category.',
-            'v_frame_size.required' => 'Frame size is required for this category.',
-            'v_material.required' => 'Material is required for this category.',
-            'v_lens_type.required' => 'Lens type is required for this category.',
-            'v_base_curve.required' => 'Base curve is required.',
-            'v_diameter.required' => 'Diameter is required.',
         ];
     }
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['name', 'brand', 'price', 'low_stock_threshold', 'category_id'], true)) {
-            $this->validateOnly($property, $this->step1Rules());
+        $step1Props = ['name', 'brand', 'category_id'];
+        if ($this->mode === 'edit') {
+            $step1Props[] = 'price';
+            $step1Props[] = 'low_stock_threshold';
         }
-        if ($property === 'v_variant_images') {
-            $this->validateOnly('v_variant_images.*', $this->variantImageRules());
+        if (in_array($property, $step1Props, true)) {
+            $this->validateOnly($property, $this->step1Rules());
         }
     }
 
@@ -222,6 +214,7 @@ class ProductForm extends Component
     {
         $product = Product::with([
             'category',
+            'defaultVariant',
             'variants' => fn ($q) => $q->orderBy('id'),
             'variants.images',
         ])->findOrFail($id);
@@ -230,7 +223,7 @@ class ProductForm extends Component
         $this->name = $product->name;
         $this->brand = $product->brand ?? '';
         $this->description = $product->description ?? '';
-        $this->price = (string) $product->price;
+        $this->price = (string) ($product->defaultVariant?->price ?? '0');
         $this->is_active = (bool) $product->is_active;
 
         $this->existingVariantImages = [];
@@ -297,13 +290,44 @@ class ProductForm extends Component
 
     public function nextStep(): void
     {
-        $this->validate($this->step1Rules(), $this->messages());
-        $this->step = 2;
+        if ($this->mode === 'edit') {
+            return;
+        }
+
+        if ($this->step === 1) {
+            $this->validate($this->step1Rules(), $this->messages());
+            $this->step = 2;
+
+            return;
+        }
+
+        if ($this->step === 2) {
+            if ($this->variantRows === []) {
+                $this->variantRows = [$this->defaultVariantRow()];
+            }
+            $this->validate(
+                array_merge($this->variantRowsValidationRules(), $this->variantImageRules()),
+                $this->messages(),
+            );
+            $this->step = 3;
+        }
     }
 
     public function prevStep(): void
     {
-        $this->step = 1;
+        if ($this->mode === 'edit') {
+            return;
+        }
+
+        if ($this->step === 3) {
+            $this->step = 2;
+
+            return;
+        }
+
+        if ($this->step === 2) {
+            $this->step = 1;
+        }
     }
 
     // ── Category change ───────────────────────────────────────────────────
@@ -326,13 +350,19 @@ class ProductForm extends Component
         }
 
         $this->applyCategory($cat);
-        $this->resetVariantForm();
+
+        if ($this->mode === 'add') {
+            $this->variantRows = [$this->defaultVariantRow()];
+            $this->variantRowImages = [];
+        }
+        $this->variantError = '';
     }
 
     private function applyCategory(ProductCategory $cat): void
     {
         $this->cat_has_ar_support = (bool) $cat->has_ar_support;
         $this->cat_requires_prescription = (bool) $cat->requires_prescription;
+        $this->cat_requires_expiry_tracking = (bool) $cat->requires_expiry_tracking;
         $this->cat_has_color = (bool) $cat->has_color;
         $this->cat_has_frame_size = (bool) $cat->has_frame_size;
         $this->cat_has_material = (bool) $cat->has_material;
@@ -346,90 +376,173 @@ class ProductForm extends Component
     private function resetCategoryFlags(): void
     {
         $this->cat_has_ar_support = $this->cat_requires_prescription = false;
+        $this->cat_requires_expiry_tracking = false;
         $this->cat_has_color = $this->cat_has_frame_size = $this->cat_has_material = false;
         $this->cat_has_lens_type = $this->cat_has_power_field = $this->cat_has_duration = false;
         $this->cat_stock_unit = 'units';
         $this->cat_name = '';
     }
 
-    // ── Pending variant management ────────────────────────────────────────
-
-    public function addVariant(): void
+    /** @return array<string, mixed> */
+    private function defaultVariantRow(): array
     {
-        $this->variantError = '';
-        $validated = $this->validate(
-            array_merge($this->step2VariantRules(), [
-                'v_variant_images.*' => ['nullable', 'image', 'max:4096'],
-            ]),
-            $this->messages(),
-        );
-
-        $variantData = [
-            'color' => $this->cat_has_color ? $this->v_color : null,
-            'frame_size' => $this->cat_has_frame_size ? $this->v_frame_size : null,
-            'material' => $this->cat_has_material ? $this->v_material : null,
-            'lens_type' => $this->cat_has_lens_type ? $this->v_lens_type : null,
-            'base_curve' => $this->cat_has_power_field ? $this->v_base_curve : null,
-            'diameter' => $this->cat_has_power_field ? $this->v_diameter : null,
-            'price_adjustment' => $this->v_price_adjustment,
-            'cost_per_unit' => filled($this->v_cost_per_unit) ? $this->v_cost_per_unit : null,
-            'initial_stock' => $this->v_initial_stock,
-            'label' => $this->buildVariantLabel(),
-            'ar_model_url' => $this->cat_has_ar_support && filled(trim($this->v_ar_model_url))
-                ? trim($this->v_ar_model_url)
-                : null,
+        return [
+            'color' => '',
+            'frame_size' => '',
+            'material' => '',
+            'lens_type' => '',
+            'base_curve' => '',
+            'diameter' => '',
+            'price' => '0.01',
+            'cost_per_unit' => '',
+            'initial_stock' => 0,
+            'reorder_level' => 5,
+            'batch_number' => '',
+            'expires_at' => '',
+            'ar_model_url' => '',
         ];
-
-        $this->pendingVariants[] = $variantData;
-        $this->pendingVariantImages[] = array_values($this->v_variant_images ?? []);
-        $this->v_variant_images = [];
-        $this->resetVariantForm();
     }
 
-    public function removeVariant(int $index): void
+    public function addVariantRow(): void
     {
-        unset($this->pendingVariants[$index], $this->pendingVariantImages[$index]);
-        $this->pendingVariants = array_values($this->pendingVariants);
-        $this->pendingVariantImages = array_values($this->pendingVariantImages);
+        $this->variantRows[] = $this->defaultVariantRow();
     }
 
-    private function buildVariantLabel(): string
+    public function removeVariantRow(int $index): void
+    {
+        if (count($this->variantRows) <= 1) {
+            return;
+        }
+        unset($this->variantRows[$index], $this->variantRowImages[$index]);
+        $this->variantRows = array_values($this->variantRows);
+        $this->variantRowImages = array_values($this->variantRowImages);
+    }
+
+    public function removeVariantRowImage(int $rowIndex, int $fileIndex): void
+    {
+        $imgs = $this->variantRowImages[$rowIndex] ?? [];
+        if (! isset($imgs[$fileIndex])) {
+            return;
+        }
+        array_splice($imgs, $fileIndex, 1);
+        $this->variantRowImages[$rowIndex] = array_values($imgs);
+    }
+
+    public function setPrimaryVariantRowImage(int $rowIndex, int $fileIndex): void
+    {
+        $imgs = $this->variantRowImages[$rowIndex] ?? [];
+        if ($fileIndex === 0 || ! isset($imgs[$fileIndex])) {
+            return;
+        }
+        $picked = $imgs[$fileIndex];
+        array_splice($imgs, $fileIndex, 1);
+        array_unshift($imgs, $picked);
+        $this->variantRowImages[$rowIndex] = $imgs;
+    }
+
+    public function goToStep(int $target): void
+    {
+        if ($this->mode !== 'add') {
+            return;
+        }
+        $this->step = max(1, min(3, $target));
+    }
+
+    public function reviewCategoryLabel(): string
+    {
+        if (! $this->category_id) {
+            return '';
+        }
+
+        return (string) ProductCategory::query()->whereKey($this->category_id)->value('name');
+    }
+
+    public function reviewTotalVariantImages(): int
+    {
+        $n = 0;
+        foreach ($this->variantRowImages as $files) {
+            $n += is_array($files) ? count($files) : 0;
+        }
+
+        return $n;
+    }
+
+    /** @return list<string> */
+    public function variantReviewFlags(int $index): array
+    {
+        $row = $this->variantRows[$index] ?? [];
+        $flags = [];
+        $price = (float) ($row['price'] ?? 0);
+        $costRaw = $row['cost_per_unit'] ?? '';
+        $cost = ($costRaw !== '' && $costRaw !== null) ? (float) $costRaw : null;
+        if ($cost !== null && $cost > 0 && $price > 0 && $price < $cost) {
+            $flags[] = 'price_below_cost';
+        }
+        if ((int) ($row['initial_stock'] ?? 0) === 0) {
+            $flags[] = 'zero_stock';
+        }
+        if ($this->cat_requires_expiry_tracking && empty($row['expires_at'])) {
+            $flags[] = 'missing_expiry';
+        }
+
+        return $flags;
+    }
+
+    public function variantRowLabel(int $index): string
+    {
+        return $this->buildVariantLabelFromRow($this->variantRows[$index] ?? []);
+    }
+
+    /** @param  array<string, mixed>  $row */
+    private function buildVariantLabelFromRow(array $row): string
     {
         $parts = [];
-        if ($this->cat_has_color && filled($this->v_color)) {
-            $parts[] = $this->v_color;
+        if ($this->cat_has_color && filled($row['color'] ?? null)) {
+            $parts[] = (string) $row['color'];
         }
-        if ($this->cat_has_frame_size && filled($this->v_frame_size)) {
-            $parts[] = $this->v_frame_size;
+        if ($this->cat_has_frame_size && filled($row['frame_size'] ?? null)) {
+            $parts[] = (string) $row['frame_size'];
         }
-        if ($this->cat_has_material && filled($this->v_material)) {
-            $parts[] = $this->v_material;
+        if ($this->cat_has_material && filled($row['material'] ?? null)) {
+            $parts[] = (string) $row['material'];
         }
-        if ($this->cat_has_lens_type && filled($this->v_lens_type)) {
-            $parts[] = $this->v_lens_type;
+        if ($this->cat_has_lens_type && filled($row['lens_type'] ?? null)) {
+            $parts[] = (string) $row['lens_type'];
         }
-        if ($this->cat_has_power_field && filled($this->v_base_curve)) {
-            $parts[] = $this->v_base_curve.' mm BC';
-        }
-        if ($this->cat_has_power_field && filled($this->v_diameter)) {
-            $parts[] = $this->v_diameter.' mm Ø';
+        if ($this->cat_has_power_field) {
+            if (filled($row['base_curve'] ?? null)) {
+                $parts[] = $row['base_curve'].' mm BC';
+            }
+            if (filled($row['diameter'] ?? null)) {
+                $parts[] = $row['diameter'].' mm Ø';
+            }
         }
 
-        return implode(' · ', $parts) ?: 'Default variant';
+        return implode(' · ', $parts) ?: (string) __('Default variant');
     }
 
     // ── Save ──────────────────────────────────────────────────────────────
 
     public function save(ProductService $productService): void
     {
+        if ($this->mode === 'add' && $this->step !== 3) {
+            return;
+        }
+
         $rules = array_merge($this->step1Rules(), $this->variantImageRules());
+        if ($this->mode === 'add') {
+            if ($this->variantRows === []) {
+                $this->variantRows = [$this->defaultVariantRow()];
+            }
+            $rules = array_merge($rules, $this->variantRowsValidationRules());
+        }
         if ($this->mode === 'edit') {
             $rules['variantArModelUrl.*'] = ['nullable', 'string', 'max:2048'];
             $rules['variantCostPerUnit.*'] = ['nullable', 'numeric', 'min:0'];
         }
         $this->validate($rules, $this->messages());
 
-        if ($this->mode === 'add' && empty($this->pendingVariants)) {
+        if ($this->mode === 'add' && $this->variantRows === []) {
             $this->variantError = 'Add at least one variant before saving.';
 
             return;
@@ -440,29 +553,52 @@ class ProductForm extends Component
             'name' => trim($this->name),
             'brand' => trim($this->brand),
             'description' => filled($this->description) ? trim($this->description) : null,
-            'price' => $this->price,
             'is_active' => $this->is_active,
         ];
+        if ($this->mode === 'edit') {
+            $productData['price'] = $this->price;
+        }
 
         try {
             if ($this->mode === 'add') {
                 $product = $productService->create($productData);
 
-                foreach ($this->pendingVariants as $idx => $v) {
-                    $variantFields = array_intersect_key($v, array_flip([
-                        'color', 'frame_size', 'material', 'lens_type', 'base_curve', 'diameter', 'price_adjustment', 'cost_per_unit', 'ar_model_url',
-                    ]));
-                    // First variant is the default
+                foreach ($this->variantRows as $idx => $row) {
+                    $variantFields = [
+                        'color' => $this->cat_has_color ? (filled($row['color'] ?? null) ? $row['color'] : null) : null,
+                        'frame_size' => $this->cat_has_frame_size ? (filled($row['frame_size'] ?? null) ? $row['frame_size'] : null) : null,
+                        'material' => $this->cat_has_material ? (filled($row['material'] ?? null) ? $row['material'] : null) : null,
+                        'lens_type' => $this->cat_has_lens_type ? (filled($row['lens_type'] ?? null) ? $row['lens_type'] : null) : null,
+                        'base_curve' => $this->cat_has_power_field ? (filled($row['base_curve'] ?? null) ? $row['base_curve'] : null) : null,
+                        'diameter' => $this->cat_has_power_field ? (filled($row['diameter'] ?? null) ? $row['diameter'] : null) : null,
+                        'price' => $row['price'],
+                        'cost_per_unit' => filled($row['cost_per_unit'] ?? null) ? $row['cost_per_unit'] : null,
+                        'ar_model_url' => $this->cat_has_ar_support && filled(trim((string) ($row['ar_model_url'] ?? '')))
+                            ? trim((string) $row['ar_model_url'])
+                            : null,
+                    ];
                     if (! $product->variants()->exists()) {
                         $variantFields['is_default'] = true;
                     }
+
+                    $inventoryExtras = [
+                        'batch_number' => $this->cat_requires_expiry_tracking && filled($row['batch_number'] ?? null)
+                            ? trim((string) $row['batch_number'])
+                            : null,
+                        'expires_at' => $this->cat_requires_expiry_tracking && filled($row['expires_at'] ?? null)
+                            ? $row['expires_at']
+                            : null,
+                    ];
+
                     $variant = $productService->createVariant(
                         $product,
                         $variantFields,
-                        (int) ($v['initial_stock'] ?? 0),
-                        $this->low_stock_threshold,
+                        (int) ($row['initial_stock'] ?? 0),
+                        (int) ($row['reorder_level'] ?? 5),
+                        $inventoryExtras,
                     );
-                    $uploads = $this->pendingVariantImages[$idx] ?? [];
+
+                    $uploads = $this->variantRowImages[$idx] ?? [];
                     if (! empty($uploads)) {
                         $this->persistUploadedImagesForVariant($variant, $uploads, $productService);
                     }
@@ -580,44 +716,6 @@ class ProductForm extends Component
             ->all();
     }
 
-    public function removePendingVariantImage(int $variantIndex, int $fileIndex): void
-    {
-        $imgs = $this->pendingVariantImages[$variantIndex] ?? [];
-        array_splice($imgs, $fileIndex, 1);
-        $this->pendingVariantImages[$variantIndex] = array_values($imgs);
-    }
-
-    public function setPrimaryPendingVariantImage(int $variantIndex, int $fileIndex): void
-    {
-        if ($fileIndex === 0 || ! isset($this->pendingVariantImages[$variantIndex][$fileIndex])) {
-            return;
-        }
-        $imgs = $this->pendingVariantImages[$variantIndex];
-        $temp = $imgs[$fileIndex];
-        array_splice($imgs, $fileIndex, 1);
-        array_unshift($imgs, $temp);
-        $this->pendingVariantImages[$variantIndex] = $imgs;
-    }
-
-    public function removeVVariantImage(int $index): void
-    {
-        $imgs = $this->v_variant_images;
-        array_splice($imgs, $index, 1);
-        $this->v_variant_images = array_values($imgs);
-    }
-
-    public function setPrimaryVVariantImage(int $index): void
-    {
-        if ($index === 0 || ! isset($this->v_variant_images[$index])) {
-            return;
-        }
-        $imgs = $this->v_variant_images;
-        $temp = $imgs[$index];
-        array_splice($imgs, $index, 1);
-        array_unshift($imgs, $temp);
-        $this->v_variant_images = $imgs;
-    }
-
     public function removePendingEditUpload(int $variantId, int $fileIndex): void
     {
         $imgs = $this->pendingVariantImagesEdit[$variantId] ?? [];
@@ -668,18 +766,6 @@ class ProductForm extends Component
 
     // ── Reset helpers ─────────────────────────────────────────────────────
 
-    private function resetVariantForm(): void
-    {
-        $this->v_color = $this->v_frame_size = $this->v_material = $this->v_lens_type = '';
-        $this->v_base_curve = $this->v_diameter = '';
-        $this->v_price_adjustment = '0';
-        $this->v_cost_per_unit = '';
-        $this->v_initial_stock = 0;
-        $this->v_ar_model_url = '';
-        $this->v_variant_images = [];
-        $this->variantError = '';
-    }
-
     private function resetForm(): void
     {
         $this->editingProductId = null;
@@ -691,18 +777,16 @@ class ProductForm extends Component
         $this->price = '0.00';
         $this->is_active = true;
         $this->low_stock_threshold = 5;
-        $this->v_ar_model_url = '';
         $this->variantArModelUrl = [];
         $this->variantCostPerUnit = [];
-        $this->v_variant_images = [];
-        $this->pendingVariantImages = [];
+        $this->variantRows = [$this->defaultVariantRow()];
+        $this->variantRowImages = [];
         $this->existingVariantImages = [];
         $this->editVariantLabels = [];
         $this->pendingVariantImagesEdit = [];
         $this->imagesToRemove = [];
-        $this->pendingVariants = [];
+        $this->variantError = '';
         $this->resetCategoryFlags();
-        $this->resetVariantForm();
         $this->resetValidation();
     }
 

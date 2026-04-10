@@ -72,8 +72,7 @@ data class ProductVariant(
     @SerializedName("base_curve")
     val baseCurve: String?,
     val diameter: String?,
-    @SerializedName("price_adjustment")
-    val priceAdjustment: String?,
+    val price: String?,
     @SerializedName("is_default")
     val isDefault: Boolean = false,
     @SerializedName("ar_model_url")

@@ -21,7 +21,7 @@ class ProductVariant extends Model
         'lens_type',
         'base_curve',
         'diameter',
-        'price_adjustment',
+        'price',
         'cost_per_unit',
         'is_default',
         'ar_model_url',
@@ -51,7 +51,7 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
-            'price_adjustment' => 'decimal:2',
+            'price' => 'decimal:2',
             'cost_per_unit' => 'decimal:2',
             'is_default' => 'boolean',
         ];
@@ -102,13 +102,10 @@ class ProductVariant extends Model
     }
 
     /**
-     * Selling unit price: base product price plus variant adjustment.
+     * Selling unit price for this SKU.
      */
     public function unitPrice(): string
     {
-        $base = (string) $this->product->price;
-        $adj = (string) $this->price_adjustment;
-
-        return bcadd($base, $adj, 2);
+        return (string) $this->price;
     }
 }

@@ -104,15 +104,13 @@
                         @endif
                     </div>
                 @else
-                    <table class="w-full min-w-[56rem] text-left text-sm">
+                    <table class="w-full min-w-[48rem] text-left text-sm">
                         <thead>
                             <tr class="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400">
                                 <th class="w-14 pl-3 py-3"></th>
                                 <th class="px-4 py-3">{{ __('Product') }}</th>
-                                <th class="px-4 py-3">{{ __('SKU') }}</th>
                                 <th class="px-4 py-3">{{ __('Category') }}</th>
                                 <th class="px-4 py-3 text-right">{{ __('Price') }}</th>
-                                <th class="px-4 py-3 text-center">{{ __('Variants') }}</th>
                                 <th class="px-4 py-3">{{ __('Stock') }}</th>
                                 <th class="px-4 py-3">{{ __('Status') }}</th>
                                 <th class="px-4 py-3">{{ __('AR') }}</th>
@@ -174,12 +172,19 @@
                                     </td>
                                     <td class="px-4 py-3 align-middle">
                                         <div class="font-semibold text-zinc-900 dark:text-zinc-50">{{ $product->name }}</div>
-                                        @if($product->brand)
-                                            <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $product->brand }}</div>
+                                        @if($product->brand || ($product->variants_count ?? 0) > 1)
+                                            <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                @if($product->brand)
+                                                    <span>{{ $product->brand }}</span>
+                                                @endif
+                                                @if(($product->variants_count ?? 0) > 1)
+                                                    @if($product->brand)
+                                                        <span class="text-zinc-400 dark:text-zinc-500" aria-hidden="true">·</span>
+                                                    @endif
+                                                    <span class="tabular-nums">{{ $product->variants_count }} {{ __('variants') }}</span>
+                                                @endif
+                                            </div>
                                         @endif
-                                    </td>
-                                    <td class="px-4 py-3 align-middle font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                                        {{ $product->defaultVariant?->sku ?? '—' }}
                                     </td>
                                     <td class="px-4 py-3 align-middle">
                                         @if($product->category)
@@ -192,9 +197,6 @@
                                     </td>
                                     <td class="px-4 py-3 text-right align-middle font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                                         ₱{{ number_format((float) $product->price, 2) }}
-                                    </td>
-                                    <td class="px-4 py-3 text-center align-middle text-xs text-zinc-600 dark:text-zinc-400">
-                                        {{ $product->variants_count ?? 0 }}
                                     </td>
                                     <td class="px-4 py-3 align-middle">
                                         <div class="flex items-center gap-2">

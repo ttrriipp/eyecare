@@ -19,11 +19,11 @@ class ProductVariantResource extends JsonResource
             'lens_type' => $this->lens_type,
             'base_curve' => $this->base_curve,
             'diameter' => $this->diameter,
-            'price_adjustment' => $this->price_adjustment,
+            'price' => (float) $this->price,
             'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
             'is_default' => $this->is_default,
             'ar_model_url' => $this->ar_model_url,
-            'unit_price' => $this->when($this->relationLoaded('product'), fn () => (float) $this->unitPrice()),
+            'unit_price' => (float) $this->unitPrice(),
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'product' => new ProductResource($this->whenLoaded('product')),
         ];
