@@ -92,6 +92,11 @@ dependencies {
     // Images
     implementation(libs.glide)
 
+    // Background work + Hilt worker integration
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+
     // ViewPager2 (image carousel)
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 

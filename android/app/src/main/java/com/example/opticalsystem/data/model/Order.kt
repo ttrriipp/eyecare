@@ -44,8 +44,8 @@ data class CreateOrderRequest(
 )
 
 data class OrderItemRequest(
-    @SerializedName("product_id")
-    val productId: Int,
+    @SerializedName("product_variant_id")
+    val productVariantId: Int,
     val quantity: Int,
 )
 

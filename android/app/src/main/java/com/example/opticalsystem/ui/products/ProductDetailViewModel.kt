@@ -14,6 +14,7 @@ import com.example.opticalsystem.data.repository.FeedbackRepository
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.displayUnitPrice
+import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.data.repository.ProductRepository
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -151,12 +152,20 @@ class ProductDetailViewModel @Inject constructor(
 
     fun addToCart(product: Product, quantity: Int, selectedVariant: ProductVariant? = null) {
         val q = quantity.coerceIn(1, 99)
-        val price = selectedVariant?.displayUnitPrice(product) ?: product.price
-        val imageUrl = selectedVariant?.images?.firstOrNull()?.imageUrl ?: product.images?.firstOrNull()?.imageUrl
+        val resolvedVariant = selectedVariant
+            ?: product.defaultVariant
+            ?: product.selectableVariants().firstOrNull()
+            ?: run {
+                _cartMessage.value = "This item has no purchasable variant."
+                return
+            }
+        val price = resolvedVariant.displayUnitPrice(product)
+        val imageUrl = resolvedVariant.images?.firstOrNull()?.imageUrl ?: product.images?.firstOrNull()?.imageUrl
         viewModelScope.launch {
             cartManager.addToCart(
                 CartItem(
-                    productId = product.id,
+                    // Cart stores variant id because order API expects product_variant_id.
+                    productId = resolvedVariant.id,
                     productName = product.name,
                     productBrand = product.brand,
                     productPrice = price,

@@ -33,9 +33,10 @@
     <!-- Home -->
     <string name="home_greeting">Welcome back,</string>
     <string name="home_subtitle">What would you like to do today?</string>
+    <string name="back">Back</string>
 
     <!-- Backend root serving /public assets (logo/images). Example: http://10.0.2.2:8000/ -->
-    <string name="backend_root_url">http://192.168.254.101:6969/</string>
+    <string name="backend_root_url">http://10.0.2.2:6969/</string>
     <!-- Relative path inside backend public folder -->
     <string name="login_logo_public_path">images/logo-no-bg.png</string>
 
@@ -158,6 +159,16 @@
     <string name="order_pickup_fee">Pickup Fee</string>
     <string name="order_pickup_fee_free">FREE</string>
     <string name="order_item_qty_format">×%d</string>
+    <string name="order_status_channel_name">Order status updates</string>
+    <string name="order_status_channel_description">Alerts when your order status changes</string>
+    <string name="order_status_changed_title">Order status updated</string>
+    <string name="order_status_changed_message">Your order %1$s is now %2$s.</string>
+    <string name="order_status_popup_title">Order Update</string>
+    <string name="order_status_popup_message">Order %1$s has been updated to %2$s.</string>
+    <string name="order_notifications_title">Notifications</string>
+    <string name="order_notifications_empty">No notifications yet.</string>
+    <string name="order_notification_item_title">Order %1$s</string>
+    <string name="order_notification_item_message">Status changed to %1$s</string>
 
     <!-- Bills -->
     <string name="bills_title">My Bills</string>

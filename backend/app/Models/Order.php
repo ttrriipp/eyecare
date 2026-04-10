@@ -50,7 +50,14 @@ class Order extends Model
 
     public function appointment(): BelongsTo
     {
-        return $this->belongsTo(Appointment::class);
+        $appointmentModel = 'App\\Models\\Appointment';
+
+        // Scheduling module may not be installed yet; keep relation safe.
+        if (! class_exists($appointmentModel)) {
+            return $this->belongsTo(User::class, 'appointment_id')->whereRaw('1 = 0');
+        }
+
+        return $this->belongsTo($appointmentModel);
     }
 
     public function processedBy(): BelongsTo

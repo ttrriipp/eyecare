@@ -30,7 +30,7 @@ class OrdersViewModel @Inject constructor(
         private set
 
     private companion object {
-        val ACTIVE_STATUSES = setOf("pending", "confirmed", "ready")
+        val ACTIVE_STATUSES = setOf("pending", "confirmed", "ready_for_pickup")
         val PAST_STATUSES = setOf("completed", "cancelled")
     }
 

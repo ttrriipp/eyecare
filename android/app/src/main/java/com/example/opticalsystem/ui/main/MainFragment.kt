@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -37,6 +38,7 @@ class MainFragment : Fragment() {
         val navController = navHostFragment.navController
 
         binding.bottomNav.setupWithNavController(navController)
+        listenForOrderDetailRequest(navController)
 
         // Tapping the already-selected tab pops nested destinations (e.g. Catalog → detail → cart)
         // back to that tab's root, matching common bottom-nav behavior.
@@ -59,8 +61,27 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun listenForOrderDetailRequest(navController: androidx.navigation.NavController) {
+        parentFragmentManager.setFragmentResultListener(
+            REQUEST_OPEN_ORDER_DETAIL,
+            viewLifecycleOwner,
+        ) { _, bundle ->
+            val orderId = bundle.getInt(KEY_ORDER_ID, -1)
+            if (orderId <= 0) return@setFragmentResultListener
+            navController.navigate(
+                R.id.orderDetailFragment,
+                bundleOf("orderId" to orderId),
+            )
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private companion object {
+        const val REQUEST_OPEN_ORDER_DETAIL = "request_open_order_detail"
+        const val KEY_ORDER_ID = "order_id"
     }
 }

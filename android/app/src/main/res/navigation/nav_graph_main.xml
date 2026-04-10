@@ -8,7 +8,15 @@
     <fragment
         android:id="@+id/nav_home"
         android:name="com.example.opticalsystem.ui.home.HomeFragment"
-        android:label="Home" />
+        android:label="Home">
+        <action
+            android:id="@+id/action_nav_home_to_orderNotificationsFragment"
+            app:destination="@id/orderNotificationsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_explore"
@@ -64,6 +72,19 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
 
+    </fragment>
+
+    <fragment
+        android:id="@+id/orderNotificationsFragment"
+        android:name="com.example.opticalsystem.ui.notifications.OrderNotificationsFragment"
+        android:label="Notifications">
+        <action
+            android:id="@+id/action_orderNotifications_to_orderDetail"
+            app:destination="@id/orderDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
