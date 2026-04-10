@@ -340,11 +340,9 @@ class ProductDetailFragment : Fragment() {
     }
 
     private fun setupSpecifications(product: Product) {
-        // Use default variant for specs; single-SKU products always have one
         val variant = product.defaultVariant ?: product.selectableVariants().firstOrNull()
-        
+
         binding.apply {
-            // Material (frame_material → variant.material)
             if (!variant?.material.isNullOrBlank()) {
                 tvSpecFrame.text = variant?.material
                 rowFrame.isVisible = true
@@ -353,23 +351,12 @@ class ProductDetailFragment : Fragment() {
                 rowFrame.isVisible = false
                 dividerFrame.isVisible = false
             }
-            
-            // Lens Type
+
             if (!variant?.lensType.isNullOrBlank()) {
                 tvSpecLens.text = variant?.lensType
                 rowLens.isVisible = true
-                dividerLens.isVisible = true
             } else {
                 rowLens.isVisible = false
-                dividerLens.isVisible = false
-            }
-            
-            // SKU (from variant or product-level accessor)
-            val skuText = variant?.sku ?: product.sku
-            if (!skuText.isNullOrBlank()) {
-                tvSpecSku.text = skuText
-            } else {
-                tvSpecSku.text = "—"
             }
         }
     }
