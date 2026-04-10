@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\V1;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Schema;
 
 class StoreOrderRequest extends FormRequest
 {
@@ -29,8 +30,13 @@ class StoreOrderRequest extends FormRequest
                 }),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'appointment_id' => ['nullable', 'integer'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
+
+        if (Schema::hasTable('appointments')) {
+            $rules['appointment_id'][] = Rule::exists('appointments', 'id');
+        }
 
         // Staff/admin can create orders on behalf of a customer or walk-in
         if ($this->user()->isAdminOrStaff()) {

@@ -32,7 +32,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/nav_shop"
+                android:text="@string/nav_catalog"
                 android:textColor="@color/on_primary"
                 android:textSize="26sp"
                 android:textStyle="bold" />
@@ -46,78 +46,6 @@
                 android:textSize="13sp" />
 
         </LinearLayout>
-
-        <!-- Cart button with badge -->
-        <FrameLayout
-            android:id="@+id/btnCart"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="0dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Cart"
-                    android:src="@drawable/ic_cart_24"
-                    android:tint="@color/primary" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Badge -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cartBadge"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_gravity="top|end"
-                android:layout_marginTop="1dp"
-                android:layout_marginEnd="1dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="#E53935"
-                app:cardCornerRadius="9dp"
-                app:cardElevation="0dp">
-
-                <TextView
-                    android:id="@+id/tvCartBadge"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:textColor="@color/on_primary"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </FrameLayout>
-
-        <!-- Filter button -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilter"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="0dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:contentDescription="Filter"
-                android:src="@drawable/ic_filter_24" />
-
-        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

@@ -12,7 +12,15 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'appointment_id' => $this->appointment_id,
             'user' => new UserResource($this->whenLoaded('user')),
+            'appointment' => $this->whenLoaded('appointment', function () {
+                return [
+                    'id' => $this->appointment?->id,
+                    'status' => data_get($this->appointment, 'status'),
+                    'scheduled_at' => data_get($this->appointment, 'scheduled_at'),
+                ];
+            }),
             'walk_in_name' => $this->walk_in_name,
             'walk_in_phone' => $this->walk_in_phone,
             'is_walk_in' => $this->isWalkIn(),

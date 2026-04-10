@@ -161,9 +161,9 @@ class ProductDetailViewModel @Inject constructor(
                 ),
             )
             _cartMessage.value = if (q == 1) {
-                "${product.name} added to cart"
+                "${product.name} added to order"
             } else {
-                "$q × ${product.name} added to cart"
+                "$q × ${product.name} added to order"
             }
         }
     }

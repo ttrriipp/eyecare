@@ -9,6 +9,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -64,7 +65,7 @@ class OrderService
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Order::query()
-            ->with(['items.productVariant.product', 'user']);
+            ->with(['items.productVariant.product', 'user', 'appointment']);
 
         if (! empty($filters['status'])) {
             $query->byStatus(OrderStatus::from($filters['status']));
@@ -98,7 +99,7 @@ class OrderService
      */
     public function find(int $orderId): Order
     {
-        return Order::with(['items.productVariant.product.images', 'user'])->findOrFail($orderId);
+        return Order::with(['items.productVariant.product.images', 'user', 'appointment'])->findOrFail($orderId);
     }
 
     /**
@@ -109,12 +110,14 @@ class OrderService
     public function create(array $data, ?User $actor = null): Order
     {
         $this->validateStock($data['items']);
+        $this->validateAppointmentLink($data, $actor);
 
         return DB::transaction(function () use ($data, $actor) {
             $discountAmount = round((float) ($data['discount_amount'] ?? 0), 2);
 
             $order = Order::create([
                 'user_id' => $data['user_id'] ?? null,
+                'appointment_id' => $data['appointment_id'] ?? null,
                 'walk_in_name' => $data['walk_in_name'] ?? null,
                 'walk_in_phone' => $data['walk_in_phone'] ?? null,
                 'order_number' => $this->generateOrderNumber(),
@@ -156,7 +159,7 @@ class OrderService
 
             $this->billingService->createForOrder($order);
 
-            $order->load(['items.productVariant.product', 'user', 'bill']);
+            $order->load(['items.productVariant.product', 'user', 'appointment', 'bill']);
 
             $this->recordStaffOrderActivity(
                 $order,
@@ -185,7 +188,7 @@ class OrderService
 
         $order->update(['status' => $newStatus]);
 
-        $order = $order->fresh(['items.productVariant.product', 'user']);
+        $order = $order->fresh(['items.productVariant.product', 'user', 'appointment']);
 
         $this->recordStaffOrderActivity(
             $order,
@@ -220,7 +223,7 @@ class OrderService
 
         $this->billingService->handleOrderCancellation($order, $user);
 
-        $order = $order->fresh(['items.productVariant.product', 'user', 'bill']);
+        $order = $order->fresh(['items.productVariant.product', 'user', 'appointment', 'bill']);
 
         $this->recordStaffOrderActivity(
             $order,
@@ -253,6 +256,60 @@ class OrderService
 
         if (! empty($errors)) {
             throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * Validate appointment linkage for order creation.
+     *
+     * Rules:
+     * - Skip when appointment_id is missing.
+     * - Appointment must exist.
+     * - If appointment status column exists, only active/booked statuses can be linked.
+     * - If appointment has user_id, it must match order user_id.
+     */
+    private function validateAppointmentLink(array $data, ?User $actor = null): void
+    {
+        $appointmentId = $data['appointment_id'] ?? null;
+        if ($appointmentId === null) {
+            return;
+        }
+
+        if (! Schema::hasTable('appointments')) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'Appointments are not available yet.',
+            ]);
+        }
+
+        $appointment = DB::table('appointments')->where('id', $appointmentId)->first();
+        if (! $appointment) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'Selected appointment does not exist.',
+            ]);
+        }
+
+        if (Schema::hasColumn('appointments', 'status') && isset($appointment->status)) {
+            $status = strtolower((string) $appointment->status);
+            if (in_array($status, ['cancelled', 'completed', 'no_show'], true)) {
+                throw ValidationException::withMessages([
+                    'appointment_id' => 'Only active appointments can be linked to an order.',
+                ]);
+            }
+        }
+
+        $orderUserId = $data['user_id'] ?? null;
+        $appointmentUserId = $appointment->user_id ?? null;
+
+        if ($orderUserId !== null && $appointmentUserId !== null && (int) $orderUserId !== (int) $appointmentUserId) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'Appointment does not belong to the selected customer.',
+            ]);
+        }
+
+        if ($actor?->isCustomer() && $appointmentUserId !== null && (int) $appointmentUserId !== (int) $actor->id) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'You can only link your own appointment.',
+            ]);
         }
     }
 

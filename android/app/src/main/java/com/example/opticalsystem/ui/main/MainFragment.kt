@@ -38,7 +38,7 @@ class MainFragment : Fragment() {
 
         binding.bottomNav.setupWithNavController(navController)
 
-        // Tapping the already-selected tab pops nested destinations (e.g. Shop → detail → cart)
+        // Tapping the already-selected tab pops nested destinations (e.g. Catalog → detail → cart)
         // back to that tab's root, matching common bottom-nav behavior.
         binding.bottomNav.setOnItemReselectedListener { menuItem ->
             val rootDestinationId = when (menuItem.itemId) {

@@ -17,6 +17,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'appointment_id',
         'processed_by',
         'walk_in_name',
         'walk_in_phone',
@@ -45,6 +46,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     public function processedBy(): BelongsTo

@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,15 +17,12 @@ import com.example.opticalsystem.data.model.ProductImage
 import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
-import com.example.opticalsystem.ui.cart.CartViewModel
 import com.example.opticalsystem.util.Resource
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @AndroidEntryPoint
@@ -36,10 +32,8 @@ class ProductDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ProductDetailViewModel by viewModels()
-    private val cartViewModel: CartViewModel by viewModels()
     private var currentProduct: Product? = null
 
-    private var quantity: Int = 1
     private var loadedProductId: Int = -1
     private lateinit var feedbackAdapter: FeedbackAdapter
     private var isUpdatingReview: Boolean = false
@@ -47,7 +41,6 @@ class ProductDetailFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_PRODUCT_ID, loadedProductId)
-        outState.putInt(STATE_QTY, quantity)
     }
 
     override fun onCreateView(
@@ -70,35 +63,14 @@ class ProductDetailFragment : Fragment() {
 
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
 
-        binding.btnCart.setOnClickListener {
-            findNavController().navigate(R.id.action_productDetail_to_cart)
-        }
-
         savedInstanceState?.let {
             loadedProductId = it.getInt(STATE_PRODUCT_ID, -1)
-            quantity = it.getInt(STATE_QTY, 1).coerceIn(1, MAX_QTY)
-        }
-
-        binding.btnDecreaseQty.setOnClickListener {
-            if (quantity > 1) {
-                quantity--
-                updateQuantityUi()
-            }
-        }
-        binding.btnIncreaseQty.setOnClickListener {
-            if (quantity < MAX_QTY) {
-                quantity++
-                updateQuantityUi()
-            }
         }
 
         binding.btnAddToCart.setOnClickListener {
-            currentProduct?.let { viewModel.addToCart(it, quantity) }
+            currentProduct?.let { viewModel.addToCart(it, 1) }
         }
 
-        updateQuantityUi()
-
-        observeCartBadge()
         viewModel.loadProduct(productId)
         observeWishlist(productId)
         setupFeedbackSection(productId)
@@ -111,14 +83,9 @@ class ProductDetailFragment : Fragment() {
                 is Resource.Success -> {
                     showLoading(false)
                     val product = result.data
-                    val previousId = loadedProductId
                     loadedProductId = product.id
-                    if (previousId != -1 && previousId != product.id) {
-                        quantity = 1
-                    }
                     currentProduct = product
                     bindProduct(product)
-                    updateQuantityUi()
                 }
                 is Resource.Error -> {
                     showLoading(false)
@@ -227,21 +194,10 @@ class ProductDetailFragment : Fragment() {
         }
     }
 
-    private fun observeCartBadge() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            cartViewModel.itemCount.collectLatest { count ->
-                binding.cartBadge.isVisible = count > 0
-                binding.tvCartBadge.text = if (count > 99) "99+" else count.toString()
-            }
-        }
-    }
-
     private fun showLoading(loading: Boolean) {
         binding.progressBar.isVisible = loading
         binding.scrollContent.isVisible = !loading
         binding.btnAddToCart.isEnabled = !loading
-        binding.btnDecreaseQty.isEnabled = !loading && quantity > 1
-        binding.btnIncreaseQty.isEnabled = !loading && quantity < MAX_QTY
     }
 
     private fun setupFeedbackSection(productId: Int) {
@@ -295,13 +251,6 @@ class ProductDetailFragment : Fragment() {
         } else {
             binding.layoutRating.isVisible = false
         }
-    }
-
-    private fun updateQuantityUi() {
-        binding.tvProductQty.text = quantity.toString()
-        val loading = binding.progressBar.isVisible
-        binding.btnDecreaseQty.isEnabled = !loading && quantity > 1
-        binding.btnIncreaseQty.isEnabled = !loading && quantity < MAX_QTY
     }
 
     private fun bindProduct(product: Product) {
@@ -440,8 +389,6 @@ class ProductDetailFragment : Fragment() {
     }
 
     companion object {
-        private const val MAX_QTY = 99
-        private const val STATE_QTY = "product_detail_qty"
         private const val STATE_PRODUCT_ID = "product_detail_product_id"
     }
 }

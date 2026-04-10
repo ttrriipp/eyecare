@@ -23,7 +23,7 @@
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Home</string>
-    <string name="nav_shop">Shop</string>
+    <string name="nav_catalog">Catalog</string>
     <string name="nav_book">Book</string>
     <string name="nav_chat">Chat</string>
     <string name="nav_profile">Profile</string>
@@ -39,11 +39,11 @@
     <!-- Relative path inside backend public folder -->
     <string name="login_logo_public_path">images/logo-no-bg.png</string>
 
-    <!-- Shop / Product List -->
+    <!-- Catalog / Product List -->
     <string name="products_count_format">%d products available</string>
     <string name="search_hint">Search frames, lenses, accessories…</string>
     <string name="category_all">All</string>
-    <string name="popular_picks">Popular picks</string>
+    <string name="popular_picks">Features</string>
     <string name="sort_by">Sort by</string>
     <string name="sort_by_label_format">Sort by %1$s ▾</string>
     <string name="sort_popular">Popular</string>
@@ -54,11 +54,12 @@
     <string name="product_image">Product image</string>
     <string name="no_reviews">No reviews</string>
     <string name="reviews_count_format">(%d)</string>
+    <string name="price_from_format">from %1$s</string>
 
     <!-- Product Detail -->
     <string name="product_detail_title">Product Detail</string>
     <string name="ar_try_on">● AR Try-On</string>
-    <string name="add_to_cart">Add to Cart</string>
+    <string name="add_to_cart">Add to Order</string>
     <string name="cd_decrease_quantity">Decrease quantity</string>
     <string name="cd_increase_quantity">Increase quantity</string>
     <string name="specifications">Specifications</string>
@@ -88,7 +89,7 @@
     <string name="nav_cart">Cart</string>
     <string name="cart_title">My Cart</string>
     <string name="cart_empty_title">Your cart is empty</string>
-    <string name="cart_empty_subtitle">Browse the Shop page and add items to get started.</string>
+    <string name="cart_empty_subtitle">Browse the Catalog page and add items to get started.</string>
     <string name="cart_item_count_format">%d item(s)</string>
     <string name="cart_subtotal">Subtotal</string>
     <string name="cart_total">Total</string>

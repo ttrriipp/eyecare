@@ -16,19 +16,15 @@ import android.text.TextUtils
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.ProductCategory
 import com.example.opticalsystem.databinding.FragmentProductListBinding
-import com.example.opticalsystem.ui.cart.CartViewModel
 import com.example.opticalsystem.util.Resource
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProductListFragment : Fragment() {
@@ -42,7 +38,6 @@ class ProductListFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ProductListViewModel by viewModels()
-    private val cartViewModel: CartViewModel by viewModels()
     private lateinit var productAdapter: ProductAdapter
 
     private val searchHandler = Handler(Looper.getMainLooper())
@@ -64,30 +59,13 @@ class ProductListFragment : Fragment() {
         setupRecyclerView()
         setupSearch()
         setupSortControl()
-        setupCartButton()
         observeViewModel()
-        observeCartBadge()
     }
 
     override fun onResume() {
         super.onResume()
-        // Ensure Shop list reflects latest backend updates when returning from details.
+        // Ensure Catalog list reflects latest backend updates when returning from details.
         viewModel.refreshProducts()
-    }
-
-    private fun setupCartButton() {
-        binding.btnCart.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_explore_to_cart)
-        }
-    }
-
-    private fun observeCartBadge() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            cartViewModel.itemCount.collectLatest { count ->
-                binding.cartBadge.isVisible = count > 0
-                binding.tvCartBadge.text = if (count > 99) "99+" else count.toString()
-            }
-        }
     }
 
     private fun setupRecyclerView() {
@@ -98,7 +76,13 @@ class ProductListFragment : Fragment() {
             )
         }
         binding.rvProducts.apply {
-            layoutManager = GridLayoutManager(requireContext(), 2)
+            val gridLayoutManager = GridLayoutManager(requireContext(), 2)
+            gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return if (productAdapter.isFullSpan(position)) 2 else 1
+                }
+            }
+            layoutManager = gridLayoutManager
             adapter = productAdapter
             setHasFixedSize(true)
         }
@@ -171,7 +155,7 @@ class ProductListFragment : Fragment() {
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
                     binding.rvProducts.isVisible = true
-                    productAdapter.submitList(result.data)
+                    productAdapter.submitProducts(result.data)
                 }
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false

@@ -107,7 +107,7 @@ class CheckoutFragment : Fragment() {
                                 bundleOf("orderId" to order.id),
                             )
                         }
-                        .setNegativeButton("Back to Shop") { _, _ ->
+                        .setNegativeButton("Back to Catalog") { _, _ ->
                             findNavController().popBackStack(R.id.nav_explore, false)
                         }
                         .setCancelable(false)

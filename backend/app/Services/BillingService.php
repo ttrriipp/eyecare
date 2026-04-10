@@ -106,6 +106,7 @@ class BillingService
     {
         return Bill::create([
             'order_id' => $order->id,
+            'appointment_id' => $order->appointment_id,
             'invoice_number' => $this->generateInvoiceNumber(),
             'amount' => $order->total_amount,
             'amount_paid' => 0,

@@ -13,7 +13,7 @@
     <fragment
         android:id="@+id/nav_explore"
         android:name="com.example.opticalsystem.ui.products.ProductListFragment"
-        android:label="Shop">
+        android:label="Catalog">
 
         <action
             android:id="@+id/action_nav_explore_to_productDetail"
