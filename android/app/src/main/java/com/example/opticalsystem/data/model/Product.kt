@@ -35,14 +35,34 @@ data class ProductCategory(
     val name: String,
     val slug: String,
     val description: String?,
-    @SerializedName("has_ar_support")
-    val hasArSupport: Boolean? = null,
-    @SerializedName("products_count")
-    val productsCount: Int?,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
     val updatedAt: String,
+    @SerializedName("has_ar_support")
+    val hasArSupport: Boolean? = null,
+    @SerializedName("requires_expiry_tracking")
+    val requiresExpiryTracking: Boolean? = null,
+    @SerializedName("requires_prescription")
+    val requiresPrescription: Boolean? = null,
+    @SerializedName("stock_unit")
+    val stockUnit: String? = null,
+    @SerializedName("is_system")
+    val isSystem: Boolean? = null,
+    @SerializedName("has_frame_size")
+    val hasFrameSize: Boolean? = null,
+    @SerializedName("has_color")
+    val hasColor: Boolean? = null,
+    @SerializedName("has_material")
+    val hasMaterial: Boolean? = null,
+    @SerializedName("has_lens_type")
+    val hasLensType: Boolean? = null,
+    @SerializedName("has_power_field")
+    val hasPowerField: Boolean? = null,
+    @SerializedName("has_duration")
+    val hasDuration: Boolean? = null,
+    @SerializedName("products_count")
+    val productsCount: Int? = null,
 )
 
 data class ProductImage(

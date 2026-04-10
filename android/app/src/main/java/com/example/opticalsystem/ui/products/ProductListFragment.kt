@@ -136,10 +136,6 @@ class ProductListFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.totalCount.observe(viewLifecycleOwner) { count ->
-            binding.tvProductCount.text = getString(R.string.products_count_format, count)
-        }
-
         viewModel.categories.observe(viewLifecycleOwner) { result ->
             if (result is Resource.Success) {
                 addCategoryChips(result.data)

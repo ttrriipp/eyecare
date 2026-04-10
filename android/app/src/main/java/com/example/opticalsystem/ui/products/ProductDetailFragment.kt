@@ -13,10 +13,13 @@ import androidx.viewpager2.widget.ViewPager2
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
+import com.example.opticalsystem.data.model.ProductCategory
 import com.example.opticalsystem.data.model.ProductImage
+import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
+import com.example.opticalsystem.databinding.ItemSpecRowBinding
 import com.example.opticalsystem.util.Resource
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -340,26 +343,64 @@ class ProductDetailFragment : Fragment() {
     }
 
     private fun setupSpecifications(product: Product) {
-        val variant = product.defaultVariant ?: product.selectableVariants().firstOrNull()
+        val container = binding.specRowsContainer
+        container.removeAllViews()
 
-        binding.apply {
-            if (!variant?.material.isNullOrBlank()) {
-                tvSpecFrame.text = variant?.material
-                rowFrame.isVisible = true
-                dividerFrame.isVisible = !variant?.lensType.isNullOrBlank()
-            } else {
-                rowFrame.isVisible = false
-                dividerFrame.isVisible = false
-            }
+        val variant: ProductVariant? = product.defaultVariant ?: product.selectableVariants().firstOrNull()
+        val category = product.category
 
-            if (!variant?.lensType.isNullOrBlank()) {
-                tvSpecLens.text = variant?.lensType
-                rowLens.isVisible = true
-            } else {
-                rowLens.isVisible = false
+        if (category != null && category.specFlagsKnown()) {
+            if (category.hasColor == true) appendSpecRow(container, R.string.spec_color, variant?.color)
+            if (category.hasFrameSize == true) appendSpecRow(container, R.string.spec_frame_size, variant?.frameSize)
+            if (category.hasMaterial == true) appendSpecRow(container, R.string.spec_material, variant?.material)
+            if (category.hasLensType == true) appendSpecRow(container, R.string.spec_lens_type, variant?.lensType)
+            if (category.hasPowerField == true) {
+                appendSpecRow(container, R.string.spec_base_curve, variant?.baseCurve)
+                appendSpecRow(container, R.string.spec_diameter, variant?.diameter)
             }
+        } else {
+            fun appendIfValue(labelRes: Int, value: String?) {
+                if (!value.isNullOrBlank()) appendSpecRow(container, labelRes, value)
+            }
+            appendIfValue(R.string.spec_color, variant?.color)
+            appendIfValue(R.string.spec_frame_size, variant?.frameSize)
+            appendIfValue(R.string.spec_material, variant?.material)
+            appendIfValue(R.string.spec_lens_type, variant?.lensType)
+            appendIfValue(R.string.spec_base_curve, variant?.baseCurve)
+            appendIfValue(R.string.spec_diameter, variant?.diameter)
+        }
+
+        binding.cardSpecifications.isVisible = container.childCount > 0
+    }
+
+    private fun appendSpecRow(container: LinearLayout, labelRes: Int, value: String?) {
+        if (container.childCount > 0) {
+            container.addView(createSpecDivider())
+        }
+        val rowBinding = ItemSpecRowBinding.inflate(layoutInflater, container, false)
+        rowBinding.tvSpecRowLabel.setText(labelRes)
+        val display = value?.trim()?.takeUnless { it.isEmpty() } ?: getString(R.string.spec_na)
+        rowBinding.tvSpecRowValue.text = display
+        container.addView(rowBinding.root)
+    }
+
+    private fun createSpecDivider(): View {
+        val h = (resources.displayMetrics.density).toInt().coerceAtLeast(1)
+        return View(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                h,
+            ).apply {
+                topMargin = (4 * resources.displayMetrics.density).toInt()
+                bottomMargin = (4 * resources.displayMetrics.density).toInt()
+            }
+            setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.divider))
         }
     }
+
+    /** True when the API sent at least one category spec flag (even if false). */
+    private fun ProductCategory.specFlagsKnown(): Boolean =
+        listOf(hasColor, hasFrameSize, hasMaterial, hasLensType, hasPowerField).any { it != null }
 
     private fun formatPrice(price: String): String {
         return try {

@@ -178,7 +178,6 @@ class ProductAdapter(
         val rows = mutableListOf<RowModel>()
 
         if (featured.isNotEmpty()) {
-            rows += RowModel.Header("Features")
             rows += featured.map { RowModel.GridProduct(it) }
         }
 

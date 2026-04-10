@@ -43,7 +43,7 @@
     <string name="products_count_format">%d products available</string>
     <string name="search_hint">Search frames, lenses, accessories…</string>
     <string name="category_all">All</string>
-    <string name="popular_picks">Features</string>
+    <string name="popular_picks">Featured</string>
     <string name="sort_by">Sort by</string>
     <string name="sort_by_label_format">Sort by %1$s ▾</string>
     <string name="sort_popular">Popular</string>
@@ -63,8 +63,12 @@
     <string name="cd_decrease_quantity">Decrease quantity</string>
     <string name="cd_increase_quantity">Increase quantity</string>
     <string name="specifications">Specifications</string>
-    <string name="spec_frame">Frame</string>
-    <string name="spec_lens">Lens</string>
+    <string name="spec_color">Color</string>
+    <string name="spec_frame_size">Frame size</string>
+    <string name="spec_material">Material</string>
+    <string name="spec_lens_type">Lens type</string>
+    <string name="spec_base_curve">Base curve</string>
+    <string name="spec_diameter">Diameter</string>
     <string name="spec_na">N/A</string>
     <string name="coming_soon">Coming soon</string>
 
