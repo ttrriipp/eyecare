@@ -12,6 +12,8 @@ import com.example.opticalsystem.data.model.Feedback
 import com.example.opticalsystem.data.model.FeedbackListResponse
 import com.example.opticalsystem.data.repository.FeedbackRepository
 import com.example.opticalsystem.data.model.Product
+import com.example.opticalsystem.data.model.ProductVariant
+import com.example.opticalsystem.data.model.displayUnitPrice
 import com.example.opticalsystem.data.repository.ProductRepository
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -147,16 +149,18 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
-    fun addToCart(product: Product, quantity: Int) {
+    fun addToCart(product: Product, quantity: Int, selectedVariant: ProductVariant? = null) {
         val q = quantity.coerceIn(1, 99)
+        val price = selectedVariant?.displayUnitPrice(product) ?: product.price
+        val imageUrl = selectedVariant?.images?.firstOrNull()?.imageUrl ?: product.images?.firstOrNull()?.imageUrl
         viewModelScope.launch {
             cartManager.addToCart(
                 CartItem(
                     productId = product.id,
                     productName = product.name,
                     productBrand = product.brand,
-                    productPrice = product.price,
-                    productImageUrl = product.images?.firstOrNull()?.imageUrl,
+                    productPrice = price,
+                    productImageUrl = imageUrl,
                     quantity = q,
                 ),
             )

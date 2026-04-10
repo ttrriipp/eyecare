@@ -59,7 +59,10 @@
     <!-- Product Detail -->
     <string name="product_detail_title">Product Detail</string>
     <string name="ar_try_on">● AR Try-On</string>
-    <string name="add_to_cart">Add to Order</string>
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="add_to_order">Add to Order</string>
+    <string name="select_color_to_see_price">Select a color to see price</string>
+    <string name="select_in_stock_color_first">Select an in-stock color first</string>
     <string name="cd_decrease_quantity">Decrease quantity</string>
     <string name="cd_increase_quantity">Increase quantity</string>
     <string name="specifications">Specifications</string>
@@ -67,6 +70,8 @@
     <string name="spec_frame_size">Frame size</string>
     <string name="spec_material">Material</string>
     <string name="spec_lens_type">Lens type</string>
+    <string name="spec_power">Power</string>
+    <string name="spec_duration">Duration</string>
     <string name="spec_base_curve">Base curve</string>
     <string name="spec_diameter">Diameter</string>
     <string name="spec_na">N/A</string>

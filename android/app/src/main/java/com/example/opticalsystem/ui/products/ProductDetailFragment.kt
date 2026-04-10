@@ -17,6 +17,7 @@ import com.example.opticalsystem.data.model.ProductCategory
 import com.example.opticalsystem.data.model.ProductImage
 import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.hasArTryOn
+import com.example.opticalsystem.data.model.displayUnitPrice
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
 import com.example.opticalsystem.databinding.ItemSpecRowBinding
@@ -25,7 +26,11 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 import kotlin.math.roundToInt
 
 @AndroidEntryPoint
@@ -36,6 +41,7 @@ class ProductDetailFragment : Fragment() {
 
     private val viewModel: ProductDetailViewModel by viewModels()
     private var currentProduct: Product? = null
+    private var selectedVariant: ProductVariant? = null
 
     private var loadedProductId: Int = -1
     private lateinit var feedbackAdapter: FeedbackAdapter
@@ -71,7 +77,12 @@ class ProductDetailFragment : Fragment() {
         }
 
         binding.btnAddToCart.setOnClickListener {
-            currentProduct?.let { viewModel.addToCart(it, 1) }
+            val product = currentProduct ?: return@setOnClickListener
+            if (requiresColorSelection(product) && selectedVariant == null) {
+                Snackbar.make(binding.root, getString(R.string.select_in_stock_color_first), Snackbar.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.addToCart(product, 1, selectedVariant)
         }
 
         viewModel.loadProduct(productId)
@@ -264,7 +275,16 @@ class ProductDetailFragment : Fragment() {
             tvBrand.text = product.brand ?: ""
             tvBrand.isVisible = product.brand != null
             tvProductName.text = product.name
-            tvPrice.text = "₱${formatPrice(product.price)}"
+            val variants = product.selectableVariants()
+            val hasColorSwatches = hasColorVariants(product, variants)
+            selectedVariant = if (hasColorSwatches) null else (product.defaultVariant ?: variants.firstOrNull())
+
+            if (hasColorSwatches) {
+                tvPrice.text = getString(R.string.select_color_to_see_price)
+            } else {
+                val basePrice = selectedVariant?.displayUnitPrice(product) ?: product.price
+                tvPrice.text = "₱${formatPrice(basePrice)}"
+            }
 
             // Description
             if (!product.description.isNullOrBlank()) {
@@ -287,8 +307,69 @@ class ProductDetailFragment : Fragment() {
             // Image carousel
             setupImageCarousel(product.images ?: emptyList())
 
-            // Specifications
-            setupSpecifications(product)
+            setupColorSwatches(product, variants, hasColorSwatches)
+            setupSpecifications(product, selectedVariant)
+            updateAddToOrderEnabled(product)
+        }
+    }
+
+    private fun setupColorSwatches(product: Product, variants: List<ProductVariant>, show: Boolean) {
+        binding.colorSwatchContainer.removeAllViews()
+        binding.colorSwatchScroll.isVisible = show
+        if (!show) return
+
+        variants.forEachIndexed { index, variant ->
+            val colorName = variant.color?.trim().takeUnless { it.isNullOrEmpty() } ?: return@forEachIndexed
+            val inStock = (variant.stockQuantity ?: 0) > 0
+            val chip = buildSwatchChip(colorName, inStock, selected = false)
+            chip.setOnClickListener {
+                if (!inStock) return@setOnClickListener
+                selectedVariant = variant
+                val selectedPrice = variant.displayUnitPrice(product)
+                binding.tvPrice.text = "₱${formatPrice(selectedPrice)}"
+                updateSwatchSelection()
+                setupSpecifications(product, selectedVariant)
+                updateAddToOrderEnabled(product)
+            }
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+            if (index > 0) {
+                lp.marginStart = dp(8)
+            }
+            binding.colorSwatchContainer.addView(chip, lp)
+        }
+    }
+
+    private fun updateSwatchSelection() {
+        val selectedColor = selectedVariant?.color?.trim().orEmpty()
+        for (i in 0 until binding.colorSwatchContainer.childCount) {
+            val v = binding.colorSwatchContainer.getChildAt(i) as? TextView ?: continue
+            val isSelected = v.tag == selectedColor
+            v.typeface = if (isSelected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            val bg = v.background as? GradientDrawable
+            bg?.setStroke(dp(1), ContextCompat.getColor(requireContext(), if (isSelected) R.color.primary else R.color.divider))
+        }
+    }
+
+    private fun buildSwatchChip(colorName: String, inStock: Boolean, selected: Boolean): TextView {
+        return TextView(requireContext()).apply {
+            tag = colorName
+            text = colorName
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            maxLines = 1
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(ContextCompat.getColor(context, R.color.surface))
+                setStroke(dp(1), ContextCompat.getColor(context, if (selected) R.color.primary else R.color.divider))
+            }
+            if (!inStock) {
+                paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+                alpha = 0.45f
+                isClickable = false
+            }
         }
     }
 
@@ -342,11 +423,11 @@ class ProductDetailFragment : Fragment() {
         }
     }
 
-    private fun setupSpecifications(product: Product) {
+    private fun setupSpecifications(product: Product, chosenVariant: ProductVariant?) {
         val container = binding.specRowsContainer
         container.removeAllViews()
 
-        val variant: ProductVariant? = product.defaultVariant ?: product.selectableVariants().firstOrNull()
+        val variant: ProductVariant? = chosenVariant ?: product.defaultVariant ?: product.selectableVariants().firstOrNull()
         val category = product.category
 
         if (category != null && category.specFlagsKnown()) {
@@ -355,8 +436,14 @@ class ProductDetailFragment : Fragment() {
             if (category.hasMaterial == true) appendSpecRow(container, R.string.spec_material, variant?.material)
             if (category.hasLensType == true) appendSpecRow(container, R.string.spec_lens_type, variant?.lensType)
             if (category.hasPowerField == true) {
-                appendSpecRow(container, R.string.spec_base_curve, variant?.baseCurve)
-                appendSpecRow(container, R.string.spec_diameter, variant?.diameter)
+                val powerValue = variant?.power ?: variant?.baseCurve
+                val powerLabel = if (!variant?.power.isNullOrBlank()) R.string.spec_power else R.string.spec_base_curve
+                appendSpecRow(container, powerLabel, powerValue)
+            }
+            if (category.hasDuration == true) {
+                val durationValue = variant?.duration ?: variant?.diameter
+                val durationLabel = if (!variant?.duration.isNullOrBlank()) R.string.spec_duration else R.string.spec_diameter
+                appendSpecRow(container, durationLabel, durationValue)
             }
         } else {
             fun appendIfValue(labelRes: Int, value: String?) {
@@ -366,20 +453,28 @@ class ProductDetailFragment : Fragment() {
             appendIfValue(R.string.spec_frame_size, variant?.frameSize)
             appendIfValue(R.string.spec_material, variant?.material)
             appendIfValue(R.string.spec_lens_type, variant?.lensType)
-            appendIfValue(R.string.spec_base_curve, variant?.baseCurve)
-            appendIfValue(R.string.spec_diameter, variant?.diameter)
+            if (!variant?.power.isNullOrBlank()) {
+                appendIfValue(R.string.spec_power, variant?.power)
+            } else {
+                appendIfValue(R.string.spec_base_curve, variant?.baseCurve)
+            }
+            if (!variant?.duration.isNullOrBlank()) {
+                appendIfValue(R.string.spec_duration, variant?.duration)
+            } else {
+                appendIfValue(R.string.spec_diameter, variant?.diameter)
+            }
         }
 
         binding.cardSpecifications.isVisible = container.childCount > 0
     }
 
     private fun appendSpecRow(container: LinearLayout, labelRes: Int, value: String?) {
+        val display = value?.trim()?.takeUnless { it.isEmpty() } ?: return
         if (container.childCount > 0) {
             container.addView(createSpecDivider())
         }
         val rowBinding = ItemSpecRowBinding.inflate(layoutInflater, container, false)
         rowBinding.tvSpecRowLabel.setText(labelRes)
-        val display = value?.trim()?.takeUnless { it.isEmpty() } ?: getString(R.string.spec_na)
         rowBinding.tvSpecRowValue.text = display
         container.addView(rowBinding.root)
     }
@@ -400,7 +495,26 @@ class ProductDetailFragment : Fragment() {
 
     /** True when the API sent at least one category spec flag (even if false). */
     private fun ProductCategory.specFlagsKnown(): Boolean =
-        listOf(hasColor, hasFrameSize, hasMaterial, hasLensType, hasPowerField).any { it != null }
+        listOf(hasColor, hasFrameSize, hasMaterial, hasLensType, hasPowerField, hasDuration).any { it != null }
+
+    private fun hasColorVariants(product: Product, variants: List<ProductVariant>): Boolean {
+        if (product.category?.hasColor != true) return false
+        val colors = variants.mapNotNull { it.color?.trim()?.takeIf(String::isNotBlank) }.distinct()
+        return colors.isNotEmpty()
+    }
+
+    private fun requiresColorSelection(product: Product): Boolean {
+        return hasColorVariants(product, product.selectableVariants())
+    }
+
+    private fun updateAddToOrderEnabled(product: Product) {
+        val needsSelection = requiresColorSelection(product)
+        val enabled = if (!needsSelection) true else ((selectedVariant?.stockQuantity ?: 0) > 0)
+        binding.btnAddToCart.isEnabled = enabled
+        binding.btnAddToCart.alpha = if (enabled) 1f else 0.6f
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun formatPrice(price: String): String {
         return try {

@@ -32,6 +32,7 @@ class ProductService
     {
         $query = Product::with([
             'category',
+            'images',
             'defaultVariant.product',
             'defaultVariant.images',
             'sharedImages',
@@ -86,7 +87,17 @@ class ProductService
 
     public function find(int $id): Product
     {
-        return Product::with(['category', 'images', 'sharedImages', 'defaultVariant.product', 'defaultVariant.images', 'variants.images', 'variants.product'])
+        return Product::with([
+            'category',
+            'images',
+            'sharedImages',
+            'defaultVariant.product',
+            'defaultVariant.images',
+            'defaultVariant.inventory',
+            'variants.images',
+            'variants.product',
+            'variants.inventory',
+        ])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count'])
             ->findOrFail($id);

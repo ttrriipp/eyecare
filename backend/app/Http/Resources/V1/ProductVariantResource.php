@@ -22,6 +22,10 @@ class ProductVariantResource extends JsonResource
             'base_curve' => $this->base_curve,
             'diameter' => $this->diameter,
             'price' => (float) $this->price,
+            'stock_quantity' => $this->when(
+                $this->relationLoaded('inventory'),
+                fn () => (int) ($this->inventory?->quantity ?? 0),
+            ),
             'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
             'is_default' => $this->is_default,
             'ar_model_url' => $this->ar_model_url,

@@ -89,10 +89,14 @@ data class ProductVariant(
     val material: String?,
     @SerializedName("lens_type")
     val lensType: String?,
+    val power: String?,
+    val duration: String?,
     @SerializedName("base_curve")
     val baseCurve: String?,
     val diameter: String?,
     val price: String?,
+    @SerializedName("stock_quantity")
+    val stockQuantity: Int? = null,
     @SerializedName("is_default")
     val isDefault: Boolean = false,
     @SerializedName("ar_model_url")

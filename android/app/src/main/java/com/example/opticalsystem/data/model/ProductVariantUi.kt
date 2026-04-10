@@ -22,6 +22,8 @@ fun ProductVariant.displayLabel(): String {
         frameSize?.trim()?.takeIf { it.isNotEmpty() },
         material?.trim()?.takeIf { it.isNotEmpty() },
         lensType?.trim()?.takeIf { it.isNotEmpty() },
+        power?.trim()?.takeIf { it.isNotEmpty() }?.let { "Power $it" },
+        duration?.trim()?.takeIf { it.isNotEmpty() }?.let { "Duration $it" },
         baseCurve?.trim()?.takeIf { it.isNotEmpty() },
         diameter?.trim()?.takeIf { it.isNotEmpty() },
     )
