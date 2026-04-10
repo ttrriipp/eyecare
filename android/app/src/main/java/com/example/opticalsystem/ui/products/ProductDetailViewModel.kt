@@ -13,6 +13,7 @@ import com.example.opticalsystem.data.model.FeedbackListResponse
 import com.example.opticalsystem.data.repository.FeedbackRepository
 import com.example.opticalsystem.data.model.Product
 import com.example.opticalsystem.data.model.ProductVariant
+import com.example.opticalsystem.data.model.displayLabel
 import com.example.opticalsystem.data.model.displayUnitPrice
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.data.repository.ProductRepository
@@ -152,22 +153,21 @@ class ProductDetailViewModel @Inject constructor(
 
     fun addToCart(product: Product, quantity: Int, selectedVariant: ProductVariant? = null) {
         val q = quantity.coerceIn(1, 99)
-        val resolvedVariant = selectedVariant
-            ?: product.defaultVariant
-            ?: product.selectableVariants().firstOrNull()
-            ?: run {
-                _cartMessage.value = "This item has no purchasable variant."
-                return
-            }
-        val price = resolvedVariant.displayUnitPrice(product)
-        val imageUrl = resolvedVariant.images?.firstOrNull()?.imageUrl ?: product.images?.firstOrNull()?.imageUrl
+        val variant = selectedVariant ?: product.defaultVariant ?: product.selectableVariants().firstOrNull()
+        if (variant == null) {
+            _cartMessage.value = "No selectable variant available for this product"
+            return
+        }
+        val price = variant.displayUnitPrice(product)
+        val imageUrl = variant.images?.firstOrNull()?.imageUrl ?: product.images?.firstOrNull()?.imageUrl
         viewModelScope.launch {
             cartManager.addToCart(
                 CartItem(
-                    // Cart stores variant id because order API expects product_variant_id.
-                    productId = resolvedVariant.id,
+                    productId = product.id,
+                    productVariantId = variant.id,
                     productName = product.name,
                     productBrand = product.brand,
+                    variantLabel = variant.displayLabel(),
                     productPrice = price,
                     productImageUrl = imageUrl,
                     quantity = q,

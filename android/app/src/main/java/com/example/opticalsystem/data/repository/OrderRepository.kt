@@ -5,6 +5,7 @@ import com.example.opticalsystem.data.api.OrderApi
 import com.example.opticalsystem.data.model.CreateOrderRequest
 import com.example.opticalsystem.data.model.Order
 import com.example.opticalsystem.util.Resource
+import org.json.JSONArray
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,17 @@ class OrderRepository @Inject constructor(
         if (body.isNotEmpty()) {
             runCatching {
                 val json = JSONObject(body)
+                val errors = json.optJSONObject("errors")
+                if (errors != null && errors.keys().hasNext()) {
+                    val firstKey = errors.keys().next()
+                    val firstValue = errors.opt(firstKey)
+                    val firstMessage = when (firstValue) {
+                        is JSONArray -> firstValue.optString(0)
+                        is String -> firstValue
+                        else -> null
+                    }?.trim()
+                    if (!firstMessage.isNullOrEmpty()) return firstMessage
+                }
                 val message = json.optString("message").trim()
                 if (message.isNotEmpty()) return message
             }

@@ -64,8 +64,7 @@ class OrderService
      */
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Order::query()
-            ->with(['items.productVariant.product', 'user', 'appointment']);
+        $query = Order::query()->with($this->orderRelations());
 
         if (! empty($filters['status'])) {
             $query->byStatus(OrderStatus::from($filters['status']));
@@ -99,7 +98,7 @@ class OrderService
      */
     public function find(int $orderId): Order
     {
-        return Order::with(['items.productVariant.product.images', 'user', 'appointment'])->findOrFail($orderId);
+        return Order::with($this->orderRelations(includeProductImages: true))->findOrFail($orderId);
     }
 
     /**
@@ -157,9 +156,8 @@ class OrderService
                 'total_amount' => $finalAmount,
             ]);
 
-            $this->billingService->createForOrder($order);
-
-            $order->load(['items.productVariant.product', 'user', 'appointment', 'bill']);
+            // Billing is intentionally deferred until staff confirmation / in-person payment stage.
+            $order->load(array_merge($this->orderRelations(), ['bill']));
 
             $this->recordStaffOrderActivity(
                 $order,
@@ -188,7 +186,7 @@ class OrderService
 
         $order->update(['status' => $newStatus]);
 
-        $order = $order->fresh(['items.productVariant.product', 'user', 'appointment']);
+        $order = $order->fresh($this->orderRelations());
 
         $this->recordStaffOrderActivity(
             $order,
@@ -223,7 +221,7 @@ class OrderService
 
         $this->billingService->handleOrderCancellation($order, $user);
 
-        $order = $order->fresh(['items.productVariant.product', 'user', 'appointment', 'bill']);
+        $order = $order->fresh(array_merge($this->orderRelations(), ['bill']));
 
         $this->recordStaffOrderActivity(
             $order,
@@ -356,5 +354,27 @@ class OrderService
             'from_status' => $fromStatus?->value,
             'to_status' => $toStatus->value,
         ]);
+    }
+
+    /**
+     * Base eager-load map for order payloads.
+     * Guard appointment relation behind a table check to avoid SQL failures
+     * in environments where the appointments module/migrations are not present.
+     *
+     * @return array<int, string>
+     */
+    private function orderRelations(bool $includeProductImages = false): array
+    {
+        $productRelation = $includeProductImages
+            ? 'items.productVariant.product.images'
+            : 'items.productVariant.product';
+
+        $relations = [$productRelation, 'user'];
+
+        if (Schema::hasTable('appointments')) {
+            $relations[] = 'appointment';
+        }
+
+        return $relations;
     }
 }

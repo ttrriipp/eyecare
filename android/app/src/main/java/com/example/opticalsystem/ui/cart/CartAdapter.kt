@@ -41,8 +41,12 @@ class CartAdapter(
             binding.tvCartItemName.text = item.productName
             binding.tvCartItemBrand.text = item.productBrand ?: ""
             binding.tvCartItemBrand.isVisible = !item.productBrand.isNullOrBlank()
+            binding.tvCartItemVariant.text = item.variantLabel.orEmpty()
+            binding.tvCartItemVariant.isVisible = !item.variantLabel.isNullOrBlank()
             binding.tvCartItemPrice.text = "₱${formatPrice(item.productPrice)}"
             binding.tvQuantity.text = item.quantity.toString()
+            val unit = item.productPrice.toDoubleOrNull() ?: 0.0
+            binding.tvCartItemLineTotal.text = "₱${String.format("%,.0f", unit * item.quantity)}"
 
             binding.btnIncrease.setOnClickListener { onIncrease(item) }
             binding.btnDecrease.setOnClickListener { onDecrease(item) }
@@ -98,7 +102,11 @@ class CartAdapter(
 
     class CartDiffCallback : DiffUtil.ItemCallback<CartItem>() {
         override fun areItemsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
+<<<<<<< HEAD
             oldItem.productId == newItem.productId
+=======
+            oldItem.productId == newItem.productId && oldItem.productVariantId == newItem.productVariantId
+>>>>>>> ec4ed21 (android: order screens)
 
         override fun areContentsTheSame(oldItem: CartItem, newItem: CartItem): Boolean =
             oldItem == newItem

@@ -69,18 +69,10 @@ class CartFragment : Fragment() {
         binding.btnCheckout.setOnClickListener {
             findNavController().navigate(R.id.action_cart_to_checkout)
         }
-
-        binding.tvClearCart.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.cart_clear)
-                .setMessage(R.string.cart_clear_message)
-                .setPositiveButton(R.string.action_clear) { _, _ ->
-                    viewModel.clearCart()
-                    Toast.makeText(requireContext(), getString(R.string.cart_cleared), Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton(R.string.action_cancel, null)
-                .show()
+        binding.btnAddMoreItems.setOnClickListener {
+            findNavController().navigate(R.id.action_cart_to_catalog)
         }
+
     }
 
     private fun showRemoveItemConfirmation(item: CartItem) {

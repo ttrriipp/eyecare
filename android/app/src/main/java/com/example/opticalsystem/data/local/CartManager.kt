@@ -24,15 +24,15 @@ class CartManager @Inject constructor(
     private val cartKey = stringPreferencesKey("cart_items")
 
     val cartItems: Flow<List<CartItem>> = context.cartDataStore.data.map { prefs ->
-        val json = prefs[cartKey] ?: return@map emptyList()
-        val type = object : TypeToken<List<CartItem>>() {}.type
-        gson.fromJson<List<CartItem>>(json, type) ?: emptyList()
+        deserialize(prefs[cartKey])
     }
 
     suspend fun addToCart(item: CartItem) {
         context.cartDataStore.edit { prefs ->
             val current = deserialize(prefs[cartKey])
-            val existingIndex = current.indexOfFirst { it.productId == item.productId }
+            val existingIndex = current.indexOfFirst {
+                it.productId == item.productId && it.productVariantId == item.productVariantId
+            }
             val updated = if (existingIndex >= 0) {
                 current.toMutableList().also {
                     val existing = it[existingIndex]
@@ -47,19 +47,27 @@ class CartManager @Inject constructor(
         }
     }
 
-    suspend fun updateQuantity(productId: Int, quantity: Int) {
+    suspend fun updateQuantity(productId: Int, productVariantId: Int, quantity: Int) {
         context.cartDataStore.edit { prefs ->
             val current = deserialize(prefs[cartKey])
-            val updated = current.map { if (it.productId == productId) it.copy(quantity = quantity) else it }
+            val updated = current.map {
+                if (it.productId == productId && it.productVariantId == productVariantId) {
+                    it.copy(quantity = quantity)
+                } else {
+                    it
+                }
+            }
                 .filter { it.quantity > 0 }
             prefs[cartKey] = gson.toJson(updated)
         }
     }
 
-    suspend fun removeFromCart(productId: Int) {
+    suspend fun removeFromCart(productId: Int, productVariantId: Int) {
         context.cartDataStore.edit { prefs ->
             val current = deserialize(prefs[cartKey])
-            prefs[cartKey] = gson.toJson(current.filter { it.productId != productId })
+            prefs[cartKey] = gson.toJson(
+                current.filterNot { it.productId == productId && it.productVariantId == productVariantId }
+            )
         }
     }
 
@@ -70,6 +78,8 @@ class CartManager @Inject constructor(
     private fun deserialize(json: String?): List<CartItem> {
         if (json.isNullOrEmpty()) return emptyList()
         val type = object : TypeToken<List<CartItem>>() {}.type
-        return gson.fromJson(json, type) ?: emptyList()
+        val raw = gson.fromJson<List<CartItem>>(json, type) ?: emptyList()
+        // Drop legacy/invalid cart rows from older app versions that lack variant IDs.
+        return raw.filter { it.productId > 0 && it.productVariantId > 0 && it.quantity > 0 }
     }
 }

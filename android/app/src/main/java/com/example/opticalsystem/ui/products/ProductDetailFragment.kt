@@ -71,6 +71,7 @@ class ProductDetailFragment : Fragment() {
         }
 
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.btnCart.setOnClickListener { findNavController().navigate(R.id.action_productDetail_to_cart) }
 
         savedInstanceState?.let {
             loadedProductId = it.getInt(STATE_PRODUCT_ID, -1)

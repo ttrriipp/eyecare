@@ -59,7 +59,14 @@ class ProductListFragment : Fragment() {
         setupRecyclerView()
         setupSearch()
         setupSortControl()
+        setupCartButton()
         observeViewModel()
+    }
+
+    private fun setupCartButton() {
+        binding.btnCart.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_explore_to_cart)
+        }
     }
 
     override fun onResume() {

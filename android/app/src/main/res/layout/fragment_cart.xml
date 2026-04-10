@@ -156,10 +156,33 @@
                 android:layout_marginVertical="10dp"
                 android:background="@color/divider" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cart_discount"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvDiscount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <!-- Total row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
                 <TextView
@@ -181,30 +204,35 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/tvPaymentNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/payment_due_visit_note"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
             <!-- Checkout button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCheckout"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="16dp"
-                android:text="@string/cart_proceed"
+                android:text="@string/continue_label"
                 android:textColor="@color/on_primary"
                 android:textSize="15sp"
                 app:backgroundTint="@color/primary"
                 app:cornerRadius="14dp" />
 
-            <!-- Clear cart link -->
-            <TextView
-                android:id="@+id/tvClearCart"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddMoreItems"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="@string/cart_clear"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/add_more_items" />
 
         </LinearLayout>
 

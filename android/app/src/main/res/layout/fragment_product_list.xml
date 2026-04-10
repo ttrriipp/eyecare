@@ -39,6 +39,15 @@
 
         </LinearLayout>
 
+        <ImageButton
+            android:id="@+id/btnCart"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/nav_cart"
+            android:src="@drawable/ic_cart_24"
+            android:tint="@color/on_primary" />
+
     </LinearLayout>
 
     <!-- ─── Search Bar ─── -->

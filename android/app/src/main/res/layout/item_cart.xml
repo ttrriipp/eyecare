@@ -65,6 +65,15 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/tvCartItemVariant"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
             <!-- Price -->
             <TextView
                 android:id="@+id/tvCartItemPrice"
@@ -73,6 +82,15 @@
                 android:layout_marginTop="4dp"
                 android:textColor="@color/price_color"
                 android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvCartItemLineTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <!-- Quantity controls row -->

@@ -35,23 +35,23 @@ class CartViewModel @Inject constructor(
 
     fun increase(item: CartItem) {
         viewModelScope.launch {
-            cartManager.updateQuantity(item.productId, item.quantity + 1)
+            cartManager.updateQuantity(item.productId, item.productVariantId, item.quantity + 1)
         }
     }
 
     fun decrease(item: CartItem) {
         viewModelScope.launch {
             if (item.quantity > 1) {
-                cartManager.updateQuantity(item.productId, item.quantity - 1)
+                cartManager.updateQuantity(item.productId, item.productVariantId, item.quantity - 1)
             } else {
-                cartManager.removeFromCart(item.productId)
+                cartManager.removeFromCart(item.productId, item.productVariantId)
             }
         }
     }
 
     fun remove(item: CartItem) {
         viewModelScope.launch {
-            cartManager.removeFromCart(item.productId)
+            cartManager.removeFromCart(item.productId, item.productVariantId)
         }
     }
 

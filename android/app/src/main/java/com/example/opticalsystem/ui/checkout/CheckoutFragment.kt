@@ -4,19 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.databinding.FragmentCheckoutBinding
-import com.example.opticalsystem.ui.cart.CartAdapter
 import com.example.opticalsystem.util.Resource
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -27,7 +23,8 @@ class CheckoutFragment : Fragment() {
     private var _binding: FragmentCheckoutBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: CheckoutViewModel by viewModels()
+    private val viewModel: CheckoutViewModel by activityViewModels()
+    private lateinit var appointmentAdapter: AppointmentOptionAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,84 +38,51 @@ class CheckoutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupRecyclerView()
+        setupAppointmentList()
         setupListeners()
         observeData()
+        viewModel.loadOrderDetailsData()
     }
 
-    private fun setupRecyclerView() {
-        val adapter = CartAdapter(
-            onIncrease = {},
-            onDecrease = {},
-            onRemove = {},
-        )
-        binding.rvCheckoutItems.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            this.adapter = adapter
+    private fun setupAppointmentList() {
+        appointmentAdapter = AppointmentOptionAdapter { appointment ->
+            val current = viewModel.selectedAppointmentId.value
+            viewModel.selectAppointment(if (current == appointment.id) null else appointment.id)
         }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.cartItems.collectLatest { items ->
-                adapter.submitList(items)
-            }
+        binding.rvAppointments.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = appointmentAdapter
         }
     }
 
     private fun setupListeners() {
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
-
-        binding.btnPlaceOrder.setOnClickListener {
-            val notes = binding.etNotes.text?.toString()
-            viewModel.placeOrder(notes)
+        binding.btnReviewOrder.setOnClickListener {
+            viewModel.setOrderNotes(binding.etNotes.text?.toString().orEmpty())
+            findNavController().navigate(R.id.action_checkout_to_orderConfirm)
         }
     }
 
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.totalPrice.collectLatest { total ->
-                binding.tvCheckoutTotal.text = "₱${String.format("%,.0f", total)}"
+            viewModel.selectedAppointmentId.collectLatest { selectedId ->
+                appointmentAdapter.selectedId = selectedId
+                binding.tvNoAppointmentNote.isVisible = selectedId == null
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.itemCount.collectLatest { count ->
-                binding.tvCheckoutItemCount.text = if (count > 0) {
-                    getString(R.string.checkout_items_format, count)
-                } else ""
-            }
-        }
-
-        viewModel.orderResult.observe(viewLifecycleOwner) { result ->
+        viewModel.upcomingAppointments.observe(viewLifecycleOwner) { result ->
             when (result) {
-                is Resource.Loading -> {
-                    binding.loadingOverlay.isVisible = true
-                    binding.btnPlaceOrder.isEnabled = false
-                    binding.btnPlaceOrder.text = getString(R.string.checkout_placing_order)
+                is Resource.Success -> appointmentAdapter.submitList(result.data)
+                else -> {
                 }
-                is Resource.Success -> {
-                    binding.loadingOverlay.isVisible = false
-                    val order = result.data
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.checkout_success_title)
-                        .setMessage(getString(R.string.checkout_success_message, order.orderNumber))
-                        .setPositiveButton("View Order") { _, _ ->
-                            findNavController().navigate(
-                                R.id.action_checkout_to_orderDetail,
-                                bundleOf("orderId" to order.id),
-                            )
-                        }
-                        .setNegativeButton("Back to Catalog") { _, _ ->
-                            findNavController().popBackStack(R.id.nav_explore, false)
-                        }
-                        .setCancelable(false)
-                        .show()
-                }
-                is Resource.Error -> {
-                    binding.loadingOverlay.isVisible = false
-                    binding.btnPlaceOrder.isEnabled = true
-                    binding.btnPlaceOrder.text = getString(R.string.checkout_place_order)
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
-                }
+            }
+        }
+
+        viewModel.profile.observe(viewLifecycleOwner) { result ->
+            if (result is Resource.Success) {
+                binding.tvCustomerName.text = result.data.name
+                binding.tvCustomerPhone.text = result.data.phone ?: getString(R.string.not_provided)
             }
         }
     }

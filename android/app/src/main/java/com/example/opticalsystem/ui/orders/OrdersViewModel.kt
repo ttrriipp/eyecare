@@ -30,7 +30,8 @@ class OrdersViewModel @Inject constructor(
         private set
 
     private companion object {
-        val ACTIVE_STATUSES = setOf("pending", "confirmed", "ready_for_pickup")
+        // Keep both current and legacy-ready keys to avoid empty tabs when backend status labels evolve.
+        val ACTIVE_STATUSES = setOf("pending", "confirmed", "ready_for_pickup", "ready")
         val PAST_STATUSES = setOf("completed", "cancelled")
     }
 

@@ -40,6 +40,8 @@ data class OrderItem(
 
 data class CreateOrderRequest(
     val items: List<OrderItemRequest>,
+    @SerializedName("appointment_id")
+    val appointmentId: Int? = null,
     val notes: String?,
 )
 
