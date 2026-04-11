@@ -381,7 +381,9 @@
                                                     </span>
                                                 @endif
                                                 @if(auth()->user()?->isAdminOrStaff())
-                                                    @php($ap = $fb->approval_status?->value ?? $fb->approval_status)
+                                                    @php
+                                                        $ap = $fb->approval_status?->value ?? $fb->approval_status;
+                                                    @endphp
                                                     @if($ap === 'pending')
                                                         <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/70 dark:text-amber-200">{{ __('Pending approval') }}</span>
                                                     @elseif($ap === 'rejected')
