@@ -37,7 +37,7 @@ class FeedbackRepository @Inject constructor(
                 val errorsObj = json.optJSONObject("errors")
                 if (errorsObj != null) {
                     // Prefer specific validation keys that are most useful to end users.
-                    val preferredKeys = listOf("product_id", "rating", "comment")
+                    val preferredKeys = listOf("product_id", "rating", "comment", "feedback", "appointment_id", "rejection_reason")
                     for (key in preferredKeys) {
                         val arr = errorsObj.optJSONArray(key)
                         if (arr != null && arr.length() > 0) {
@@ -158,6 +158,26 @@ class FeedbackRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "updateFeedback failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
+        }
+    }
+
+    suspend fun deleteFeedback(feedbackId: Int): Resource<Unit> {
+        return try {
+            val response = feedbackApi.deleteFeedback(feedbackId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(
+                    parseError(
+                        code = response.code(),
+                        rawBody = response.errorBody()?.string(),
+                        fallback = "Failed to delete review",
+                    ),
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteFeedback failed", e)
             Resource.Error(networkError(e, fallback = "Network error"))
         }
     }

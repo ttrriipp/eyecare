@@ -125,7 +125,7 @@ class ProductController extends Controller
     {
         $feedbacksQuery = fn ($q) => $q->with('user')->orderByDesc('created_at');
         if (! $request->user()?->isAdminOrStaff()) {
-            $feedbacksQuery = fn ($q) => $q->with('user')->visible()->orderByDesc('created_at');
+            $feedbacksQuery = fn ($q) => $q->with('user')->publicListing()->orderByDesc('created_at');
         }
 
         $product->load([

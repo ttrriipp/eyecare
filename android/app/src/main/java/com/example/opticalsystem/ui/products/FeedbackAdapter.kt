@@ -1,6 +1,7 @@
 package com.example.opticalsystem.ui.products
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -27,6 +28,16 @@ class FeedbackAdapter : ListAdapter<Feedback, FeedbackAdapter.FeedbackViewHolder
             binding.tvUserName.text = feedback.user?.name ?: "Anonymous"
             binding.ratingBarFeedback.rating = feedback.rating.toFloat()
             binding.tvComment.text = feedback.comment?.takeIf { it.isNotBlank() } ?: "—"
+
+            val reply = feedback.adminReply?.takeIf { it.isNotBlank() }
+            if (reply != null) {
+                binding.tvClinicReplyLabel.visibility = View.VISIBLE
+                binding.tvClinicReply.visibility = View.VISIBLE
+                binding.tvClinicReply.text = reply
+            } else {
+                binding.tvClinicReplyLabel.visibility = View.GONE
+                binding.tvClinicReply.visibility = View.GONE
+            }
 
             // Backend sends ISO timestamps (e.g., 2026-03-30T12:34:56.000Z).
             binding.tvCreatedAt.text = feedback.createdAt.take(10).ifBlank { "—" }

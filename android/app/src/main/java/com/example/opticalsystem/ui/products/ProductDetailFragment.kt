@@ -25,6 +25,7 @@ import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.databinding.FragmentProductDetailBinding
 import com.example.opticalsystem.databinding.ItemSpecRowBinding
 import com.example.opticalsystem.util.Resource
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import android.widget.ImageView
@@ -152,17 +153,50 @@ class ProductDetailFragment : Fragment() {
 
                 binding.btnSubmitReview.text = getString(R.string.update_review)
                 binding.btnSubmitReview.isEnabled = feedback.rating >= 1
+                binding.btnDeleteReview.isVisible = true
+
+                when (feedback.approvalStatus?.lowercase()) {
+                    "pending" -> {
+                        binding.tvReviewStatus.isVisible = true
+                        binding.tvReviewStatus.text = getString(R.string.review_status_pending)
+                    }
+                    "rejected" -> {
+                        binding.tvReviewStatus.isVisible = true
+                        val base = getString(R.string.review_status_rejected)
+                        val reason = feedback.rejectionReason?.trim().orEmpty()
+                        binding.tvReviewStatus.text = if (reason.isNotEmpty()) "$base\n$reason" else base
+                    }
+                    else -> {
+                        binding.tvReviewStatus.isVisible = false
+                    }
+                }
             } else {
                 binding.ratingBarWrite.rating = 0f
                 binding.etReviewComment.setText("")
                 binding.btnSubmitReview.text = getString(R.string.submit_review)
                 binding.btnSubmitReview.isEnabled = binding.ratingBarWrite.rating >= 1f
+                binding.btnDeleteReview.isVisible = false
+                binding.tvReviewStatus.isVisible = false
             }
             updateReviewComposerVisibility()
         }
 
         viewModel.canReview.observe(viewLifecycleOwner) {
             updateReviewComposerVisibility()
+        }
+
+        viewModel.deleteReview.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Resource.Loading -> binding.btnDeleteReview.isEnabled = false
+                is Resource.Success -> {
+                    binding.btnDeleteReview.isEnabled = true
+                    Snackbar.make(binding.root, getString(R.string.review_deleted), Snackbar.LENGTH_SHORT).show()
+                }
+                is Resource.Error -> {
+                    binding.btnDeleteReview.isEnabled = true
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
         }
 
         viewModel.submitFeedback.observe(viewLifecycleOwner) { result ->
@@ -278,6 +312,18 @@ class ProductDetailFragment : Fragment() {
                 comment = commentOrNull,
             )
         }
+
+        binding.btnDeleteReview.setOnClickListener {
+            val fb = viewModel.myFeedback.value ?: return@setOnClickListener
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.review_delete_confirm_title)
+                .setMessage(R.string.review_delete_confirm_message)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.delete_review) { _, _ ->
+                    viewModel.deleteReview(feedbackId = fb.id, productId = productId)
+                }
+                .show()
+        }
     }
 
     private fun updateReviewComposerVisibility() {
@@ -307,6 +353,7 @@ class ProductDetailFragment : Fragment() {
     private fun showSubmitFeedbackLoading(loading: Boolean) {
         binding.progressSubmitReview.isVisible = loading
         binding.btnSubmitReview.isEnabled = !loading && binding.ratingBarWrite.rating >= 1f
+        binding.btnDeleteReview.isEnabled = !loading
     }
 
     private fun updateRatingSummary(averageRating: Float?, totalReviews: Int?) {

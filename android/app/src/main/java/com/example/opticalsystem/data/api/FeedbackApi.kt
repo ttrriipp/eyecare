@@ -5,6 +5,7 @@ import com.example.opticalsystem.data.model.StoreFeedbackResponse
 import com.example.opticalsystem.data.model.StoreFeedbackRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -34,5 +35,10 @@ interface FeedbackApi {
         @Path("feedback") feedbackId: Int,
         @Body request: StoreFeedbackRequest,
     ): Response<StoreFeedbackResponse>
+
+    @DELETE("feedbacks/{feedback}")
+    suspend fun deleteFeedback(
+        @Path("feedback") feedbackId: Int,
+    ): Response<Unit>
 }
 

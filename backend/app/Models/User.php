@@ -81,6 +81,11 @@ class User extends Authenticatable
         return $this->hasMany(Bill::class, 'collected_by');
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function feedbacks(): HasMany
     {
         return $this->hasMany(Feedback::class);

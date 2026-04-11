@@ -48,8 +48,8 @@ class ProductService
                     ->with('inventory');
             },
         ])
-            ->withAvg('feedbacks as average_rating', 'rating')
-            ->withCount(['feedbacks as reviews_count']);
+            ->withAvg('approvedVisibleProductFeedbacks as average_rating', 'rating')
+            ->withCount(['approvedVisibleProductFeedbacks as reviews_count']);
 
         $this->applyProductActiveScope($query, $filters);
 
@@ -106,8 +106,8 @@ class ProductService
             'variants.product',
             'variants.inventory',
         ])
-            ->withAvg('feedbacks as average_rating', 'rating')
-            ->withCount(['feedbacks as reviews_count'])
+            ->withAvg('approvedVisibleProductFeedbacks as average_rating', 'rating')
+            ->withCount(['approvedVisibleProductFeedbacks as reviews_count'])
             ->findOrFail($id);
     }
 

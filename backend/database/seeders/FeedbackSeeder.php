@@ -71,10 +71,16 @@ class FeedbackSeeder extends Seeder
             Feedback::updateOrCreate(
                 ['user_id' => $customer->id, 'product_id' => $product->id],
                 [
+                    'feedback_type' => 'product',
+                    'appointment_id' => null,
                     'rating' => $review['rating'],
                     'comment' => $review['comment'],
                     'is_verified_purchase' => $review['is_verified_purchase'],
                     'is_visible' => $review['is_visible'],
+                    'approval_status' => 'approved',
+                    'approval_reviewed_at' => null,
+                    'approval_reviewed_by' => null,
+                    'rejection_reason' => null,
                     'admin_reply' => $review['admin_reply'] ?? null,
                     'moderated_by' => $review['moderated_by'] ?? null,
                     'moderated_at' => $review['moderated_at'] ?? null,

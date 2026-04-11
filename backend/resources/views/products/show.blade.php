@@ -380,6 +380,14 @@
                                                         {{ __('Hidden') }}
                                                     </span>
                                                 @endif
+                                                @if(auth()->user()?->isAdminOrStaff())
+                                                    @php($ap = $fb->approval_status?->value ?? $fb->approval_status)
+                                                    @if($ap === 'pending')
+                                                        <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/70 dark:text-amber-200">{{ __('Pending approval') }}</span>
+                                                    @elseif($ap === 'rejected')
+                                                        <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-900 dark:bg-rose-950/70 dark:text-rose-200">{{ __('Rejected') }}</span>
+                                                    @endif
+                                                @endif
                                             </div>
                                             @if(auth()->user()?->isAdminOrStaff() && $fb->user?->email)
                                                 <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{{ $fb->user->email }}</p>
@@ -405,9 +413,9 @@
                                     @if($fb->comment)
                                         <p class="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{{ $fb->comment }}</p>
                                     @endif
-                                    @if(auth()->user()?->isAdminOrStaff() && filled($fb->admin_reply))
-                                        <div class="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800/60">
-                                            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Admin reply') }}</span>
+                                    @if(filled($fb->admin_reply))
+                                        <div class="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm dark:border-sky-900/60 dark:bg-sky-950/40">
+                                            <span class="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">{{ __('Clinic reply') }}</span>
                                             <p class="mt-1 whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{{ $fb->admin_reply }}</p>
                                         </div>
                                     @endif

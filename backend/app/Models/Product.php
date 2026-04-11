@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FeedbackType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -106,7 +107,16 @@ class Product extends Model
 
     public function feedbacks(): HasMany
     {
-        return $this->hasMany(Feedback::class);
+        return $this->hasMany(Feedback::class)
+            ->where('feedback_type', FeedbackType::Product);
+    }
+
+    /**
+     * Product reviews that are approved and not staff-hidden (for ratings and public lists).
+     */
+    public function approvedVisibleProductFeedbacks(): HasMany
+    {
+        return $this->feedbacks()->publicListing();
     }
 
     public function scopeActive(Builder $query): Builder

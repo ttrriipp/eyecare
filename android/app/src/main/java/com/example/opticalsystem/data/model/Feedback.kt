@@ -8,9 +8,17 @@ data class Feedback(
     val userId: Int,
     val user: User?,
     @SerializedName("product_id")
-    val productId: Int,
+    val productId: Int?,
+    @SerializedName("feedback_type")
+    val feedbackType: String? = null,
     val rating: Int,
     val comment: String?,
+    @SerializedName("approval_status")
+    val approvalStatus: String? = null,
+    @SerializedName("rejection_reason")
+    val rejectionReason: String? = null,
+    @SerializedName("admin_reply")
+    val adminReply: String? = null,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")

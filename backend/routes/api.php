@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\ConversationController;
@@ -40,10 +41,14 @@ Route::prefix('v1')->group(function () {
         Route::get('bills', [BillingController::class, 'index']);
         Route::get('bills/{bill}', [BillingController::class, 'show']);
 
-        // Feedbacks (product reviews)
+        // Feedbacks (product, service, appointment)
         Route::get('products/{product}/feedbacks', [FeedbackController::class, 'index']);
         Route::post('products/{product}/feedbacks', [FeedbackController::class, 'store']);
+        Route::post('feedback/service', [FeedbackController::class, 'storeService']);
+        Route::get('appointments', [AppointmentController::class, 'index']);
+        Route::post('appointments/{appointment}/feedbacks', [FeedbackController::class, 'storeAppointment']);
         Route::put('feedbacks/{feedback}', [FeedbackController::class, 'update']);
+        Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
 
         // Direct Messaging — all authenticated users
         // NOTE: unread-count must be registered before {conversation} to avoid
@@ -75,9 +80,6 @@ Route::prefix('v1')->group(function () {
             Route::put('bills/{bill}/void', [BillingController::class, 'void']);
             Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
 
-            // Feedback moderation (admin only)
-            Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
-
             // Direct Messaging — reopen (admin only)
             Route::patch('conversations/{conversation}/reopen', [ConversationController::class, 'reopen']);
         });
@@ -96,6 +98,10 @@ Route::prefix('v1')->group(function () {
 
             // Direct Messaging — close (staff or admin)
             Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);
+
+            // Feedback approval queue (staff or admin)
+            Route::put('feedbacks/{feedback}/approve', [FeedbackController::class, 'approve']);
+            Route::put('feedbacks/{feedback}/reject', [FeedbackController::class, 'reject']);
         });
 
         // Customer-only routes
@@ -105,5 +111,3 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
-
-

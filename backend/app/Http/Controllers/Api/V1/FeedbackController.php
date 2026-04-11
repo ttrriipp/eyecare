@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\ApproveFeedbackApiRequest;
+use App\Http\Requests\Api\V1\RejectFeedbackApiRequest;
+use App\Http\Requests\Api\V1\StoreAppointmentFeedbackRequest;
 use App\Http\Requests\Api\V1\StoreFeedbackRequest;
+use App\Http\Requests\Api\V1\StoreServiceFeedbackRequest;
 use App\Http\Requests\Api\V1\UpdateFeedbackRequest;
 use App\Http\Resources\V1\FeedbackResource;
+use App\Models\Appointment;
 use App\Models\Feedback;
 use App\Models\Product;
 use App\Services\FeedbackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FeedbackController extends Controller
 {
@@ -56,7 +60,7 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Submit a review for a product (customer only).
+     * Submit a product review (customer only). Pending until approved.
      */
     public function store(StoreFeedbackRequest $request, Product $product): JsonResponse
     {
@@ -66,37 +70,104 @@ class FeedbackController extends Controller
         $feedback = $this->feedbackService->create($request->user()->id, $data);
 
         return response()->json([
-            'message' => 'Review submitted successfully.',
+            'message' => 'Review submitted. It will appear after staff approval.',
             'feedback' => new FeedbackResource($feedback),
         ], 201);
     }
 
     /**
-     * Update own review (customer only).
+     * Submit general service / clinic feedback (customer only).
+     */
+    public function storeService(StoreServiceFeedbackRequest $request): JsonResponse
+    {
+        $feedback = $this->feedbackService->createServiceFeedback(
+            $request->user()->id,
+            $request->validated(),
+        );
+
+        return response()->json([
+            'message' => 'Thank you. Your feedback was submitted for review.',
+            'feedback' => new FeedbackResource($feedback),
+        ], 201);
+    }
+
+    /**
+     * Submit feedback for a completed appointment (customer only).
+     */
+    public function storeAppointment(StoreAppointmentFeedbackRequest $request, Appointment $appointment): JsonResponse
+    {
+        $feedback = $this->feedbackService->createAppointmentFeedback(
+            $request->user()->id,
+            $appointment->id,
+            $request->validated(),
+        );
+
+        return response()->json([
+            'message' => 'Thank you. Your feedback was submitted for review.',
+            'feedback' => new FeedbackResource($feedback),
+        ], 201);
+    }
+
+    /**
+     * Update own feedback (customer only). Re-queues for approval.
      */
     public function update(UpdateFeedbackRequest $request, Feedback $feedback): JsonResponse
     {
         $feedback = $this->feedbackService->update($feedback, $request->validated());
 
         return response()->json([
-            'message' => 'Review updated successfully.',
+            'message' => 'Review updated. It will appear after staff approval.',
             'feedback' => new FeedbackResource($feedback),
         ]);
     }
 
     /**
-     * Delete a review (admin only).
+     * Delete own feedback (customer) or any feedback (admin).
      */
     public function destroy(Request $request, Feedback $feedback): JsonResponse
     {
-        if (! $request->user()->isAdmin()) {
-            abort(403, 'Only administrators can delete reviews.');
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            $this->feedbackService->delete($feedback);
+
+            return response()->json([
+                'message' => 'Review deleted successfully.',
+            ]);
         }
 
-        $this->feedbackService->delete($feedback);
+        if ($user->isCustomer() && (int) $feedback->user_id === (int) $user->id) {
+            $this->feedbackService->delete($feedback);
+
+            return response()->json([
+                'message' => 'Your review was deleted.',
+            ]);
+        }
+
+        abort(403, 'You cannot delete this review.');
+    }
+
+    public function approve(ApproveFeedbackApiRequest $request, Feedback $feedback): JsonResponse
+    {
+        $feedback = $this->feedbackService->approve($feedback, $request->user()->id);
 
         return response()->json([
-            'message' => 'Review deleted successfully.',
+            'message' => 'Feedback approved.',
+            'feedback' => new FeedbackResource($feedback),
+        ]);
+    }
+
+    public function reject(RejectFeedbackApiRequest $request, Feedback $feedback): JsonResponse
+    {
+        $feedback = $this->feedbackService->reject(
+            $feedback,
+            $request->user()->id,
+            $request->validated('rejection_reason'),
+        );
+
+        return response()->json([
+            'message' => 'Feedback rejected.',
+            'feedback' => new FeedbackResource($feedback),
         ]);
     }
 }

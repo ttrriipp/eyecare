@@ -94,6 +94,13 @@
     <string name="review_update_success">Review updated successfully</string>
     <string name="review_pick_rating_first">Please pick a rating first</string>
     <string name="review_requires_completed_order">You can review this product after you complete an order that includes it.</string>
+    <string name="clinic_reply">Clinic reply</string>
+    <string name="review_status_pending">Pending staff approval</string>
+    <string name="review_status_rejected">Not approved. You can edit and resubmit.</string>
+    <string name="delete_review">Delete</string>
+    <string name="review_delete_confirm_title">Delete review?</string>
+    <string name="review_delete_confirm_message">Remove your review for this product?</string>
+    <string name="review_deleted">Review deleted</string>
 
     <!-- Cart -->
     <string name="nav_cart">Cart</string>

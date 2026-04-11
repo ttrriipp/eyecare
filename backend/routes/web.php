@@ -81,6 +81,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin,staff')->group(function () {
         Route::get('feedbacks', [FeedbackController::class, 'index'])
             ->name('feedbacks.index');
+        Route::put('feedbacks/{feedback}/reply', [FeedbackController::class, 'respond'])
+            ->name('feedbacks.reply');
+        Route::put('feedbacks/{feedback}/approve', [FeedbackController::class, 'approve'])
+            ->name('feedbacks.approve');
+        Route::put('feedbacks/{feedback}/reject', [FeedbackController::class, 'reject'])
+            ->name('feedbacks.reject');
 
         Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
             ->name('admin.inventory.adjustments');

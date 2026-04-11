@@ -48,6 +48,9 @@ class ProductDetailViewModel @Inject constructor(
     private val _submitFeedback = MutableLiveData<Resource<Feedback>>()
     val submitFeedback: LiveData<Resource<Feedback>> = _submitFeedback
 
+    private val _deleteReview = MutableLiveData<Resource<Unit>>()
+    val deleteReview: LiveData<Resource<Unit>> = _deleteReview
+
     private val _myFeedback = MutableLiveData<Feedback?>()
     val myFeedback: LiveData<Feedback?> = _myFeedback
 
@@ -139,6 +142,22 @@ class ProductDetailViewModel @Inject constructor(
                 rating = rating,
                 comment = comment,
             )
+        }
+    }
+
+    fun deleteReview(feedbackId: Int, productId: Int) {
+        _deleteReview.value = Resource.Loading
+        viewModelScope.launch {
+            when (val result = feedbackRepository.deleteFeedback(feedbackId)) {
+                is Resource.Success -> {
+                    _deleteReview.value = result
+                    loadFeedbacks(productId)
+                    loadProduct(productId)
+                }
+                else -> {
+                    _deleteReview.value = result
+                }
+            }
         }
     }
 

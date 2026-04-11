@@ -2,25 +2,43 @@
 
 namespace App\Services;
 
+use App\Enums\AppointmentStatus;
+use App\Enums\FeedbackApprovalStatus;
+use App\Enums\FeedbackType;
 use App\Enums\OrderStatus;
+use App\Models\Appointment;
 use App\Models\Feedback;
+use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
 
 class FeedbackService
 {
     /**
-     * Paginate all reviews for staff/admin (product + customer visible).
+     * Paginate all feedback for staff/admin (moderation queue + full history).
      */
     public function paginateForStaff(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Feedback::query()
-            ->with(['user', 'product.category']);
+            ->with(['user', 'product.category', 'moderator', 'appointment', 'approvalReviewer']);
 
         if (! empty($filters['product_id'])) {
             $query->forProduct((int) $filters['product_id']);
+        }
+
+        if (! empty($filters['feedback_type'])) {
+            $type = FeedbackType::tryFrom((string) $filters['feedback_type']);
+            if ($type !== null) {
+                $query->ofType($type);
+            }
+        }
+
+        if (! empty($filters['approval_status'])) {
+            $status = FeedbackApprovalStatus::tryFrom((string) $filters['approval_status']);
+            if ($status !== null) {
+                $query->where('approval_status', $status);
+            }
         }
 
         if (! empty($filters['rating'])) {
@@ -52,14 +70,15 @@ class FeedbackService
     }
 
     /**
-     * List reviews for a product with pagination.
+     * Public product reviews (approved, not staff-hidden).
      */
     public function listForProduct(int $productId, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Feedback::query()
             ->with(['user'])
             ->forProduct($productId)
-            ->visible();
+            ->ofType(FeedbackType::Product)
+            ->publicListing();
 
         if (! empty($filters['rating'])) {
             $query->byRating((int) $filters['rating']);
@@ -73,8 +92,7 @@ class FeedbackService
     }
 
     /**
-     * Create a review for a product.
-     * Enforces one review per customer per product.
+     * Create a product review (pending until staff approves).
      */
     public function create(int $userId, array $data): Feedback
     {
@@ -85,8 +103,10 @@ class FeedbackService
             ]);
         }
 
-        $existing = Feedback::where('user_id', $userId)
+        $existing = Feedback::query()
+            ->where('user_id', $userId)
             ->where('product_id', $productId)
+            ->ofType(FeedbackType::Product)
             ->exists();
 
         if ($existing) {
@@ -98,33 +118,144 @@ class FeedbackService
         $feedback = Feedback::create([
             'user_id' => $userId,
             'product_id' => $productId,
+            'feedback_type' => FeedbackType::Product,
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
             'is_verified_purchase' => true,
+            'approval_status' => FeedbackApprovalStatus::Pending,
         ]);
 
         return $feedback->load('user');
     }
 
     /**
-     * Update a review.
+     * General service / clinic feedback (not tied to a product).
      */
-    public function update(Feedback $feedback, array $data): Feedback
+    public function createServiceFeedback(int $userId, array $data): Feedback
     {
-        if (! $this->hasCompletedPurchase($feedback->user_id, $feedback->product_id)) {
+        if (! $this->canSubmitServiceOrAppointmentFeedback($userId)) {
             throw ValidationException::withMessages([
-                'product_id' => 'You can only review products from completed orders.',
+                'feedback' => 'You can submit this feedback after at least one completed visit or completed order.',
             ]);
         }
 
-        $feedback->update($data);
+        $feedback = Feedback::create([
+            'user_id' => $userId,
+            'product_id' => null,
+            'appointment_id' => null,
+            'feedback_type' => FeedbackType::Service,
+            'rating' => $data['rating'],
+            'comment' => $data['comment'] ?? null,
+            'is_verified_purchase' => false,
+            'approval_status' => FeedbackApprovalStatus::Pending,
+        ]);
 
-        return $feedback->fresh(['user']);
+        return $feedback->load('user');
+    }
+
+    /**
+     * Feedback for a specific completed appointment.
+     */
+    public function createAppointmentFeedback(int $userId, int $appointmentId, array $data): Feedback
+    {
+        $appointment = Appointment::query()->findOrFail($appointmentId);
+
+        if ((int) $appointment->user_id !== $userId) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'This appointment does not belong to you.',
+            ]);
+        }
+
+        if ($appointment->status !== AppointmentStatus::Completed) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'You can only review completed appointments.',
+            ]);
+        }
+
+        $existing = Feedback::query()
+            ->where('user_id', $userId)
+            ->where('appointment_id', $appointmentId)
+            ->ofType(FeedbackType::Appointment)
+            ->exists();
+
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'appointment_id' => 'You have already reviewed this appointment.',
+            ]);
+        }
+
+        $feedback = Feedback::create([
+            'user_id' => $userId,
+            'product_id' => null,
+            'appointment_id' => $appointmentId,
+            'feedback_type' => FeedbackType::Appointment,
+            'rating' => $data['rating'],
+            'comment' => $data['comment'] ?? null,
+            'is_verified_purchase' => false,
+            'approval_status' => FeedbackApprovalStatus::Pending,
+        ]);
+
+        return $feedback->load(['user', 'appointment']);
+    }
+
+    /**
+     * Update a review (customer). Re-queues for approval when content changes.
+     */
+    public function update(Feedback $feedback, array $data): Feedback
+    {
+        if ($feedback->feedback_type === FeedbackType::Product) {
+            if ($feedback->product_id === null || ! $this->hasCompletedPurchase($feedback->user_id, (int) $feedback->product_id)) {
+                throw ValidationException::withMessages([
+                    'product_id' => 'You can only review products from completed orders.',
+                ]);
+            }
+        }
+
+        $payload = collect($data)->only(['rating', 'comment'])->filter(fn ($v) => $v !== null)->all();
+
+        $feedback->update(array_merge($payload, [
+            'approval_status' => FeedbackApprovalStatus::Pending,
+            'approval_reviewed_at' => null,
+            'approval_reviewed_by' => null,
+            'rejection_reason' => null,
+        ]));
+
+        return $feedback->fresh(['user', 'appointment']);
+    }
+
+    public function approve(Feedback $feedback, int $reviewerId): Feedback
+    {
+        $feedback->update([
+            'approval_status' => FeedbackApprovalStatus::Approved,
+            'approval_reviewed_at' => now(),
+            'approval_reviewed_by' => $reviewerId,
+            'rejection_reason' => null,
+            'is_visible' => true,
+        ]);
+
+        return $feedback->fresh(['user', 'product.category', 'moderator', 'appointment', 'approvalReviewer']);
+    }
+
+    public function reject(Feedback $feedback, int $reviewerId, ?string $reason): Feedback
+    {
+        $feedback->update([
+            'approval_status' => FeedbackApprovalStatus::Rejected,
+            'approval_reviewed_at' => now(),
+            'approval_reviewed_by' => $reviewerId,
+            'rejection_reason' => $reason !== null && trim($reason) !== '' ? trim($reason) : null,
+        ]);
+
+        return $feedback->fresh(['user', 'product.category', 'moderator', 'appointment', 'approvalReviewer']);
     }
 
     public function canUserReviewProduct(int $userId, int $productId): bool
     {
         return $this->hasCompletedPurchase($userId, $productId);
+    }
+
+    public function canSubmitServiceFeedback(int $userId): bool
+    {
+        return $this->canSubmitServiceOrAppointmentFeedback($userId);
     }
 
     public function getUserFeedbackForProduct(int $userId, int $productId): ?Feedback
@@ -133,30 +264,68 @@ class FeedbackService
             ->with(['user'])
             ->where('user_id', $userId)
             ->where('product_id', $productId)
+            ->ofType(FeedbackType::Product)
             ->first();
     }
 
-    /**
-     * Delete a review (admin only).
-     */
+    public function respond(Feedback $feedback, int $responderUserId, ?string $reply): Feedback
+    {
+        $trimmed = $reply !== null ? trim($reply) : '';
+
+        if ($trimmed === '') {
+            $feedback->update([
+                'admin_reply' => null,
+                'moderated_by' => null,
+                'moderated_at' => null,
+            ]);
+        } else {
+            $feedback->update([
+                'admin_reply' => $trimmed,
+                'moderated_by' => $responderUserId,
+                'moderated_at' => now(),
+            ]);
+        }
+
+        return $feedback->fresh(['user', 'product.category', 'moderator']);
+    }
+
     public function delete(Feedback $feedback): void
     {
         $feedback->delete();
     }
 
-    /**
-     * Get average rating for a product.
-     */
     public function averageRating(int $productId): ?float
     {
-        $avg = Feedback::forProduct($productId)->avg('rating');
+        $avg = Feedback::query()
+            ->forProduct($productId)
+            ->ofType(FeedbackType::Product)
+            ->publicListing()
+            ->avg('rating');
 
         return $avg ? round((float) $avg, 1) : null;
     }
 
-    /**
-     * Verify if customer has at least one completed order containing the product.
-     */
+    private function canSubmitServiceOrAppointmentFeedback(int $userId): bool
+    {
+        return $this->hasAnyCompletedOrder($userId) || $this->hasCompletedAppointment($userId);
+    }
+
+    private function hasAnyCompletedOrder(int $userId): bool
+    {
+        return Order::query()
+            ->where('user_id', $userId)
+            ->where('status', OrderStatus::Completed)
+            ->exists();
+    }
+
+    private function hasCompletedAppointment(int $userId): bool
+    {
+        return Appointment::query()
+            ->where('user_id', $userId)
+            ->where('status', AppointmentStatus::Completed)
+            ->exists();
+    }
+
     private function hasCompletedPurchase(int $userId, int $productId): bool
     {
         return OrderItem::query()
