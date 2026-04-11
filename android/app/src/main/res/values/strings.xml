@@ -250,5 +250,8 @@
     <string name="conversation_closed_banner">This conversation is closed</string>
     <string name="conversation_closed_banner_sub">You cannot reply to a closed conversation.</string>
     <string name="message_hint">Type a message...</string>
+    <string name="conversation_subject_title">New Conversation</string>
+    <string name="conversation_subject_hint">What is this about? (e.g. Order inquiry)</string>
+    <string name="start_conversation_action">Start</string>
     <string name="conversation_default_title">Chat</string>
 </resources>

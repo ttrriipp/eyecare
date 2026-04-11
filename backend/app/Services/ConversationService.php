@@ -8,7 +8,6 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\ValidationException;
 
 class ConversationService
 {
@@ -39,27 +38,33 @@ class ConversationService
     }
 
     /**
-     * Create a new conversation for a customer.
-     * Enforces the one-open-at-a-time rule: throws a ValidationException
-     * if the customer already has an open conversation.
+     * Create a new conversation for a customer, or return the existing open one.
+     * One-open-at-a-time: does not create a second row; mobile clients can always
+     * open the returned conversation (avoids 422 vs empty list from pagination).
+     *
+     * @return array{conversation: Conversation, created: bool}
      */
-    public function startConversation(User $user, array $data): Conversation
+    public function startConversation(User $user, array $data): array
     {
         $existing = Conversation::forUser($user->id)->open()->first();
 
         if ($existing !== null) {
-            throw ValidationException::withMessages([
-                'conversation' => 'You already have an open conversation. Please continue there or wait for it to be closed before starting a new one.',
-            ]);
+            return [
+                'conversation' => $existing->load('user'),
+                'created' => false,
+            ];
         }
 
         $conversation = Conversation::create([
             'user_id' => $user->id,
             'subject' => $data['subject'] ?? null,
-            'status'  => ConversationStatus::Open,
+            'status' => ConversationStatus::Open,
         ]);
 
-        return $conversation->load('user');
+        return [
+            'conversation' => $conversation->load('user'),
+            'created' => true,
+        ];
     }
 
     /**

@@ -34,9 +34,9 @@ class ConversationController extends Controller
             'data' => ConversationResource::collection($conversations),
             'meta' => [
                 'current_page' => $conversations->currentPage(),
-                'last_page'    => $conversations->lastPage(),
-                'per_page'     => $conversations->perPage(),
-                'total'        => $conversations->total(),
+                'last_page' => $conversations->lastPage(),
+                'per_page' => $conversations->perPage(),
+                'total' => $conversations->total(),
             ],
         ]);
     }
@@ -46,15 +46,19 @@ class ConversationController extends Controller
      */
     public function store(StartConversationRequest $request): JsonResponse
     {
-        $conversation = $this->conversationService->startConversation(
+        $result = $this->conversationService->startConversation(
             user: $request->user(),
             data: $request->validated(),
         );
 
+        $created = $result['created'];
+
         return response()->json([
-            'message'      => 'Conversation started successfully.',
-            'conversation' => new ConversationResource($conversation),
-        ], 201);
+            'message' => $created
+                ? 'Conversation started successfully.'
+                : 'You already have an open conversation.',
+            'conversation' => new ConversationResource($result['conversation']),
+        ], $created ? 201 : 200);
     }
 
     /**
@@ -84,7 +88,7 @@ class ConversationController extends Controller
         $conversation = $this->conversationService->closeConversation($conversation);
 
         return response()->json([
-            'message'      => 'Conversation closed.',
+            'message' => 'Conversation closed.',
             'conversation' => new ConversationResource($conversation),
         ]);
     }
@@ -99,7 +103,7 @@ class ConversationController extends Controller
         $conversation = $this->conversationService->reopenConversation($conversation);
 
         return response()->json([
-            'message'      => 'Conversation reopened.',
+            'message' => 'Conversation reopened.',
             'conversation' => new ConversationResource($conversation),
         ]);
     }
