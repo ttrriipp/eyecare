@@ -1,4 +1,6 @@
-<div class="flex h-full w-full flex-1 flex-col gap-4">
+<div
+    class="flex min-h-0 w-full max-h-[calc(100dvh-8rem)] flex-1 flex-col gap-4 overflow-hidden sm:max-h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-5rem)]"
+>
 
     {{-- ── Page header ─────────────────────────────────────────────────── --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -13,11 +15,11 @@
     </div>
 
     {{-- ── Main content area ────────────────────────────────────────────── --}}
-    <div class="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
+    <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row lg:items-stretch">
 
         {{-- ── LEFT: Conversation list ─────────────────────────────────── --}}
         <div @class([
-            'min-w-0 flex-1 flex-col gap-3',
+            'min-w-0 flex min-h-0 flex-1 flex-col gap-3',
             'hidden lg:flex' => $selectedConversationId,
             'flex' => !$selectedConversationId,
         ])>
@@ -47,8 +49,8 @@
             </div>
 
             {{-- Conversation list --}}
-            <div 
-                class="flex-1 overflow-y-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+            <div
+                class="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                 wire:loading.class="pointer-events-none opacity-60"
                 wire:target="setStatusFilter, gotoPage, previousPage, nextPage"
             >
@@ -142,8 +144,10 @@
 
         {{-- ── RIGHT: Thread panel ────────────────────────────────────────── --}}
         @if($selectedConversationId)
-            <div class="flex min-h-[65vh] w-full shrink-0 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 lg:min-h-0 lg:w-[450px]">
-                <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+            <div
+                class="flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 lg:w-[450px] lg:flex-none lg:self-stretch"
+            >
+                <div class="flex shrink-0 items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
                     <h3 class="font-medium text-zinc-900 dark:text-zinc-50">{{ __('Conversation') }}</h3>
                     <button wire:click="closeThread" type="button" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                         <flux:icon name="x-mark" class="h-5 w-5" />

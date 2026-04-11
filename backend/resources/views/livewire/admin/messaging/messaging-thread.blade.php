@@ -1,7 +1,7 @@
 <div class="flex min-h-0 flex-1 flex-col bg-zinc-50/50 dark:bg-zinc-900/50">
 
     @if($this->conversation->isClosed())
-        <div class="flex flex-col items-center justify-center border-b border-amber-200 bg-amber-50 px-4 py-3 text-center sm:flex-row sm:justify-between dark:border-amber-900/50 dark:bg-amber-500/10">
+        <div class="flex shrink-0 flex-col items-center justify-center border-b border-amber-200 bg-amber-50 px-4 py-3 text-center sm:flex-row sm:justify-between dark:border-amber-900/50 dark:bg-amber-500/10">
             <div class="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-500">
                 <flux:icon name="lock-closed" class="h-4 w-4" />
                 <span>{{ __('This conversation is closed.') }}</span>
@@ -16,9 +16,9 @@
     @endif
 
     {{-- Messages list --}}
-    <div 
+    <div
         id="messages-container"
-        class="flex-1 overflow-y-auto p-4 flex flex-col gap-4"
+        class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4"
     >
         @if($this->threadMessages->isEmpty())
             <div class="m-auto flex flex-col items-center justify-center text-center">
@@ -75,7 +75,7 @@
     </div>
 
     {{-- Input area --}}
-    <div class="border-t border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div class="shrink-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <form wire:submit="sendMessage" class="flex flex-col gap-3">
             <div class="relative">
                 <flux:textarea 
