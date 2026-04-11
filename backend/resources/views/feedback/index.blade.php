@@ -103,23 +103,6 @@
                     </select>
                 </div>
 
-                <div class="w-full min-w-0 lg:w-auto lg:min-w-[11rem]">
-                    <label for="fb-approval" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {{ __('Approval') }}
-                    </label>
-                    <select
-                        id="fb-approval"
-                        name="approval_status"
-                        onchange="this.form.submit()"
-                        class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                    >
-                        <option value="">{{ __('Any status') }}</option>
-                        <option value="pending" @selected(($filters['approval_status'] ?? '') === 'pending')>{{ __('Pending') }}</option>
-                        <option value="approved" @selected(($filters['approval_status'] ?? '') === 'approved')>{{ __('Approved') }}</option>
-                        <option value="rejected" @selected(($filters['approval_status'] ?? '') === 'rejected')>{{ __('Rejected') }}</option>
-                    </select>
-                </div>
-
                 <div class="flex gap-2 lg:ml-auto">
                     <flux:button :href="route('feedbacks.index')" variant="ghost" wire:navigate>
                         {{ __('Reset') }}
@@ -142,7 +125,6 @@
                             <tr>
                                 <th class="px-4 py-3">{{ __('Product') }}</th>
                                 <th class="px-4 py-3 whitespace-nowrap">{{ __('Type') }}</th>
-                                <th class="px-4 py-3 whitespace-nowrap">{{ __('Approval') }}</th>
                                 <th class="px-4 py-3 whitespace-nowrap">{{ __('On product page') }}</th>
                                 <th class="px-4 py-3">{{ __('Customer') }}</th>
                                 <th class="px-4 py-3 text-center">{{ __('Rating') }}</th>
@@ -178,16 +160,6 @@
                                             @default
                                                 {{ __('Product') }}
                                         @endswitch
-                                    </td>
-                                    <td class="px-4 py-3 align-top whitespace-nowrap">
-                                        @php($st = $fb->approval_status?->value ?? $fb->approval_status)
-                                        @if($st === 'pending')
-                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950/80 dark:text-amber-200">{{ __('Pending') }}</span>
-                                        @elseif($st === 'rejected')
-                                            <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-900 dark:bg-rose-950/80 dark:text-rose-200">{{ __('Rejected') }}</span>
-                                        @else
-                                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200">{{ __('Approved') }}</span>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 align-top whitespace-nowrap">
                                         @if($fb->is_visible)
@@ -273,7 +245,7 @@
                                     </td>
                                 </tr>
                                 <tr class="bg-zinc-50/80 dark:bg-zinc-950/40 lg:hidden">
-                                    <td colspan="9" class="px-4 pb-3 pt-0 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <td colspan="8" class="px-4 pb-3 pt-0 text-xs text-zinc-600 dark:text-zinc-400">
                                         @if($fb->comment)
                                             <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ __('Comment') }}:</span>
                                             {{ \Illuminate\Support\Str::limit($fb->comment, 200) }}

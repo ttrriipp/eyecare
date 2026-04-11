@@ -21,7 +21,7 @@ class FeedbackService
     public function paginateForStaff(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Feedback::query()
-            ->with(['user', 'product.category', 'moderator', 'appointment', 'approvalReviewer']);
+            ->with(['user', 'product.category', 'moderator', 'appointment']);
 
         if (! empty($filters['product_id'])) {
             $query->forProduct((int) $filters['product_id']);
@@ -31,13 +31,6 @@ class FeedbackService
             $type = FeedbackType::tryFrom((string) $filters['feedback_type']);
             if ($type !== null) {
                 $query->ofType($type);
-            }
-        }
-
-        if (! empty($filters['approval_status'])) {
-            $status = FeedbackApprovalStatus::tryFrom((string) $filters['approval_status']);
-            if ($status !== null) {
-                $query->where('approval_status', $status);
             }
         }
 

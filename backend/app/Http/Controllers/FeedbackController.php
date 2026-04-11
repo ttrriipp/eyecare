@@ -23,7 +23,6 @@ class FeedbackController extends Controller
             'search',
             'product_id',
             'rating',
-            'approval_status',
             'feedback_type',
             'sort_by',
             'sort_dir',
