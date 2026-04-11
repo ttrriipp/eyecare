@@ -209,11 +209,6 @@
                                         @else
                                             <span class="text-zinc-400 dark:text-zinc-500">—</span>
                                         @endif
-                                        @if(filled($fb->admin_reply))
-                                            <p class="mt-2 text-xs text-sky-700 dark:text-sky-300">
-                                                {{ __('Clinic reply on file — open Actions → Reply to view or edit.') }}
-                                            </p>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 align-top text-zinc-600 dark:text-zinc-400 hidden sm:table-cell whitespace-nowrap text-xs">
                                         {{ $fb->created_at?->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
@@ -296,11 +291,6 @@
                                             {{ \Illuminate\Support\Str::limit($fb->comment, 200) }}
                                         @else
                                             <span class="text-zinc-400">{{ __('No comment') }}</span>
-                                        @endif
-                                        @if(filled($fb->admin_reply))
-                                            <p class="mt-2 text-sky-700 dark:text-sky-300">
-                                                {{ __('Clinic reply on file — open Actions → Reply to view or edit.') }}
-                                            </p>
                                         @endif
                                         <div class="mt-1 text-zinc-500 sm:hidden">
                                             {{ $fb->created_at?->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
