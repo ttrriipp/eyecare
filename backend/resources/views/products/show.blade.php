@@ -622,13 +622,13 @@
                                 {{ __('Edit product') }}
                             </flux:button>
                             @if($product->is_active ?? true)
-                                <form method="POST" action="{{ route('products.deactivate', $product) }}" class="w-full">
-                                    @csrf
-                                    @method('PATCH')
-                                    <flux:button type="submit" variant="danger" icon="eye-slash" class="w-full">
-                                        {{ __('Deactivate') }}
-                                    </flux:button>
-                                </form>
+                                <div class="w-full">
+                                    <flux:modal.trigger name="confirm-deactivate-product">
+                                        <flux:button type="button" variant="danger" icon="eye-slash" class="w-full">
+                                            {{ __('Deactivate') }}
+                                        </flux:button>
+                                    </flux:modal.trigger>
+                                </div>
                             @else
                                 <form method="POST" action="{{ route('products.activate', $product) }}" class="w-full">
                                     @csrf
@@ -644,6 +644,27 @@
                                 </form>
                             @endif
                         </div>
+
+                        @if($product->is_active ?? true)
+                            <flux:modal name="confirm-deactivate-product" focusable class="max-w-xl">
+                                <div class="space-y-2 pr-8">
+                                    <flux:heading size="lg">{{ __('Deactivate this product?') }}</flux:heading>
+                                    <flux:subheading>
+                                        {{ __('It will be hidden from the catalog until you activate it again.') }}
+                                    </flux:subheading>
+                                </div>
+                                <div class="mt-6 flex justify-end gap-2">
+                                    <flux:modal.close>
+                                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                                    </flux:modal.close>
+                                    <form method="POST" action="{{ route('products.deactivate', $product) }}" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <flux:button type="submit" variant="danger">{{ __('Deactivate') }}</flux:button>
+                                    </form>
+                                </div>
+                            </flux:modal>
+                        @endif
                     </div>
                 @endif
             </div>
