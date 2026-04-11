@@ -13,19 +13,21 @@ class ConversationSeeder extends Seeder
     public function run(): void
     {
         $customer = User::where('email', 'customer@eyecare.test')->first();
-        $staff    = User::where('email', 'staff@eyecare.test')->first();
-        $admin    = User::where('email', 'admin@eyecare.test')->first();
+        $staff = User::where('email', 'staff@eyecare.test')->first();
+        $admin = User::where('email', 'admin@eyecare.test')->first();
 
         if (! $customer || ! $staff || ! $admin) {
             $this->command->warn('ConversationSeeder skipped: seed users not found. Run UserSeeder first.');
+
             return;
         }
 
-        // ── Open Conversation 1: Lens prescription inquiry ────────────────────
+        // ── Open (only one open conversation per customer in seed data)
+        // ── Lens prescription inquiry
         $conv1 = Conversation::create([
-            'user_id'         => $customer->id,
-            'subject'         => 'Lens prescription inquiry',
-            'status'          => ConversationStatus::Open,
+            'user_id' => $customer->id,
+            'subject' => 'Lens prescription inquiry',
+            'status' => ConversationStatus::Open,
             'last_message_at' => now()->subMinutes(5),
         ]);
 
@@ -37,12 +39,12 @@ class ConversationSeeder extends Seeder
             [$customer->id, 'Perfect, I\'ll come by this Saturday. Thank you!', now()->subMinutes(5)],
         ]);
 
-        // ── Open Conversation 2: Contact lens stock question ──────────────────
+        // ── Closed: Contact lens stock (only one open thread per customer at a time)
         $conv2 = Conversation::create([
-            'user_id'         => $customer->id,
-            'subject'         => 'Contact lens availability',
-            'status'          => ConversationStatus::Open,
-            'last_message_at' => now()->subHours(1),
+            'user_id' => $customer->id,
+            'subject' => 'Contact lens availability',
+            'status' => ConversationStatus::Closed,
+            'last_message_at' => now()->subMinutes(20),
         ]);
 
         $this->addMessages($conv2->id, [
@@ -51,14 +53,16 @@ class ConversationSeeder extends Seeder
             [$admin->id,   'Yes, we have Acuvue Oasys and FreshLook in -2.50 available. Would you like to reserve a box?', now()->subHours(3)->subMinutes(40)],
             [$customer->id, 'Yes please, one box of Acuvue Oasys would be great.', now()->subHours(2)],
             [$admin->id,   'Reserved under your name. Please pick up within 3 business days. We\'ll send you a reminder.', now()->subHours(1)],
-        ]);
+            [$customer->id, 'Picked them up — thanks again!', now()->subMinutes(35)],
+            [$admin->id,   'Glad they worked out. Message us anytime if you need more.', now()->subMinutes(20)],
+        ], readAll: true);
 
-        // ── Open Conversation 3: Frame repair ─────────────────────────────────
+        // ── Closed: Frame repair
         $conv3 = Conversation::create([
-            'user_id'         => $customer->id,
-            'subject'         => 'Frame repair request',
-            'status'          => ConversationStatus::Open,
-            'last_message_at' => now()->subDays(1),
+            'user_id' => $customer->id,
+            'subject' => 'Frame repair request',
+            'status' => ConversationStatus::Closed,
+            'last_message_at' => now()->subDays(1)->addHours(2),
         ]);
 
         $this->addMessages($conv3->id, [
@@ -66,13 +70,15 @@ class ConversationSeeder extends Seeder
             [$staff->id,   'Hi Juan! Nose pad replacements are quick — usually free of charge. Just bring the frame in.', now()->subDays(2)->subHours(2)],
             [$customer->id, 'Wonderful, I\'ll pop by tomorrow morning.', now()->subDays(2)->subHour()],
             [$staff->id,   'We\'ll be happy to help. Ask for the technician at the front desk.', now()->subDays(1)],
-        ]);
+            [$customer->id, 'All fixed — thanks!', now()->subDays(1)->addHour()],
+            [$staff->id,   'Perfect. Reach out if anything else comes up.', now()->subDays(1)->addHours(2)],
+        ], readAll: true);
 
         // ── Closed Conversation: Resolved billing query ───────────────────────
         $conv4 = Conversation::create([
-            'user_id'         => $customer->id,
-            'subject'         => 'Question about my last bill',
-            'status'          => ConversationStatus::Closed,
+            'user_id' => $customer->id,
+            'subject' => 'Question about my last bill',
+            'status' => ConversationStatus::Closed,
             'last_message_at' => now()->subDays(7),
         ]);
 
@@ -101,12 +107,12 @@ class ConversationSeeder extends Seeder
 
             Message::create([
                 'conversation_id' => $conversationId,
-                'sender_id'       => $senderId,
-                'body'            => $body,
-                'is_read'         => $isRead,
-                'read_at'         => $isRead ? $sentAt->addMinutes(rand(2, 10)) : null,
-                'created_at'      => $sentAt,
-                'updated_at'      => $sentAt,
+                'sender_id' => $senderId,
+                'body' => $body,
+                'is_read' => $isRead,
+                'read_at' => $isRead ? $sentAt->addMinutes(rand(2, 10)) : null,
+                'created_at' => $sentAt,
+                'updated_at' => $sentAt,
             ]);
         }
     }
