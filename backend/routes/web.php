@@ -83,10 +83,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('feedbacks.index');
         Route::put('feedbacks/{feedback}/reply', [FeedbackController::class, 'respond'])
             ->name('feedbacks.reply');
-        Route::put('feedbacks/{feedback}/approve', [FeedbackController::class, 'approve'])
-            ->name('feedbacks.approve');
-        Route::put('feedbacks/{feedback}/reject', [FeedbackController::class, 'reject'])
-            ->name('feedbacks.reject');
+        Route::put('feedbacks/{feedback}/visibility', [FeedbackController::class, 'setVisibility'])
+            ->name('feedbacks.visibility');
 
         Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
             ->name('admin.inventory.adjustments');
@@ -99,9 +97,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::livewire('admin/settings/categories', CategoryManager::class)
             ->name('admin.settings.categories');
-
-        Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
-            ->name('feedbacks.destroy');
 
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('staff', [UserManagementController::class, 'staffIndex'])->name('staff.index');

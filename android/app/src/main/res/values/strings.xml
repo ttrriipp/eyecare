@@ -97,6 +97,7 @@
     <string name="clinic_reply">Clinic reply</string>
     <string name="review_status_pending">Pending staff approval</string>
     <string name="review_status_rejected">Not approved. You can edit and resubmit.</string>
+    <string name="review_hidden_by_moderator">This review is hidden from the product page because it did not follow our community guidelines (for example, offensive language). You can still edit your review below.</string>
     <string name="delete_review">Delete</string>
     <string name="review_delete_confirm_title">Delete review?</string>
     <string name="review_delete_confirm_message">Remove your review for this product?</string>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Enums\FeedbackApprovalStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,8 +32,26 @@ class FeedbackResource extends JsonResource
             'admin_reply' => $this->admin_reply,
             'moderated_by' => $this->moderated_by,
             'moderated_at' => $this->moderated_at?->toISOString(),
+            'hidden_from_public_message' => $this->when(
+                $this->includeHiddenFromPublicMessage($request),
+                fn () => __('The clinic hid your rating and comment on this product because they did not meet our community standards (for example, offensive or inappropriate language). Other customers no longer see this review; you can still update it below or contact us if you think this was a mistake.'),
+            ),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];
+    }
+
+    private function includeHiddenFromPublicMessage(Request $request): bool
+    {
+        if ($this->is_visible) {
+            return false;
+        }
+
+        $user = $request->user();
+        if ($user === null || (int) $this->user_id !== (int) $user->id) {
+            return false;
+        }
+
+        return $this->approval_status === FeedbackApprovalStatus::Approved;
     }
 }

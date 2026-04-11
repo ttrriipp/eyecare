@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\ApproveFeedbackApiRequest;
-use App\Http\Requests\Api\V1\RejectFeedbackApiRequest;
+use App\Http\Requests\Api\V1\SetFeedbackVisibilityApiRequest;
 use App\Http\Requests\Api\V1\StoreAppointmentFeedbackRequest;
 use App\Http\Requests\Api\V1\StoreFeedbackRequest;
 use App\Http\Requests\Api\V1\StoreServiceFeedbackRequest;
@@ -70,7 +69,7 @@ class FeedbackController extends Controller
         $feedback = $this->feedbackService->create($request->user()->id, $data);
 
         return response()->json([
-            'message' => 'Review submitted. It will appear after staff approval.',
+            'message' => 'Thank you — your review is now live on this product.',
             'feedback' => new FeedbackResource($feedback),
         ], 201);
     }
@@ -86,7 +85,7 @@ class FeedbackController extends Controller
         );
 
         return response()->json([
-            'message' => 'Thank you. Your feedback was submitted for review.',
+            'message' => 'Thank you — we received your feedback.',
             'feedback' => new FeedbackResource($feedback),
         ], 201);
     }
@@ -103,7 +102,7 @@ class FeedbackController extends Controller
         );
 
         return response()->json([
-            'message' => 'Thank you. Your feedback was submitted for review.',
+            'message' => 'Thank you — we received your appointment feedback.',
             'feedback' => new FeedbackResource($feedback),
         ], 201);
     }
@@ -116,7 +115,7 @@ class FeedbackController extends Controller
         $feedback = $this->feedbackService->update($feedback, $request->validated());
 
         return response()->json([
-            'message' => 'Review updated. It will appear after staff approval.',
+            'message' => 'Review updated.',
             'feedback' => new FeedbackResource($feedback),
         ]);
     }
@@ -147,26 +146,17 @@ class FeedbackController extends Controller
         abort(403, 'You cannot delete this review.');
     }
 
-    public function approve(ApproveFeedbackApiRequest $request, Feedback $feedback): JsonResponse
+    public function setVisibility(SetFeedbackVisibilityApiRequest $request, Feedback $feedback): JsonResponse
     {
-        $feedback = $this->feedbackService->approve($feedback, $request->user()->id);
-
-        return response()->json([
-            'message' => 'Feedback approved.',
-            'feedback' => new FeedbackResource($feedback),
-        ]);
-    }
-
-    public function reject(RejectFeedbackApiRequest $request, Feedback $feedback): JsonResponse
-    {
-        $feedback = $this->feedbackService->reject(
+        $visible = $request->boolean('is_visible');
+        $feedback = $this->feedbackService->setPublicVisibility(
             $feedback,
+            $visible,
             $request->user()->id,
-            $request->validated('rejection_reason'),
         );
 
         return response()->json([
-            'message' => 'Feedback rejected.',
+            'message' => $visible ? 'Feedback is visible on the product page again.' : 'Feedback hidden from the product page.',
             'feedback' => new FeedbackResource($feedback),
         ]);
     }

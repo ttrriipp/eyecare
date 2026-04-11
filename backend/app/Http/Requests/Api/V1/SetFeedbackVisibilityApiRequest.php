@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RejectFeedbackApiRequest extends FormRequest
+class SetFeedbackVisibilityApiRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,7 @@ class RejectFeedbackApiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rejection_reason' => ['nullable', 'string', 'max:1000'],
+            'is_visible' => ['required', 'boolean'],
         ];
     }
 }

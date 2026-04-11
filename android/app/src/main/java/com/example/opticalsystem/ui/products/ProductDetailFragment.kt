@@ -155,16 +155,21 @@ class ProductDetailFragment : Fragment() {
                 binding.btnSubmitReview.isEnabled = feedback.rating >= 1
                 binding.btnDeleteReview.isVisible = true
 
-                when (feedback.approvalStatus?.lowercase()) {
-                    "pending" -> {
-                        binding.tvReviewStatus.isVisible = true
-                        binding.tvReviewStatus.text = getString(R.string.review_status_pending)
-                    }
-                    "rejected" -> {
+                when {
+                    feedback.approvalStatus?.equals("rejected", ignoreCase = true) == true -> {
                         binding.tvReviewStatus.isVisible = true
                         val base = getString(R.string.review_status_rejected)
                         val reason = feedback.rejectionReason?.trim().orEmpty()
                         binding.tvReviewStatus.text = if (reason.isNotEmpty()) "$base\n$reason" else base
+                    }
+                    feedback.approvalStatus?.equals("pending", ignoreCase = true) == true -> {
+                        binding.tvReviewStatus.isVisible = true
+                        binding.tvReviewStatus.text = getString(R.string.review_status_pending)
+                    }
+                    !feedback.isVisible -> {
+                        binding.tvReviewStatus.isVisible = true
+                        binding.tvReviewStatus.text = feedback.hiddenFromPublicMessage?.trim().takeUnless { it.isNullOrEmpty() }
+                            ?: getString(R.string.review_hidden_by_moderator)
                     }
                     else -> {
                         binding.tvReviewStatus.isVisible = false

@@ -143,6 +143,7 @@
                                 <th class="px-4 py-3">{{ __('Product') }}</th>
                                 <th class="px-4 py-3 whitespace-nowrap">{{ __('Type') }}</th>
                                 <th class="px-4 py-3 whitespace-nowrap">{{ __('Approval') }}</th>
+                                <th class="px-4 py-3 whitespace-nowrap">{{ __('On product page') }}</th>
                                 <th class="px-4 py-3">{{ __('Customer') }}</th>
                                 <th class="px-4 py-3 text-center">{{ __('Rating') }}</th>
                                 <th class="px-4 py-3 hidden lg:table-cell">{{ __('Comment') }}</th>
@@ -188,6 +189,13 @@
                                             <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200">{{ __('Approved') }}</span>
                                         @endif
                                     </td>
+                                    <td class="px-4 py-3 align-top whitespace-nowrap">
+                                        @if($fb->is_visible)
+                                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200">{{ __('Visible') }}</span>
+                                        @else
+                                            <span class="inline-flex rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200">{{ __('Hidden') }}</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 align-top">
                                         <div class="text-zinc-900 dark:text-zinc-100">
                                             {{ $fb->user?->name ?? '—' }}
@@ -213,7 +221,6 @@
                                     <td class="px-4 py-3 align-top text-zinc-600 dark:text-zinc-400 hidden sm:table-cell whitespace-nowrap text-xs">
                                         {{ $fb->created_at?->timezone(config('app.timezone'))->format('M j, Y g:i A') }}
                                     </td>
-                                    @php($approval = $fb->approval_status?->value ?? $fb->approval_status)
                                     <td class="px-3 py-3 align-middle text-center">
                                         <flux:dropdown position="bottom" align="end">
                                             <flux:button
@@ -228,64 +235,45 @@
                                             </flux:button>
 
                                             <flux:menu>
-                                                @if($approval === 'pending')
+                                                <flux:modal.trigger name="reply-feedback-{{ $fb->id }}">
+                                                    <flux:menu.item as="button" type="button" icon="chat-bubble-left-right">
+                                                        {{ __('Reply') }}
+                                                    </flux:menu.item>
+                                                </flux:modal.trigger>
+
+                                                @if($fb->is_visible)
                                                     <form
                                                         method="POST"
-                                                        action="{{ route('feedbacks.approve', $fb) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
+                                                        action="{{ route('feedbacks.visibility', $fb) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
                                                         class="contents"
                                                     >
                                                         @csrf
                                                         @method('PUT')
-                                                        <flux:menu.item as="button" type="submit" icon="check">
-                                                            {{ __('Approve') }}
+                                                        <input type="hidden" name="is_visible" value="0">
+                                                        <flux:menu.item as="button" type="submit" icon="eye-slash">
+                                                            {{ __('Hide from product page') }}
                                                         </flux:menu.item>
                                                     </form>
-                                                    <flux:modal.trigger name="reject-feedback-{{ $fb->id }}">
-                                                        <flux:menu.item as="button" type="button" icon="x-circle">
-                                                            {{ __('Reject') }}
-                                                        </flux:menu.item>
-                                                    </flux:modal.trigger>
-                                                @elseif($approval === 'rejected')
+                                                @else
                                                     <form
                                                         method="POST"
-                                                        action="{{ route('feedbacks.approve', $fb) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
+                                                        action="{{ route('feedbacks.visibility', $fb) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
                                                         class="contents"
                                                     >
                                                         @csrf
                                                         @method('PUT')
-                                                        <flux:menu.item as="button" type="submit" icon="check">
-                                                            {{ __('Approve') }}
+                                                        <input type="hidden" name="is_visible" value="1">
+                                                        <flux:menu.item as="button" type="submit" icon="eye">
+                                                            {{ __('Show on product page') }}
                                                         </flux:menu.item>
                                                     </form>
-                                                @endif
-
-                                                @if(in_array($approval, ['pending', 'approved'], true))
-                                                    <flux:modal.trigger name="reply-feedback-{{ $fb->id }}">
-                                                        <flux:menu.item as="button" type="button" icon="chat-bubble-left-right">
-                                                            {{ __('Reply') }}
-                                                        </flux:menu.item>
-                                                    </flux:modal.trigger>
-                                                @endif
-
-                                                @if(auth()->user()?->isAdmin())
-                                                    <flux:menu.separator />
-                                                    <flux:modal.trigger name="confirm-delete-feedback-{{ $fb->id }}">
-                                                        <flux:menu.item
-                                                            as="button"
-                                                            type="button"
-                                                            icon="trash"
-                                                            class="text-red-600 dark:text-red-400"
-                                                        >
-                                                            {{ __('Delete') }}
-                                                        </flux:menu.item>
-                                                    </flux:modal.trigger>
                                                 @endif
                                             </flux:menu>
                                         </flux:dropdown>
                                     </td>
                                 </tr>
                                 <tr class="bg-zinc-50/80 dark:bg-zinc-950/40 lg:hidden">
-                                    <td colspan="8" class="px-4 pb-3 pt-0 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <td colspan="9" class="px-4 pb-3 pt-0 text-xs text-zinc-600 dark:text-zinc-400">
                                         @if($fb->comment)
                                             <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ __('Comment') }}:</span>
                                             {{ \Illuminate\Support\Str::limit($fb->comment, 200) }}
@@ -371,72 +359,6 @@
                         </form>
                     </flux:modal>
                 @endforeach
-
-                @foreach($feedbacks as $fb)
-                    @if(($fb->approval_status?->value ?? $fb->approval_status) === 'pending')
-                        <flux:modal name="reject-feedback-{{ $fb->id }}" focusable class="max-w-xl">
-                            <form
-                                method="POST"
-                                action="{{ route('feedbacks.reject', $fb) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
-                                class="space-y-4"
-                            >
-                                @csrf
-                                @method('PUT')
-                                <div class="pr-8">
-                                    <flux:heading size="lg">{{ __('Reject feedback') }}</flux:heading>
-                                    <flux:subheading class="mt-1">
-                                        {{ $fb->user?->name ?? '—' }}
-                                    </flux:subheading>
-                                </div>
-                                <div>
-                                    <label for="reject-reason-{{ $fb->id }}" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ __('Reason (optional)') }}
-                                    </label>
-                                    <flux:textarea
-                                        id="reject-reason-{{ $fb->id }}"
-                                        name="rejection_reason"
-                                        rows="4"
-                                        placeholder="{{ __('Shown to the customer in the app.') }}"
-                                    ></flux:textarea>
-                                    @error('rejection_reason')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div class="flex justify-end gap-2">
-                                    <flux:modal.close>
-                                        <flux:button type="button" variant="ghost">{{ __('Cancel') }}</flux:button>
-                                    </flux:modal.close>
-                                    <flux:button type="submit" variant="danger">{{ __('Reject') }}</flux:button>
-                                </div>
-                            </form>
-                        </flux:modal>
-                    @endif
-                @endforeach
-
-                @if(auth()->user()?->isAdmin())
-                    @foreach($feedbacks as $fb)
-                        <flux:modal name="confirm-delete-feedback-{{ $fb->id }}" focusable class="max-w-xl">
-                            <div class="space-y-2 pr-8">
-                                <flux:heading size="lg">
-                                    {{ __('Are you sure you want to delete this feedback?') }}
-                                </flux:heading>
-                                <flux:subheading>
-                                    {{ __('This action cannot be undone.') }}
-                                </flux:subheading>
-                            </div>
-                            <div class="mt-6 flex justify-end gap-2">
-                                <flux:modal.close>
-                                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                                </flux:modal.close>
-                                <form method="POST" action="{{ route('feedbacks.destroy', $fb) }}" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <flux:button type="submit" variant="danger">{{ __('Delete') }}</flux:button>
-                                </form>
-                            </div>
-                        </flux:modal>
-                    @endforeach
-                @endif
 
                 <div class="border-t border-zinc-200 px-4 py-3 text-sm dark:border-zinc-700">
                     {{ $feedbacks->withQueryString()->links() }}

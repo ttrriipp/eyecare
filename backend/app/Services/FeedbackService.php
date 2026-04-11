@@ -122,7 +122,8 @@ class FeedbackService
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
             'is_verified_purchase' => true,
-            'approval_status' => FeedbackApprovalStatus::Pending,
+            'is_visible' => true,
+            'approval_status' => FeedbackApprovalStatus::Approved,
         ]);
 
         return $feedback->load('user');
@@ -147,7 +148,8 @@ class FeedbackService
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
             'is_verified_purchase' => false,
-            'approval_status' => FeedbackApprovalStatus::Pending,
+            'is_visible' => true,
+            'approval_status' => FeedbackApprovalStatus::Approved,
         ]);
 
         return $feedback->load('user');
@@ -192,7 +194,8 @@ class FeedbackService
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
             'is_verified_purchase' => false,
-            'approval_status' => FeedbackApprovalStatus::Pending,
+            'is_visible' => true,
+            'approval_status' => FeedbackApprovalStatus::Approved,
         ]);
 
         return $feedback->load(['user', 'appointment']);
@@ -214,7 +217,7 @@ class FeedbackService
         $payload = collect($data)->only(['rating', 'comment'])->filter(fn ($v) => $v !== null)->all();
 
         $feedback->update(array_merge($payload, [
-            'approval_status' => FeedbackApprovalStatus::Pending,
+            'approval_status' => FeedbackApprovalStatus::Approved,
             'approval_reviewed_at' => null,
             'approval_reviewed_by' => null,
             'rejection_reason' => null,
@@ -287,6 +290,17 @@ class FeedbackService
         }
 
         return $feedback->fresh(['user', 'product.category', 'moderator']);
+    }
+
+    public function setPublicVisibility(Feedback $feedback, bool $visible, int $moderatorId): Feedback
+    {
+        $feedback->update([
+            'is_visible' => $visible,
+            'moderated_by' => $moderatorId,
+            'moderated_at' => now(),
+        ]);
+
+        return $feedback->fresh(['user', 'product.category', 'moderator', 'appointment', 'approvalReviewer']);
     }
 
     public function delete(Feedback $feedback): void

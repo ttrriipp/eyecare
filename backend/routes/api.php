@@ -99,9 +99,8 @@ Route::prefix('v1')->group(function () {
             // Direct Messaging — close (staff or admin)
             Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);
 
-            // Feedback approval queue (staff or admin)
-            Route::put('feedbacks/{feedback}/approve', [FeedbackController::class, 'approve']);
-            Route::put('feedbacks/{feedback}/reject', [FeedbackController::class, 'reject']);
+            // Feedback visibility (staff or admin)
+            Route::put('feedbacks/{feedback}/visibility', [FeedbackController::class, 'setVisibility']);
         });
 
         // Customer-only routes

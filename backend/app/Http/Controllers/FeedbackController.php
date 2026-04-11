@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ModerateFeedbackRequest;
 use App\Http\Requests\RespondToFeedbackRequest;
+use App\Http\Requests\SetFeedbackVisibilityRequest;
 use App\Models\Feedback;
 use App\Models\Product;
 use App\Services\FeedbackService;
@@ -55,34 +55,22 @@ class FeedbackController extends Controller
             ->with('status', __('Reply saved.'));
     }
 
-    public function approve(Request $request, Feedback $feedback): RedirectResponse
+    public function setVisibility(SetFeedbackVisibilityRequest $request, Feedback $feedback): RedirectResponse
     {
-        $this->feedbackService->approve($feedback, $request->user()->id);
+        $visible = $request->boolean('is_visible');
 
-        return redirect()
-            ->route('feedbacks.index', $request->query())
-            ->with('status', __('Feedback approved.'));
-    }
-
-    public function reject(ModerateFeedbackRequest $request, Feedback $feedback): RedirectResponse
-    {
-        $this->feedbackService->reject(
+        $this->feedbackService->setPublicVisibility(
             $feedback,
+            $visible,
             $request->user()->id,
-            $request->validated('rejection_reason'),
         );
 
-        return redirect()
-            ->route('feedbacks.index', $request->query())
-            ->with('status', __('Feedback rejected.'));
-    }
-
-    public function destroy(Request $request, Feedback $feedback): RedirectResponse
-    {
-        $this->feedbackService->delete($feedback);
+        $message = $visible
+            ? __('Review is visible on the product page again.')
+            : __('Review hidden from the product page.');
 
         return redirect()
             ->route('feedbacks.index', $request->query())
-            ->with('status', __('Review deleted.'));
+            ->with('status', $message);
     }
 }

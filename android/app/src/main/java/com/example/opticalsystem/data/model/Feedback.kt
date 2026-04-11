@@ -13,12 +13,16 @@ data class Feedback(
     val feedbackType: String? = null,
     val rating: Int,
     val comment: String?,
+    @SerializedName("is_visible")
+    val isVisible: Boolean = true,
     @SerializedName("approval_status")
     val approvalStatus: String? = null,
     @SerializedName("rejection_reason")
     val rejectionReason: String? = null,
     @SerializedName("admin_reply")
     val adminReply: String? = null,
+    @SerializedName("hidden_from_public_message")
+    val hiddenFromPublicMessage: String? = null,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
