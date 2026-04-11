@@ -8,73 +8,9 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class InventoryService
 {
-    /**
-     * Paginate products with optional inventory row (for web stock overview).
-     * Quantities and dates are aggregated across all variants per product.
-     */
-    public function paginateProductsForInventory(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $invAgg = DB::table('inventory')
-            ->join('product_variants', 'product_variants.id', '=', 'inventory.product_variant_id')
-            ->select(
-                'product_variants.product_id',
-                DB::raw('SUM(inventory.quantity) as qty_sum'),
-                DB::raw('MAX(inventory.updated_at) as inv_last_updated'),
-            )
-            ->groupBy('product_variants.product_id');
-
-        $query = Product::query()
-            ->leftJoinSub($invAgg, 'inv_agg', function ($join) {
-                $join->on('inv_agg.product_id', '=', 'products.id');
-            })
-            ->select('products.*')
-            ->addSelect(DB::raw('inv_agg.qty_sum as aggregate_qty'))
-            ->addSelect(DB::raw('inv_agg.inv_last_updated as inventory_last_touch'))
-            ->with(['category', 'defaultVariant.images', 'sharedImages', 'defaultVariant.inventory']);
-
-        if (! empty($filters['search'])) {
-            $query->search($filters['search']);
-        }
-
-        if (($filters['low_stock'] ?? false) === true) {
-            $query->whereExists(function ($q) {
-                $q->select(DB::raw('1'))
-                    ->from('product_variants as pv')
-                    ->join('inventory as i', 'i.product_variant_id', '=', 'pv.id')
-                    ->whereColumn('pv.product_id', 'products.id')
-                    ->whereColumn('i.quantity', '<=', 'i.reorder_level');
-            });
-        }
-
-        if (! empty($filters['date_from'])) {
-            $query->whereDate('inv_agg.inv_last_updated', '>=', $filters['date_from']);
-        }
-
-        if (! empty($filters['date_to'])) {
-            $query->whereDate('inv_agg.inv_last_updated', '<=', $filters['date_to']);
-        }
-
-        $sortBy = $filters['sort_by'] ?? null;
-        $sortDir = $filters['sort_dir'] ?? 'desc';
-
-        if ($sortBy === 'name') {
-            $query->orderBy('products.name', $sortDir === 'asc' ? 'asc' : 'desc');
-        } elseif ($sortBy === 'quantity') {
-            $query->orderBy('inv_agg.qty_sum', $sortDir === 'asc' ? 'asc' : 'desc');
-        } else {
-            $query
-                ->orderByRaw('CASE WHEN inv_agg.inv_last_updated IS NULL THEN 1 ELSE 0 END ASC')
-                ->orderBy('inv_agg.inv_last_updated', 'desc')
-                ->orderBy('products.name', 'asc');
-        }
-
-        return $query->paginate($perPage);
-    }
-
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Inventory::query()
@@ -96,7 +32,7 @@ class InventoryService
     }
 
     /**
-     * Default variant inventory for admin stock edit (single-SKU-style products).
+     * Default variant inventory for admin stock edit (legacy entry without ?variant=).
      */
     public function findByProduct(Product $product): Inventory
     {
@@ -107,6 +43,14 @@ class InventoryService
             throw new \RuntimeException('Product is missing a default variant.');
         }
 
+        return $this->findForVariant($variant);
+    }
+
+    /**
+     * Inventory row for a variant (creates row if missing).
+     */
+    public function findForVariant(ProductVariant $variant): Inventory
+    {
         return Inventory::query()
             ->with([
                 'productVariant.product.category',

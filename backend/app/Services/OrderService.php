@@ -9,8 +9,8 @@ use App\Models\OrderStatusHistory;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class OrderService
@@ -128,8 +128,13 @@ class OrderService
 
             $totalAmount = 0;
 
-            foreach ($data['items'] as $itemData) {
+            foreach ($data['items'] as $index => $itemData) {
                 $variant = ProductVariant::with('product')->findOrFail($itemData['product_variant_id']);
+                if (! $variant->is_active) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_variant_id" => __('This product option is no longer available.'),
+                    ]);
+                }
                 $unitPrice = (float) $variant->unitPrice();
                 $subtotal = $unitPrice * $itemData['quantity'];
                 $totalAmount += $subtotal;

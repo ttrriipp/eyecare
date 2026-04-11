@@ -19,13 +19,12 @@ class Browse extends Component
     /** @var int|string|null */
     public $category_id = null;
 
-    public bool $include_inactive = false;
+    /** @var 'active'|'inactive'|'all' */
+    public string $status_filter = 'active';
 
     public string $listView = 'grid';
 
     public string $sort_by = 'created_at';
-
-    public string $sort_dir = 'desc';
 
     public function mount(): void
     {
@@ -44,28 +43,13 @@ class Browse extends Component
         $this->resetPage();
     }
 
-    public function updatedInclude_inactive(): void
+    public function updatedStatus_filter(): void
     {
         $this->resetPage();
     }
 
     public function updatedSort_by(): void
     {
-        $this->resetPage();
-    }
-
-    public function updatedSort_dir(): void
-    {
-        $this->resetPage();
-    }
-
-    public function resetFilters(): void
-    {
-        $this->search = '';
-        $this->category_id = null;
-        $this->include_inactive = false;
-        $this->sort_by = 'created_at';
-        $this->sort_dir = 'desc';
         $this->resetPage();
     }
 
@@ -82,14 +66,14 @@ class Browse extends Component
     protected function filters(): array
     {
         $filters = [
-            'search'    => $this->search,
+            'search' => $this->search,
             'category_id' => filled($this->category_id) ? (int) $this->category_id : null,
-            'sort_by'   => $this->sort_by,
-            'sort_dir'  => $this->sort_dir,
+            'sort_by' => $this->sort_by,
+            'sort_dir' => 'desc',
         ];
 
         if (auth()->user()?->isAdmin()) {
-            $filters['include_inactive'] = $this->include_inactive;
+            $filters['status'] = $this->status_filter;
         }
 
         return $filters;

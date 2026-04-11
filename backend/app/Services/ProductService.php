@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
@@ -36,14 +37,21 @@ class ProductService
             'defaultVariant.product',
             'defaultVariant.images',
             'sharedImages',
-            'variants:id,product_id,ar_model_url',
+            'variants' => function ($q): void {
+                $q->select([
+                    'product_variants.id',
+                    'product_variants.product_id',
+                    'product_variants.ar_model_url',
+                    'product_variants.is_default',
+                    'product_variants.is_active',
+                ])
+                    ->with('inventory');
+            },
         ])
             ->withAvg('feedbacks as average_rating', 'rating')
             ->withCount(['feedbacks as reviews_count']);
 
-        if (! ($filters['include_inactive'] ?? false)) {
-            $query->active();
-        }
+        $this->applyProductActiveScope($query, $filters);
 
         if (! empty($filters['category_id'])) {
             $query->byCategory($filters['category_id']);
@@ -416,6 +424,55 @@ class ProductService
     }
 
     /**
+     * Turn a variant on or off for the storefront. At least one variant must stay active.
+     * Deactivating the default SKU promotes another active variant to default when possible.
+     */
+    public function setVariantIsActive(ProductVariant $variant, bool $active): void
+    {
+        $variant->loadMissing('product');
+        $product = $variant->product;
+
+        if ($active) {
+            $variant->update(['is_active' => true]);
+            $product->refresh();
+            $product->loadMissing('defaultVariant');
+            if ($product->defaultVariant && ! $product->defaultVariant->is_active) {
+                $this->setDefaultVariant($variant->fresh());
+            }
+
+            return;
+        }
+
+        if (! $variant->is_active) {
+            return;
+        }
+
+        $otherActiveExists = $product->variants()
+            ->whereKeyNot($variant->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if (! $otherActiveExists) {
+            throw ValidationException::withMessages([
+                'variant' => __('At least one variant must stay active.'),
+            ]);
+        }
+
+        if ($variant->is_default) {
+            $next = $product->variants()
+                ->whereKeyNot($variant->id)
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->first();
+            if ($next) {
+                $this->setDefaultVariant($next);
+            }
+        }
+
+        $variant->update(['is_active' => false]);
+    }
+
+    /**
      * Mark this variant as the product's default and clear the flag on siblings.
      */
     public function setDefaultVariant(ProductVariant $variant): void
@@ -520,6 +577,30 @@ class ProductService
         if ($product) {
             $this->ensureProductHasDefaultVariant($product);
         }
+    }
+
+    /**
+     * @param  Builder<Product>  $query
+     */
+    private function applyProductActiveScope(Builder $query, array $filters): void
+    {
+        $status = $filters['status'] ?? null;
+
+        if (is_string($status) && in_array($status, ['active', 'inactive', 'all'], true)) {
+            match ($status) {
+                'active' => $query->active(),
+                'inactive' => $query->where('is_active', false),
+                'all' => null,
+            };
+
+            return;
+        }
+
+        if ($filters['include_inactive'] ?? false) {
+            return;
+        }
+
+        $query->active();
     }
 
     /**

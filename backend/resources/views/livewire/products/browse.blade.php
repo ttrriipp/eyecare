@@ -49,38 +49,22 @@
                 </select>
             </div>
 
-            <div class="w-full md:w-32">
-                <label for="sort_dir" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    {{ __('Order') }}
-                </label>
-                <select
-                    wire:model.live="sort_dir"
-                    id="sort_dir"
-                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                >
-                    <option value="desc">{{ __('Desc') }}</option>
-                    <option value="asc">{{ __('Asc') }}</option>
-                </select>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-4 md:ml-auto">
-                @if(auth()->user()?->isAdmin())
-                    <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                        <input
-                            wire:model.live="include_inactive"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-zinc-400 text-sky-600 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950"
-                        >
-                        <span>{{ __('Include inactive') }}</span>
+            @if(auth()->user()?->isAdmin())
+                <div class="w-full md:w-44">
+                    <label for="status_filter" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Status') }}
                     </label>
-                @endif
-
-                <div class="ml-auto flex gap-2">
-                    <flux:button type="button" wire:click="resetFilters" variant="ghost" wire:loading.attr="disabled">
-                        {{ __('Reset') }}
-                    </flux:button>
+                    <select
+                        wire:model.live="status_filter"
+                        id="status_filter"
+                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                        <option value="active">{{ __('Active') }}</option>
+                        <option value="inactive">{{ __('Inactive') }}</option>
+                        <option value="all">{{ __('All') }}</option>
+                    </select>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 
@@ -128,16 +112,18 @@
             </div>
         @elseif($listView === 'table')
             <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <table class="w-full min-w-[52rem] text-left text-sm">
+                <table class="w-full min-w-[48rem] text-left text-sm">
                     <thead>
                         <tr
                             class="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-400"
                         >
                             <th class="px-4 py-3.5">{{ __('Image') }}</th>
                             <th class="px-4 py-3.5">{{ __('Product') }}</th>
-                            <th class="px-4 py-3.5">{{ __('Brand') }}</th>
                             <th class="px-4 py-3.5">{{ __('Category') }}</th>
                             <th class="px-4 py-3.5 text-end">{{ __('Price') }}</th>
+                            @if(auth()->user()?->isAdminOrStaff())
+                                <th class="px-4 py-3.5 text-end">{{ __('Stock') }}</th>
+                            @endif
                             <th class="px-4 py-3.5">{{ __('Rating') }}</th>
                             <th class="px-4 py-3.5">{{ __('Status') }}</th>
                             <th class="px-4 py-3.5 text-end">{{ __('Actions') }}</th>
@@ -146,7 +132,37 @@
                     <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                         @foreach($products as $product)
                             @php
-                                $thumbUrl = $product->images->first()?->image_url;
+                                $catalogView = ! auth()->user()?->isAdminOrStaff();
+                                $variantsForCatalog = $catalogView
+                                    ? $product->variants->filter(fn ($v) => $v->is_active ?? true)
+                                    : $product->variants;
+                                $thumbVariant = $catalogView
+                                    ? ($variantsForCatalog->sortBy('id')->first() ?? $product->defaultVariant)
+                                    : $product->defaultVariant;
+                                $thumbUrl = $thumbVariant?->firstGalleryImage()?->image_url
+                                    ?? $product->images->first()?->image_url;
+                                $totalStock = (int) $variantsForCatalog->sum(fn ($v) => $v->inventory?->quantity ?? 0);
+                                $variantCountTable = $variantsForCatalog->count();
+                                $hasLowVariant = $variantsForCatalog->contains(function ($v) {
+                                    $inv = $v->inventory;
+                                    $q = (int) ($inv?->quantity ?? 0);
+                                    $rl = (int) ($inv?->reorder_level ?? 5);
+
+                                    return $q > 0 && $q <= $rl;
+                                });
+                                $stockIsOut = $totalStock === 0;
+                                $stockIsLow = ! $stockIsOut && $hasLowVariant;
+                                $stockIsHealthy = ! $stockIsOut && ! $stockIsLow;
+                                $reorderMax = $variantCountTable > 0
+                                    ? max(1, $variantsForCatalog->map(fn ($v) => (int) ($v->inventory?->reorder_level ?? 5))->max())
+                                    : 5;
+                                $stockBarMaxRef = max(50, $reorderMax * 3);
+                                $stockBarPct = $stockIsOut
+                                    ? 8
+                                    : min(100, (int) round(($totalStock / $stockBarMaxRef) * 100));
+                                $rowPrice = $catalogView
+                                    ? ($variantsForCatalog->sortBy('id')->first()?->price ?? 0)
+                                    : ($product->price ?? 0);
                             @endphp
                             <tr
                                 wire:key="table-product-{{ $product->id }}"
@@ -168,17 +184,26 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 align-middle">
-                                    <div class="max-w-xs font-semibold text-zinc-900 dark:text-zinc-50">
-                                        {{ $product->name }}
+                                    <div class="max-w-md">
+                                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                            <span class="font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
+                                                {{ $product->name }}
+                                            </span>
+                                            @if($variantCountTable > 1)
+                                                <span class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium tabular-nums text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                                                    {{ trans_choice('{1} :count variant|[2,*] :count variants', $variantCountTable, ['count' => $variantCountTable]) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                            {{ $product->brand ?? '—' }}
+                                        </p>
+                                        @if($variantsForCatalog->contains(fn ($v) => filled($v->ar_model_url)))
+                                            <span class="mt-1 inline-block text-[11px] font-medium text-sky-600 dark:text-sky-400">
+                                                {{ __('AR') }}
+                                            </span>
+                                        @endif
                                     </div>
-                                    @if($product->variants->contains(fn ($v) => filled($v->ar_model_url)))
-                                        <span class="mt-0.5 inline-block text-[11px] font-medium text-sky-600 dark:text-sky-400">
-                                            {{ __('AR') }}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 align-middle text-zinc-700 dark:text-zinc-300">
-                                    {{ $product->brand ?? '—' }}
                                 </td>
                                 <td class="px-4 py-3 align-middle text-zinc-700 dark:text-zinc-300">
                                     {{ $product->category?->name ?? __('Uncategorized') }}
@@ -186,8 +211,34 @@
                                 <td
                                     class="px-4 py-3 align-middle text-end text-base font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
                                 >
-                                    {{ \App\Support\Money::peso($product->price ?? 0) }}
+                                    {{ \App\Support\Money::peso($rowPrice) }}
                                 </td>
+                                @if(auth()->user()?->isAdminOrStaff())
+                                    <td class="px-4 py-3 align-middle">
+                                        <div class="flex items-center justify-end gap-2.5">
+                                            <div class="h-2 w-14 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                                @if($stockIsOut)
+                                                    <div class="h-full w-[12%] rounded-full bg-red-500 dark:bg-red-500"></div>
+                                                @elseif($stockIsLow)
+                                                    <div
+                                                        class="h-full rounded-full bg-amber-400 dark:bg-amber-500"
+                                                        style="width: {{ max(18, $stockBarPct) }}%"
+                                                    ></div>
+                                                @else
+                                                    <div class="h-full w-full rounded-full bg-emerald-600 dark:bg-emerald-500"></div>
+                                                @endif
+                                            </div>
+                                            <span
+                                                @class([
+                                                    'text-sm font-semibold tabular-nums shrink-0 min-w-[2rem] text-end',
+                                                    'text-red-600 dark:text-red-400' => $stockIsOut,
+                                                    'text-amber-600 dark:text-amber-400' => $stockIsLow,
+                                                    'text-zinc-800 dark:text-zinc-200' => $stockIsHealthy,
+                                                ])
+                                            >{{ number_format($totalStock) }}</span>
+                                        </div>
+                                    </td>
+                                @endif
                                 <td class="px-4 py-3 align-middle">
                                     @if(($product->reviews_count ?? 0) > 0)
                                         <div class="flex items-center gap-1">
@@ -252,78 +303,103 @@
         @else
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @foreach($products as $product)
+                    @php
+                        $catalogView = ! auth()->user()?->isAdminOrStaff();
+                        $variantsForCatalog = $catalogView
+                            ? $product->variants->filter(fn ($v) => $v->is_active ?? true)
+                            : $product->variants;
+                        $thumbVariant = $catalogView
+                            ? ($variantsForCatalog->sortBy('id')->first() ?? $product->defaultVariant)
+                            : $product->defaultVariant;
+                        $thumbUrl = $thumbVariant?->firstGalleryImage()?->image_url
+                            ?? $product->images->first()?->image_url;
+                        $variantCount = $variantsForCatalog->count();
+                        $gridPrice = $catalogView
+                            ? ($variantsForCatalog->sortBy('id')->first()?->price ?? 0)
+                            : ($product->price ?? 0);
+                        $showArBadge = ($product->category?->has_ar_support ?? false)
+                            && $variantsForCatalog->contains(fn ($v) => filled($v->ar_model_url));
+                        $reviewCount = (int) ($product->reviews_count ?? 0);
+                    @endphp
                     <a
                         wire:key="grid-product-{{ $product->id }}"
                         href="{{ route('products.show', $product) }}"
                         class="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-lg dark:hover:shadow-zinc-950/50"
                         wire:navigate
                     >
-                        @php
-                            $imageUrl = $product->images->first()?->image_url;
-                        @endphp
-                        <div class="aspect-[4/3] w-full bg-zinc-100 transition group-hover:opacity-95 dark:bg-zinc-800">
-                            @if($imageUrl)
-                                <img
-                                    src="{{ $imageUrl }}"
-                                    alt="{{ $product->name }}"
-                                    class="h-full w-full object-cover"
-                                >
-                            @else
-                                <x-product-image-placeholder class="h-full w-full" />
-                            @endif
-                        </div>
-
-                        <div class="flex flex-1 flex-col gap-2 p-4">
-                            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                                <div
-                                    class="line-clamp-2 text-base font-bold leading-snug text-zinc-900 group-hover:text-sky-700 dark:text-zinc-50 dark:group-hover:text-sky-400"
-                                >
-                                    {{ $product->name }}
-                                </div>
-                                <div
-                                    class="text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
-                                >
-                                    {{ \App\Support\Money::peso($product->price ?? 0) }}
-                                </div>
-                                <div class="text-xs text-zinc-600 dark:text-zinc-400">
-                                    {{ $product->brand ?? '—' }}
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="text-xs text-zinc-500 dark:text-zinc-500">
-                                    {{ $product->category?->name ?? __('Uncategorized') }}
-                                </div>
-                                @if(($product->reviews_count ?? 0) > 0)
-                                    <div class="flex shrink-0 items-center gap-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                        </svg>
-                                        {{ number_format($product->average_rating ?? 0, 1) }}
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div class="mt-2 flex items-center justify-between">
+                        {{-- Top: media (status + AR badges top-right, image centered) --}}
+                        <div class="relative aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-800">
+                            <div class="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center justify-end gap-1.5">
                                 @if($product->is_active ?? true)
                                     <span
-                                        class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200"
+                                        class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-200"
                                     >
                                         {{ __('Active') }}
                                     </span>
                                 @else
                                     <span
-                                        class="inline-flex items-center rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                                        class="rounded-full bg-zinc-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
                                     >
                                         {{ __('Inactive') }}
                                     </span>
                                 @endif
-
-                                @if($product->variants->contains(fn ($v) => filled($v->ar_model_url)))
-                                    <span class="text-[11px] font-medium text-sky-600 dark:text-sky-400">
-                                        {{ __('AR available') }}
+                                @if($showArBadge)
+                                    <span
+                                        class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-800 dark:bg-purple-950/70 dark:text-purple-200"
+                                    >
+                                        {{ __('AR') }}
                                     </span>
                                 @endif
+                            </div>
+                            <div class="flex h-full w-full items-center justify-center p-4">
+                                @if($thumbUrl)
+                                    <img
+                                        src="{{ $thumbUrl }}"
+                                        alt=""
+                                        class="max-h-full max-w-full object-contain"
+                                    >
+                                @else
+                                    <x-product-image-placeholder :caption="false" class="h-28 w-28 shrink-0 rounded-lg opacity-90" />
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Bottom: category → name → brand → [price | variants] --}}
+                        <div class="flex flex-1 flex-col p-4 pt-3">
+                            <p class="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                {{ $product->category?->name ?? __('Uncategorized') }}
+                            </p>
+                            <p class="mt-1 line-clamp-2 text-base font-semibold leading-snug text-zinc-900 group-hover:text-sky-700 dark:text-zinc-50 dark:group-hover:text-sky-400">
+                                {{ $product->name }}
+                            </p>
+                            <p class="mt-0.5 text-sm text-zinc-700 dark:text-zinc-300">
+                                {{ $product->brand ?? '—' }}
+                            </p>
+
+                            <div class="mt-1.5 flex min-h-[1.25rem] items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                                @if($reviewCount > 0)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 shrink-0 text-amber-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    <span class="tabular-nums font-medium text-zinc-700 dark:text-zinc-300">{{ number_format($product->average_rating ?? 0, 1) }}</span>
+                                    <span class="text-zinc-500 dark:text-zinc-500">
+                                        {{ trans_choice('{1} :count review|[2,*] :count reviews', $reviewCount, ['count' => $reviewCount]) }}
+                                    </span>
+                                @else
+                                    <span class="text-zinc-400 dark:text-zinc-500">{{ __('No reviews yet') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="mt-auto flex items-end justify-between gap-3 pt-3">
+                                <span class="text-base font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+                                    {{ \App\Support\Money::peso($gridPrice) }}
+                                </span>
+                                <span class="flex shrink-0 items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true"></span>
+                                    <span class="tabular-nums">
+                                        {{ trans_choice('{1} :count variant|[2,*] :count variants', $variantCount, ['count' => $variantCount]) }}
+                                    </span>
+                                </span>
                             </div>
                         </div>
                     </a>

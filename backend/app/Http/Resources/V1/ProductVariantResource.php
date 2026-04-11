@@ -27,6 +27,7 @@ class ProductVariantResource extends JsonResource
                 fn () => (int) ($this->inventory?->quantity ?? 0),
             ),
             'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
+            'is_active' => $this->when($request->user()?->isAdminOrStaff(), (bool) $this->is_active),
             'is_default' => $this->is_default,
             'ar_model_url' => $this->ar_model_url,
             'unit_price' => (float) $this->unitPrice(),

@@ -26,25 +26,14 @@
                     </flux:sidebar.item>
 
 
-                    @if(auth()->user()?->isAdminOrStaff())
-                        <flux:sidebar.item
-                            icon="layout-grid"
-                            :href="route('products.index')"
-                            :current="request()->routeIs('products.*', 'admin.inventory.*')"
-                            wire:navigate
-                        >
-                            {{ __('Products') }}
-                        </flux:sidebar.item>
-                    @else
-                        <flux:sidebar.item
-                            icon="layout-grid"
-                            :href="route('products.index')"
-                            :current="request()->routeIs('products.*')"
-                            wire:navigate
-                        >
-                            {{ __('Products') }}
-                        </flux:sidebar.item>
-                    @endif
+                    <flux:sidebar.item
+                        icon="layout-grid"
+                        :href="route('products.index')"
+                        :current="request()->routeIs('products.*')"
+                        wire:navigate
+                    >
+                        {{ __('Products') }}
+                    </flux:sidebar.item>
 
                     <flux:sidebar.item
                         icon="clipboard-document-list"
@@ -109,19 +98,6 @@
                         </flux:sidebar.item>
                     @endif
                 </flux:sidebar.group>
-
-                @if(auth()->user()?->isAdmin())
-                    <flux:sidebar.group :heading="__('Settings')">
-                        <flux:sidebar.item
-                            icon="tag"
-                            :href="route('admin.settings.categories')"
-                            :current="request()->routeIs('admin.settings.categories')"
-                            wire:navigate
-                        >
-                            {{ __('Categories') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
-                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

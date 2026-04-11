@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,7 @@ class ProductVariant extends Model
         'price',
         'cost_per_unit',
         'is_default',
+        'is_active',
         'ar_model_url',
     ];
 
@@ -56,7 +58,17 @@ class ProductVariant extends Model
             'price' => 'decimal:2',
             'cost_per_unit' => 'decimal:2',
             'is_default' => 'boolean',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     public function product(): BelongsTo

@@ -72,10 +72,11 @@ class StoreStaffOrderRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('product_variants', 'id')->where(function ($q) {
-                    $q->whereIn('product_id', Product::query()
-                        ->where('is_active', true)
-                        ->whereNull('deleted_at')
-                        ->select('id'));
+                    $q->where('is_active', true)
+                        ->whereIn('product_id', Product::query()
+                            ->where('is_active', true)
+                            ->whereNull('deleted_at')
+                            ->select('id'));
                 }),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
