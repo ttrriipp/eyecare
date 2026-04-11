@@ -20,8 +20,7 @@ interface ConversationApi {
     @GET("conversations")
     suspend fun getConversations(
         @Query("status") status: String? = null,
-        @Query("page") page: Int? = null,
-        @Query("per_page") perPage: Int = 100,
+        @Query("per_page") perPage: Int = 50,
     ): Response<ConversationListResponse>
 
     @GET("conversations/unread-count")

@@ -28,9 +28,6 @@ class MessagingViewModel @Inject constructor(
     private val _navigateToThread = MutableLiveData<Conversation?>()
     val navigateToThread: LiveData<Conversation?> = _navigateToThread
 
-    private val _hasOpenConversation = MutableLiveData(false)
-    val hasOpenConversation: LiveData<Boolean> = _hasOpenConversation
-
     private val _unreadCount = MutableLiveData(0)
     val unreadCount: LiveData<Int> = _unreadCount
 
@@ -47,9 +44,15 @@ class MessagingViewModel @Inject constructor(
             val result = conversationRepository.getConversations()
             when (result) {
                 is Resource.Success -> {
-                    val sorted = sortConversations(result.data)
-                    _conversationState.value = Resource.Success(sorted)
-                    _hasOpenConversation.value = sorted.any { it.isOpen }
+                    val conversations = result.data
+                    val openConversation = conversations.firstOrNull { it.isOpen }
+                    if (openConversation != null) {
+                        // Customer has an open conversation — navigate directly to it.
+                        _navigateToThread.value = openConversation
+                    } else {
+                        // No open conversation: show empty state (may include a closed one).
+                        _conversationState.value = Resource.Success(conversations)
+                    }
                 }
                 is Resource.Error -> _conversationState.value = Resource.Error(result.message)
                 is Resource.Loading -> {}
@@ -59,24 +62,6 @@ class MessagingViewModel @Inject constructor(
 
     fun onNavigatedToThread() {
         _navigateToThread.value = null
-    }
-
-    /** Refreshes the list without clearing the UI to a loading state (e.g. after returning from a thread). */
-    fun refreshConversations() {
-        viewModelScope.launch {
-            when (val result = conversationRepository.getConversations()) {
-                is Resource.Success -> {
-                    val sorted = sortConversations(result.data)
-                    _conversationState.value = Resource.Success(sorted)
-                    _hasOpenConversation.value = sorted.any { it.isOpen }
-                }
-                else -> { /* keep existing list on error */ }
-            }
-        }
-    }
-
-    private fun sortConversations(list: List<Conversation>): List<Conversation> {
-        return list.sortedByDescending { it.lastMessageAt ?: it.createdAt }
     }
 
     // ── Start a new conversation ──────────────────────────────────────────────

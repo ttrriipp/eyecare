@@ -54,28 +54,14 @@ class ConversationRepository @Inject constructor(
 
     suspend fun getConversations(status: String? = null): Resource<List<Conversation>> {
         return try {
-            val merged = mutableListOf<Conversation>()
-            var page = 1
-            var lastPage = 1
-            do {
-                val response = conversationApi.getConversations(status = status, page = page)
-                if (!response.isSuccessful || response.body() == null) {
-                    return Resource.Error(
-                        parseError(
-                            response.code(),
-                            response.errorBody()?.string(),
-                            "Failed to load conversations",
-                        ),
-                    )
-                }
-                val body = response.body()!!
-                merged.addAll(body.data)
-                lastPage = body.meta?.lastPage ?: 1
-                page++
-            } while (page <= lastPage)
-
-            val sorted = merged.sortedByDescending { it.lastMessageAt ?: it.createdAt }
-            Resource.Success(sorted)
+            val response = conversationApi.getConversations(status = status)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!.data)
+            } else {
+                Resource.Error(
+                    parseError(response.code(), response.errorBody()?.string(), "Failed to load conversations"),
+                )
+            }
         } catch (e: Exception) {
             Log.e(TAG, "getConversations failed", e)
             Resource.Error(networkError(e))

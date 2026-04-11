@@ -29,39 +29,6 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         tools:visibility="visible" />
 
-    <!-- Conversation list -->
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupConversationList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:constraint_referenced_ids="rvConversations"
-        tools:visibility="visible" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvConversations"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@id/btnNewConversationList"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        tools:listitem="@layout/item_conversation" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnNewConversationList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:paddingHorizontal="24dp"
-        android:text="@string/start_new_conversation"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <!-- Empty state (no conversations at all) -->
     <androidx.constraintlayout.widget.Group
         android:id="@+id/groupEmptyState"
@@ -121,6 +88,54 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvEmptySubtitle" />
+
+    <!-- Closed-conversation state -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupClosedState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="tvClosedTitle,tvClosedSubtitle,btnNewConversationClosed" />
+
+    <TextView
+        android:id="@+id/tvClosedTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/conversation_closed"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/tvClosedSubtitle"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <TextView
+        android:id="@+id/tvClosedSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="40dp"
+        android:gravity="center"
+        android:text="@string/conversation_closed_start_new"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvClosedTitle" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnNewConversationClosed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/start_new_conversation"
+        android:paddingHorizontal="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvClosedSubtitle" />
 
     <!-- Error state -->
     <androidx.constraintlayout.widget.Group
