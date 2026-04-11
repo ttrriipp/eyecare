@@ -55,31 +55,34 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-        <!-- Bottom row: Date + Amount -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Middle row: Amount paid / total -->
+        <TextView
+            android:id="@+id/tvBillAmount"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginTop="6dp"
+            android:textColor="@color/price_color"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvBillDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+        <!-- Balance due (shown when partially paid) -->
+        <TextView
+            android:id="@+id/tvBalanceDue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tvBillAmount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/price_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+        <!-- Bottom row: Date -->
+        <TextView
+            android:id="@+id/tvBillDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
 
     </LinearLayout>
 

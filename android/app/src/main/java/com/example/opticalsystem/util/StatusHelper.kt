@@ -70,6 +70,10 @@ object StatusHelper {
                 ContextCompat.getColor(context, R.color.payment_unpaid),
                 ContextCompat.getColor(context, R.color.payment_unpaid_bg),
             )
+            "partially_paid" -> Pair(
+                ContextCompat.getColor(context, R.color.payment_partially_paid),
+                ContextCompat.getColor(context, R.color.payment_partially_paid_bg),
+            )
             "paid" -> Pair(
                 ContextCompat.getColor(context, R.color.payment_paid),
                 ContextCompat.getColor(context, R.color.payment_paid_bg),

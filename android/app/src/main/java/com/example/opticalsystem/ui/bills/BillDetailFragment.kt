@@ -77,10 +77,27 @@ class BillDetailFragment : Fragment() {
 
         StatusHelper.applyPaymentStatusBadge(binding.tvPaymentStatus, bill.paymentStatus, bill.paymentStatusLabel)
 
-        // Payment method
-        if (!bill.paymentMethod.isNullOrBlank()) {
+        // Amount paid
+        if (!bill.amountPaid.isNullOrBlank()) {
+            binding.rowAmountPaid.isVisible = true
+            binding.tvAmountPaid.text = StatusHelper.formatPrice(bill.amountPaid)
+        } else {
+            binding.rowAmountPaid.isVisible = false
+        }
+
+        // Balance due
+        if (!bill.balanceDue.isNullOrBlank()) {
+            binding.rowBalanceDue.isVisible = true
+            binding.tvBalanceDue.text = StatusHelper.formatPrice(bill.balanceDue)
+        } else {
+            binding.rowBalanceDue.isVisible = false
+        }
+
+        // Payment method (prefer human-readable label from API)
+        val methodDisplay = bill.paymentMethodLabel ?: bill.paymentMethod
+        if (!methodDisplay.isNullOrBlank()) {
             binding.rowPaymentMethod.isVisible = true
-            binding.tvPaymentMethod.text = bill.paymentMethod
+            binding.tvPaymentMethod.text = methodDisplay
         } else {
             binding.rowPaymentMethod.isVisible = false
         }

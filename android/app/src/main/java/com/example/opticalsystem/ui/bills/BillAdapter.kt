@@ -29,10 +29,21 @@ class BillAdapter(
 
         fun bind(bill: Bill, onClick: (Bill) -> Unit) {
             binding.tvInvoiceNumber.text = bill.invoiceNumber
-            binding.tvBillAmount.text = StatusHelper.formatPrice(bill.amount)
             binding.tvBillDate.text = StatusHelper.formatDateShort(bill.createdAt)
 
             StatusHelper.applyPaymentStatusBadge(binding.tvPaymentStatus, bill.paymentStatus, bill.paymentStatusLabel)
+
+            val paid = StatusHelper.formatPrice(bill.amountPaid ?: "0")
+            val total = StatusHelper.formatPrice(bill.amount)
+            binding.tvBillAmount.text = "$paid / $total"
+
+            val balanceVal = bill.balanceDue?.toDoubleOrNull() ?: 0.0
+            if (balanceVal > 0 && bill.paymentStatus != "unpaid") {
+                binding.tvBalanceDue.isVisible = true
+                binding.tvBalanceDue.text = "Balance: ${StatusHelper.formatPrice(bill.balanceDue!!)}"
+            } else {
+                binding.tvBalanceDue.isVisible = false
+            }
 
             if (bill.orderId != null) {
                 binding.tvLinkedOrder.isVisible = true

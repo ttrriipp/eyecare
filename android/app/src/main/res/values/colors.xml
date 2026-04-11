@@ -53,6 +53,8 @@
     <!-- Payment Status Colors -->
     <color name="payment_unpaid">#F59E0B</color>
     <color name="payment_unpaid_bg">#1AF59E0B</color>
+    <color name="payment_partially_paid">#0EA5E9</color>
+    <color name="payment_partially_paid_bg">#1A0EA5E9</color>
     <color name="payment_paid">#22C55E</color>
     <color name="payment_paid_bg">#1A22C55E</color>
     <color name="payment_refunded">#F97316</color>

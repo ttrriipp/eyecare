@@ -12,12 +12,22 @@ data class Bill(
     @SerializedName("invoice_number")
     val invoiceNumber: String,
     val amount: String,
+    @SerializedName("amount_paid")
+    val amountPaid: String?,
+    @SerializedName("balance_due")
+    val balanceDue: String?,
     @SerializedName("payment_status")
     val paymentStatus: String,
     @SerializedName("payment_status_label")
     val paymentStatusLabel: String,
     @SerializedName("payment_method")
     val paymentMethod: String?,
+    @SerializedName("payment_method_label")
+    val paymentMethodLabel: String?,
+    @SerializedName("collected_by")
+    val collectedBy: Int?,
+    @SerializedName("collector_name")
+    val collectorName: String?,
     @SerializedName("paid_at")
     val paidAt: String?,
     @SerializedName("created_at")

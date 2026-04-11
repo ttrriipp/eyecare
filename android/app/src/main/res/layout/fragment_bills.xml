@@ -79,6 +79,13 @@
                 style="@style/Widget.Material3.Chip.Filter" />
 
             <com.google.android.material.chip.Chip
+                android:id="@+id/chipPartiallyPaid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bill_status_partially_paid"
+                style="@style/Widget.Material3.Chip.Filter" />
+
+            <com.google.android.material.chip.Chip
                 android:id="@+id/chipPaid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

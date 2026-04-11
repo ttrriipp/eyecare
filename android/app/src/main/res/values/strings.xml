@@ -224,12 +224,16 @@
     <string name="bill_detail_title">Bill Details</string>
     <string name="bill_invoice_number">Invoice Number</string>
     <string name="bill_amount">Amount</string>
+    <string name="bill_total_amount">Total Amount</string>
+    <string name="bill_amount_paid">Amount Paid</string>
+    <string name="bill_balance_due">Balance Due</string>
     <string name="bill_payment_status">Payment Status</string>
     <string name="bill_payment_method">Payment Method</string>
     <string name="bill_paid_at">Paid At</string>
     <string name="bill_linked_order">Linked Order</string>
     <string name="bill_status_all">All</string>
     <string name="bill_status_unpaid">Unpaid</string>
+    <string name="bill_status_partially_paid">Partially Paid</string>
     <string name="bill_status_paid">Paid</string>
     <string name="bill_status_refunded">Refunded</string>
     <string name="bill_status_voided">Voided</string>

@@ -60,6 +60,7 @@ class BillsFragment : Fragment() {
         binding.chipGroupStatus.setOnCheckedStateChangeListener { _, checkedIds ->
             val status = when {
                 checkedIds.contains(R.id.chipUnpaid) -> "unpaid"
+                checkedIds.contains(R.id.chipPartiallyPaid) -> "partially_paid"
                 checkedIds.contains(R.id.chipPaid) -> "paid"
                 checkedIds.contains(R.id.chipRefunded) -> "refunded"
                 checkedIds.contains(R.id.chipVoided) -> "voided"

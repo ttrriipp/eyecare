@@ -152,14 +152,25 @@
                         <label for="payment_method" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             {{ __('Payment method') }} <span class="text-red-600 dark:text-red-400">*</span>
                         </label>
-                        <flux:input
+                        @php
+                            $paymentMethodChoices = [
+                                \App\Enums\PaymentMethod::Cash->value => __('Cash'),
+                                \App\Enums\PaymentMethod::GCash->value => __('Gcash'),
+                                \App\Enums\PaymentMethod::Maya->value => __('Maya'),
+                                \App\Enums\PaymentMethod::BankTransfer->value => __('Bank Transfer'),
+                            ];
+                            $selectedMethod = old('payment_method', \App\Enums\PaymentMethod::Cash->value);
+                        @endphp
+                        <select
                             id="payment_method"
                             name="payment_method"
-                            :label="false"
-                            value="{{ old('payment_method') }}"
-                            placeholder="{{ __('e.g. Cash, GCash, bank transfer') }}"
                             required
-                        />
+                            class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                        >
+                            @foreach($paymentMethodChoices as $value => $label)
+                                <option value="{{ $value }}" @selected($selectedMethod === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
                         @error('payment_method')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
