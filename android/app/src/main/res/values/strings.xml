@@ -63,6 +63,7 @@
     <string name="add_to_cart">Add to Cart</string>
     <string name="add_to_order">Add to Order</string>
     <string name="select_color_to_see_price">Select a color to see price</string>
+    <string name="rating_reviews_line">%1$.1f (%2$d reviews)</string>
     <string name="select_in_stock_color_first">Select an in-stock color first</string>
     <string name="cd_decrease_quantity">Decrease quantity</string>
     <string name="cd_increase_quantity">Increase quantity</string>
@@ -109,17 +110,16 @@
     <string name="cart_empty_title">Your cart is empty</string>
     <string name="cart_empty_subtitle">Browse the Catalog page and add items to get started.</string>
     <string name="cart_item_count_format">%d item(s)</string>
-    <string name="cart_subtotal">Subtotal</string>
     <string name="cart_total">Total</string>
     <string name="cart_proceed">Proceed to Checkout</string>
     <string name="continue_label">Continue</string>
     <string name="add_more_items">Add more items</string>
-    <string name="cart_discount">Discount</string>
     <string name="payment_due_visit_note">No payment is collected now. Payment is due at pickup or after your appointment.</string>
     <string name="cart_clear">Clear Cart</string>
     <string name="cart_removed_format">%s removed</string>
     <string name="cart_cleared">Cart cleared</string>
     <string name="cart_quantity_label">Qty: %d</string>
+    <string name="cart_price_each_format">%1$s each</string>
     <string name="cart_remove_item_title">Remove item</string>
     <string name="cart_remove_item_message">Remove %1$s from your cart?</string>
     <string name="cart_clear_message">Remove all items from your cart?</string>

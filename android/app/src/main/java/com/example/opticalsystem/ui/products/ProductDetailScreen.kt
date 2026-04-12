@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -55,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.appcompat.widget.AppCompatRatingBar
 import com.bumptech.glide.Glide
 import com.bumptech.glide.signature.ObjectKey
 import com.example.opticalsystem.R
@@ -81,6 +80,8 @@ import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.displayUnitPrice
 import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.data.model.selectableVariants
+import com.example.opticalsystem.ui.components.CartIconWithBadge
+import com.example.opticalsystem.ui.components.RatingStarsRow
 import com.example.opticalsystem.util.BackendImageUrl
 import com.example.opticalsystem.util.Resource
 import kotlinx.coroutines.launch
@@ -241,9 +242,13 @@ fun ProductDetailScreen(
                     var selectedVariant by remember(product.id, product.updatedAt) {
                         val variants = product.selectableVariants()
                         val hasSwatches = hasColorVariants(product, variants)
-                        mutableStateOf(
-                            if (hasSwatches) null else (product.defaultVariant ?: variants.firstOrNull()),
-                        )
+                        val inStock = variants.filter { (it.stockQuantity ?: 0) > 0 }
+                        val initial = when {
+                            !hasSwatches -> product.defaultVariant ?: variants.firstOrNull()
+                            inStock.size == 1 -> inStock.first()
+                            else -> null
+                        }
+                        mutableStateOf(initial)
                     }
 
                     var writeRating by remember(myFeedback?.id, myFeedback?.rating) {
@@ -307,7 +312,7 @@ fun ProductDetailScreen(
                                 },
                                 onRequestDelete = { showDeleteDialog = true },
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(32.dp))
                         }
 
                         val addEnabled = addToCartEnabled(product, selectedVariant)
@@ -325,6 +330,7 @@ fun ProductDetailScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .navigationBarsPadding()
                                 .padding(16.dp)
                                 .height(52.dp),
                             enabled = addEnabled,
@@ -365,7 +371,7 @@ private fun DetailToolbar(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorResource(R.color.primary))
-            .padding(start = 4.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+            .padding(start = 4.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
@@ -395,33 +401,12 @@ private fun DetailToolbar(
                 tint = colorResource(R.color.on_primary),
             )
         }
-        Box {
-            IconButton(onClick = onCart, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_cart_24),
-                    contentDescription = stringResource(R.string.nav_cart),
-                    tint = colorResource(R.color.on_primary),
-                )
-            }
-            if (cartCount > 0) {
-                val badge = cartCount.coerceAtMost(99)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(18.dp)
-                        .clip(CircleShape)
-                        .background(colorResource(R.color.nav_badge_background)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = if (cartCount > 99) "99+" else badge.toString(),
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        }
+        CartIconWithBadge(
+            cartCount = cartCount,
+            onClick = onCart,
+            iconTint = colorResource(R.color.on_primary),
+            contentDescription = stringResource(R.string.nav_cart),
+        )
     }
 }
 
@@ -567,43 +552,35 @@ private fun ProductInfoBlock(
         val rating = product.averageRating
         val count = product.reviewsCount
         if (rating != null && count != null) {
-            Row(
+            RatingStarsRow(
+                rating = rating,
                 modifier = Modifier.padding(top = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        AppCompatRatingBar(ctx).apply {
-                            setIsIndicator(true)
-                            numStars = 5
-                            stepSize = 0.1f
-                            this.rating = rating
-                        }
-                    },
-                    modifier = Modifier.height(18.dp),
-                )
-                Text(
-                    text = "$rating ($count reviews)",
-                    modifier = Modifier.padding(start = 6.dp),
-                    color = colorResource(R.color.text_secondary),
-                    fontSize = 12.sp,
-                )
-            }
+                starSize = 16.dp,
+                showScore = false,
+                trailingText = stringResource(R.string.rating_reviews_line, rating, count),
+                trailingTextSize = 12f,
+            )
         }
 
-        val priceText = if (hasSwatches && selectedVariant == null) {
-            stringResource(R.string.select_color_to_see_price)
+        if (hasSwatches && selectedVariant == null) {
+            Text(
+                text = stringResource(R.string.select_color_to_see_price),
+                modifier = Modifier.padding(top = 10.dp),
+                color = colorResource(R.color.text_secondary),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                lineHeight = 20.sp,
+            )
         } else {
             val basePrice = selectedVariant?.displayUnitPrice(product) ?: product.price
-            "₱${formatDetailPrice(basePrice)}"
+            Text(
+                text = "₱${formatDetailPrice(basePrice)}",
+                modifier = Modifier.padding(top = 10.dp),
+                color = colorResource(R.color.price_color),
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
-        Text(
-            text = priceText,
-            modifier = Modifier.padding(top = 10.dp),
-            color = colorResource(R.color.price_color),
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-        )
 
         if (hasSwatches) {
             Row(
@@ -838,25 +815,13 @@ private fun ReviewsCard(
                     val avg = fr.data.averageRating
                     val total = fr.data.meta?.total ?: list.size
                     if (avg != null && total > 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            AndroidView(
-                                factory = { ctx ->
-                                    AppCompatRatingBar(ctx).apply {
-                                        setIsIndicator(true)
-                                        numStars = 5
-                                        stepSize = 0.1f
-                                        rating = avg
-                                    }
-                                },
-                                modifier = Modifier.height(18.dp),
-                            )
-                            Text(
-                                text = "$avg ($total reviews)",
-                                modifier = Modifier.padding(start = 6.dp),
-                                color = colorResource(R.color.text_secondary),
-                                fontSize = 12.sp,
-                            )
-                        }
+                        RatingStarsRow(
+                            rating = avg,
+                            starSize = 15.dp,
+                            showScore = false,
+                            trailingText = stringResource(R.string.rating_reviews_line, avg, total),
+                            trailingTextSize = 12f,
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     if (list.isEmpty()) {
@@ -925,16 +890,11 @@ private fun FeedbackRow(feedback: Feedback) {
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
         )
-        AndroidView(
-            factory = { ctx ->
-                AppCompatRatingBar(ctx).apply {
-                    setIsIndicator(true)
-                    numStars = 5
-                    stepSize = 1f
-                    rating = feedback.rating.toFloat()
-                }
-            },
-            modifier = Modifier.height(20.dp),
+        RatingStarsRow(
+            rating = feedback.rating.toFloat(),
+            starSize = 16.dp,
+            showScore = false,
+            trailingText = null,
         )
         Text(
             text = feedback.comment?.takeIf { it.isNotBlank() } ?: "—",

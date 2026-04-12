@@ -14,6 +14,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,9 +23,11 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.opticalsystem.R
+import com.example.opticalsystem.ui.theme.EyeCareTheme
 
 @Composable
 fun HomeScreen(
@@ -88,5 +92,31 @@ fun HomeScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Home — notification dot")
+@Composable
+private fun HomeScreenPreviewWithDot() {
+    EyeCareTheme {
+        val dot = remember { mutableStateOf(true) }
+        HomeScreen(
+            userName = "Maria",
+            onNotificationsClick = {},
+            notificationDot = dot,
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home — no dot")
+@Composable
+private fun HomeScreenPreviewNoDot() {
+    EyeCareTheme {
+        val dot = remember { mutableStateOf(false) }
+        HomeScreen(
+            userName = "Alex",
+            onNotificationsClick = {},
+            notificationDot = dot,
+        )
     }
 }

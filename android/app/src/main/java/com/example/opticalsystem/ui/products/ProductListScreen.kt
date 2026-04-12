@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,7 +24,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -66,7 +67,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.signature.ObjectKey
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.model.Product
+import com.example.opticalsystem.data.model.ProductCategory
+import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.hasArTryOn
+import com.example.opticalsystem.ui.components.CartIconWithBadge
+import com.example.opticalsystem.ui.components.RatingStarsRow
+import com.example.opticalsystem.ui.theme.EyeCareTheme
 import com.example.opticalsystem.util.BackendImageUrl
 import com.example.opticalsystem.util.Resource
 import kotlinx.coroutines.delay
@@ -137,7 +143,7 @@ fun ProductListScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorResource(R.color.primary))
-                .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
+                .padding(start = 20.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -147,41 +153,19 @@ fun ProductListScreen(
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
             )
-            Box {
-                IconButton(onClick = onOpenCart, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_cart_24),
-                        contentDescription = stringResource(R.string.nav_cart),
-                        tint = colorResource(R.color.on_primary),
-                    )
-                }
-                if (cartCount > 0) {
-                    val badge = cartCount.coerceAtMost(99)
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(colorResource(R.color.nav_badge_background)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = if (cartCount > 99) "99+" else badge.toString(),
-                            color = androidx.compose.ui.graphics.Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                        )
-                    }
-                }
-            }
+            CartIconWithBadge(
+                cartCount = cartCount,
+                onClick = onOpenCart,
+                iconTint = colorResource(R.color.on_primary),
+                contentDescription = stringResource(R.string.nav_cart),
+            )
         }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(46.dp)
-                .padding(start = 16.dp, end = 16.dp, top = 14.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -374,22 +358,39 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
+private fun ProductRatingRow(rating: Float, reviewCount: Int) {
+    RatingStarsRow(
+        rating = rating,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        trailingText = "($reviewCount)",
+    )
+}
+
+// Fixed height keeps rows aligned in LazyVerticalGrid; tall enough for 2-line title + rating + price.
+private val ProductGridCardHeight = 318.dp
+
+@Composable
 private fun ProductGridCard(product: Product, onClick: (Product) -> Unit) {
     Card(
         onClick = { onClick(product) },
         modifier = Modifier
             .fillMaxWidth()
+            .height(ProductGridCardHeight)
             .padding(6.dp),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, colorResource(R.color.divider)),
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp),
+                    .height(128.dp),
             ) {
                 ProductThumb(
                     product = product,
@@ -415,57 +416,44 @@ private fun ProductGridCard(product: Product, onClick: (Product) -> Unit) {
                     }
                 }
             }
-            Column(modifier = Modifier.padding(10.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+            ) {
                 if (!product.brand.isNullOrEmpty()) {
                     Text(
                         text = product.brand.uppercase(),
                         color = colorResource(R.color.text_secondary),
                         fontSize = 9.sp,
                         letterSpacing = 0.08.sp,
+                        lineHeight = 12.sp,
                     )
                 }
                 Text(
                     text = product.name,
-                    modifier = Modifier.padding(top = 2.dp),
+                    modifier = Modifier.padding(top = if (product.brand.isNullOrEmpty()) 0.dp else 4.dp),
                     color = colorResource(R.color.text_primary),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 15.sp,
+                    lineHeight = 17.sp,
                 )
                 val rating = product.averageRating
                 val count = product.reviewsCount
                 if (rating != null && count != null) {
-                    Row(
-                        modifier = Modifier.padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        AndroidView(
-                            factory = { ctx ->
-                                androidx.appcompat.widget.AppCompatRatingBar(ctx).apply {
-                                    this.rating = rating
-                                    numStars = 5
-                                    stepSize = 0.1f
-                                    setIsIndicator(true)
-                                }
-                            },
-                            modifier = Modifier.height(18.dp),
-                        )
-                        Text(
-                            text = "($count)",
-                            modifier = Modifier.padding(start = 4.dp),
-                            color = colorResource(R.color.text_secondary),
-                            fontSize = 10.sp,
-                        )
-                    }
+                    ProductRatingRow(rating = rating, reviewCount = count)
                 }
+                Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = formatDisplayPriceLine(product),
-                    modifier = Modifier.padding(top = 5.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     color = colorResource(R.color.price_color),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
+                    lineHeight = 18.sp,
                 )
             }
         }
@@ -584,4 +572,97 @@ private fun ProductThumb(
             }
         },
     )
+}
+
+private fun previewProductForGrid(
+    withAr: Boolean = false,
+    longTitle: Boolean = false,
+): Product {
+    val defaultVar = ProductVariant(
+        id = 1,
+        productId = 1,
+        sku = null,
+        color = null,
+        frameSize = null,
+        material = null,
+        lensType = null,
+        power = null,
+        duration = null,
+        baseCurve = null,
+        diameter = null,
+        price = null,
+        stockQuantity = null,
+        isDefault = true,
+        arModelUrl = if (withAr) "https://example.com/model.bin" else null,
+        unitPrice = null,
+        images = null,
+    )
+    return Product(
+        id = 1,
+        category = ProductCategory(
+            id = 1,
+            name = "Sunglasses",
+            slug = "sunglasses",
+            description = null,
+            createdAt = "",
+            updatedAt = "",
+            hasArSupport = withAr,
+        ),
+        name = if (longTitle) {
+            "Polarized UV Protection Sunglasses Classic Aviator Style Full Rim"
+        } else {
+            "Classic Round Metal Frame"
+        },
+        description = null,
+        price = "1500",
+        brand = "BOLON",
+        images = null,
+        defaultVariant = defaultVar,
+        variants = null,
+        averageRating = 4.2f,
+        reviewsCount = 18,
+        createdAt = "2024-01-01T00:00:00Z",
+        updatedAt = "2024-01-01T00:00:00Z",
+    )
+}
+
+@Preview(showBackground = true, name = "Product grid card")
+@Composable
+private fun ProductGridCardPreview() {
+    EyeCareTheme {
+        ProductGridCard(
+            product = previewProductForGrid(withAr = false, longTitle = false),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Product grid card + AR")
+@Composable
+private fun ProductGridCardWithArPreview() {
+    EyeCareTheme {
+        ProductGridCard(
+            product = previewProductForGrid(withAr = true, longTitle = false),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Product grid card — long title")
+@Composable
+private fun ProductGridCardLongTitlePreview() {
+    EyeCareTheme {
+        ProductGridCard(
+            product = previewProductForGrid(withAr = false, longTitle = true),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Rating row")
+@Composable
+private fun ProductRatingRowPreview() {
+    EyeCareTheme {
+        ProductRatingRow(rating = 4.2f, reviewCount = 18)
+    }
 }

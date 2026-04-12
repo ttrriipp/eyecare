@@ -25,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -50,6 +49,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.Glide
 import com.example.opticalsystem.R
 import com.example.opticalsystem.data.local.CartItem
+import com.example.opticalsystem.ui.theme.EyeCareTheme
 import com.example.opticalsystem.util.BackendImageUrl
 
 @Composable
@@ -209,106 +210,82 @@ fun CartScreen(
         }
 
         if (cartItems.isNotEmpty()) {
-            Card(
+            CartCheckoutFooter(
+                formattedTotal = formattedTotal,
+                onCheckout = onCheckout,
+                onAddMoreItems = onAddMoreItems,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CartCheckoutFooter(
+    formattedTotal: String,
+    onCheckout: () -> Unit,
+    onAddMoreItems: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorResource(R.color.surface),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = colorResource(R.color.surface),
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cart_subtotal),
-                            color = colorResource(R.color.text_secondary),
-                            fontSize = 14.sp,
-                        )
-                        Text(
-                            text = formattedTotal,
-                            color = colorResource(R.color.text_primary),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 10.dp),
-                        color = colorResource(R.color.divider),
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cart_discount),
-                            color = colorResource(R.color.text_secondary),
-                            fontSize = 14.sp,
-                        )
-                        Text(
-                            text = "—",
-                            color = colorResource(R.color.text_secondary),
-                            fontSize = 14.sp,
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cart_total),
-                            color = colorResource(R.color.text_primary),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = formattedTotal,
-                            color = colorResource(R.color.price_color),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.payment_due_visit_note),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        color = colorResource(R.color.text_secondary),
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Button(
-                        onClick = onCheckout,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                            .padding(top = 16.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.primary),
-                        ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.continue_label),
-                            color = colorResource(R.color.on_primary),
-                            fontSize = 15.sp,
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = onAddMoreItems,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                            .padding(top = 8.dp),
-                        shape = RoundedCornerShape(14.dp),
-                    ) {
-                        Text(stringResource(R.string.add_more_items))
-                    }
-                }
+                Text(
+                    text = stringResource(R.string.cart_total),
+                    color = colorResource(R.color.text_primary),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = formattedTotal,
+                    color = colorResource(R.color.price_color),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Text(
+                text = stringResource(R.string.payment_due_visit_note),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                color = colorResource(R.color.text_secondary),
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+            )
+            Button(
+                onClick = onCheckout,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(top = 16.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(R.color.primary),
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.continue_label),
+                    color = colorResource(R.color.on_primary),
+                    fontSize = 15.sp,
+                )
+            }
+            OutlinedButton(
+                onClick = onAddMoreItems,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(top = 8.dp),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Text(stringResource(R.string.add_more_items))
             }
         }
     }
@@ -379,21 +356,26 @@ private fun CartLineCard(
                         fontSize = 12.sp,
                     )
                 }
+                val unit = item.productPrice.toDoubleOrNull() ?: 0.0
+                val lineTotal = unit * item.quantity
                 Text(
-                    text = "₱${formatCartUnitPrice(item.productPrice)}",
+                    text = "₱${String.format("%,.0f", lineTotal)}",
                     modifier = Modifier.padding(top = 4.dp),
                     color = colorResource(R.color.price_color),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                 )
-                val unit = item.productPrice.toDoubleOrNull() ?: 0.0
-                Text(
-                    text = "₱${String.format("%,.0f", unit * item.quantity)}",
-                    modifier = Modifier.padding(top = 2.dp),
-                    color = colorResource(R.color.text_primary),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (item.quantity > 1) {
+                    Text(
+                        text = stringResource(
+                            R.string.cart_price_each_format,
+                            "₱${formatCartUnitPrice(item.productPrice)}",
+                        ),
+                        modifier = Modifier.padding(top = 2.dp),
+                        color = colorResource(R.color.text_secondary),
+                        fontSize = 12.sp,
+                    )
+                }
                 Row(
                     modifier = Modifier.padding(top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -500,4 +482,55 @@ private fun GlideCartThumbnail(
             }
         },
     )
+}
+
+private val previewCartItemQty1 = CartItem(
+    productId = 1,
+    productVariantId = 1,
+    productName = "Bolon Classic Full-Rim Frame",
+    productBrand = "Bolon",
+    variantLabel = "Black · Medium (54mm) · Acetate · Clear",
+    productPrice = "1500",
+    productImageUrl = null,
+    quantity = 1,
+)
+
+private val previewCartItemQty2 = previewCartItemQty1.copy(quantity = 2)
+
+@Preview(showBackground = true, name = "Cart line — qty 1")
+@Composable
+private fun CartLineCardPreviewQty1() {
+    EyeCareTheme {
+        CartLineCard(
+            item = previewCartItemQty1,
+            onIncrease = {},
+            onDecrease = {},
+            onRemove = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Cart line — qty 2 (each label)")
+@Composable
+private fun CartLineCardPreviewQty2() {
+    EyeCareTheme {
+        CartLineCard(
+            item = previewCartItemQty2,
+            onIncrease = {},
+            onDecrease = {},
+            onRemove = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Cart checkout footer")
+@Composable
+private fun CartCheckoutFooterPreview() {
+    EyeCareTheme {
+        CartCheckoutFooter(
+            formattedTotal = "₱2,300",
+            onCheckout = {},
+            onAddMoreItems = {},
+        )
+    }
 }

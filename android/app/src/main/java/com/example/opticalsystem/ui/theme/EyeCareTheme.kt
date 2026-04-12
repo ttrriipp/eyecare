@@ -5,8 +5,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -132,6 +137,7 @@ fun EyeCareTheme(
         onBackground = color(ctx, R.color.text_primary),
         surface = color(ctx, R.color.surface),
         onSurface = color(ctx, R.color.text_primary),
+        surfaceContainer = Color(0xFFECEFF4),
         surfaceVariant = color(ctx, R.color.spec_row_alt),
         onSurfaceVariant = color(ctx, R.color.text_secondary),
         outline = color(ctx, R.color.divider),
@@ -156,6 +162,7 @@ fun EyeCareTheme(
         onBackground = Color(0xFFE8EEF4),
         surface = Color(0xFF1C2128),
         onSurface = Color(0xFFE8EEF4),
+        surfaceContainer = Color(0xFF252C35),
         surfaceVariant = Color(0xFF2A3139),
         onSurfaceVariant = Color(0xFF9AA8B8),
         outline = Color(0xFF3D4654),
@@ -171,4 +178,30 @@ fun EyeCareTheme(
         typography = EyeCareTypography,
         content = content,
     )
+}
+
+@Preview(showBackground = true, name = "EyeCare theme — light")
+@Composable
+private fun EyeCareThemeLightPreview() {
+    EyeCareTheme(darkTheme = false) {
+        Text(
+            text = "Sample title",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "EyeCare theme — dark")
+@Composable
+private fun EyeCareThemeDarkPreview() {
+    EyeCareTheme(darkTheme = true) {
+        Text(
+            text = "Sample title",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
 }
