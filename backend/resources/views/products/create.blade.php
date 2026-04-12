@@ -599,5 +599,57 @@
             applyColumnVisibility();
             reindexVariantRows();
         })();
+
+        (function () {
+            if (window.__eyecareVariantImagePreviewInit) return;
+            window.__eyecareVariantImagePreviewInit = true;
+
+            function revokePreviewImages(wrap) {
+                if (!wrap) return;
+                wrap.querySelectorAll('img[data-preview-blob]').forEach(function (img) {
+                    if (img.src && img.src.indexOf('blob:') === 0) {
+                        URL.revokeObjectURL(img.src);
+                    }
+                });
+            }
+
+            document.addEventListener('change', function (e) {
+                const input = e.target;
+                if (!input || !input.classList || !input.classList.contains('variant-images-input')) return;
+                const cell = input.closest('.variant-images-cell');
+                if (!cell) return;
+                const outer = cell.querySelector('.variant-images-preview-wrap');
+                const wrap = cell.querySelector('.variant-images-preview');
+                if (!wrap) return;
+
+                revokePreviewImages(wrap);
+                wrap.innerHTML = '';
+
+                if (!input.files || !input.files.length) {
+                    if (outer) outer.classList.add('hidden');
+                    return;
+                }
+
+                const frag = document.createDocumentFragment();
+                Array.prototype.forEach.call(input.files, function (file) {
+                    if (!file.type.match(/^image\//)) return;
+                    const url = URL.createObjectURL(file);
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = '';
+                    img.setAttribute('data-preview-blob', '1');
+                    img.className = 'h-14 w-14 shrink-0 rounded-md border border-zinc-200 object-cover dark:border-zinc-600';
+                    frag.appendChild(img);
+                });
+                wrap.appendChild(frag);
+                if (outer) outer.classList.toggle('hidden', wrap.children.length === 0);
+            }, true);
+
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+                form.querySelectorAll('.variant-images-preview').forEach(revokePreviewImages);
+            }, true);
+        })();
     </script>
 </x-layouts::app>

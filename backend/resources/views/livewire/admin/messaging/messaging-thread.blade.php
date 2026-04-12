@@ -22,6 +22,7 @@
                 @php
                     $isCustomer = $message->sender?->role === \App\Enums\UserRole::Customer;
                     // Customer messages are left-aligned, staff/admin messages are right-aligned.
+                    $msgAt = $message->created_at->clone()->timezone(config('app.display_timezone'));
                 @endphp
 
                 <div
@@ -42,10 +43,12 @@
                                 {{ $message->sender?->name ?: __('Optical Shop') }}
                             </span>
                             <span class="text-[10px] text-zinc-400 dark:text-zinc-500">
-                                @if($message->created_at->diffInHours() < 24)
-                                    {{ $message->created_at->format('g:i A') }}
+                                @if($msgAt->isToday())
+                                    {{ $msgAt->format('g:i A') }}
+                                @elseif($msgAt->isYesterday())
+                                    {{ __('Yesterday,') }} {{ $msgAt->format('g:i A') }}
                                 @else
-                                    {{ $message->created_at->format('M j, g:i A') }}
+                                    {{ $msgAt->format('M j, g:i A') }}
                                 @endif
                             </span>
                         </div>
@@ -67,10 +70,23 @@
 
     {{-- Input area --}}
     <div class="shrink-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <form wire:submit="sendMessage" class="flex flex-col gap-3">
+        <form
+            wire:submit="sendMessage"
+            class="flex flex-col gap-3"
+            x-data
+            x-on:keydown.enter="
+                if ($event.shiftKey) return;
+                const el = $event.target;
+                if (!el || el.tagName !== 'TEXTAREA') return;
+                if (!el.value || !el.value.trim()) return;
+                $event.preventDefault();
+                $wire.set('body', el.value);
+                $wire.sendMessage();
+            "
+        >
             <div class="relative">
                 <flux:textarea
-                    wire:model.live.debounce.150ms="body"
+                    wire:model.live="body"
                     placeholder="{{ __('Type your message...') }}"
                     rows="3"
                     resize="none"
@@ -78,7 +94,7 @@
                 />
             </div>
 
-            <div class="flex items-center justify-end">
+            <div class="flex items-center justify-end gap-2">
                 <flux:button
                     type="submit"
                     variant="primary"

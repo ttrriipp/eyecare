@@ -53,6 +53,8 @@
                             @php
                                 $isSelected = $selectedConversationId === $conversation->id;
                                 $hasUnread = $conversation->messages->filter(fn($m) => !$m->is_read && $m->sender_id !== auth()->id())->isNotEmpty();
+                                $displayTz = config('app.display_timezone');
+                                $lastAt = $conversation->last_message_at?->clone()->timezone($displayTz);
                             @endphp
                             <li>
                                 <button
@@ -80,11 +82,13 @@
                                                 {{ $conversation->user?->name ?: __('Unknown User') }}
                                             </div>
                                             <div class="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
-                                                @if($conversation->last_message_at)
-                                                    @if($conversation->last_message_at->diffInDays() > 0)
-                                                        {{ $conversation->last_message_at->format('M j') }}
+                                                @if($lastAt)
+                                                    @if($lastAt->isToday())
+                                                        {{ $lastAt->format('g:i A') }}
+                                                    @elseif($lastAt->isYesterday())
+                                                        {{ __('Yesterday') }}
                                                     @else
-                                                        {{ $conversation->last_message_at->diffForHumans(short: true) }}
+                                                        {{ $lastAt->format('M j') }}
                                                     @endif
                                                 @endif
                                             </div>
