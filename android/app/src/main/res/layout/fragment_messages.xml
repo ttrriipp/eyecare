@@ -10,8 +10,12 @@
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@color/primary"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         app:title="@string/nav_messages"
-        app:titleTextColor="@color/text_primary"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
+        app:titleTextColor="@color/on_primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,46 +37,65 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:constraint_referenced_ids="ivIntroIcon,tvIntroTitle,tvIntroSubtitle,tvIntroUnread,barrierIntroActions,btnOpenChat"
+        app:constraint_referenced_ids="cardIntroIcon,tvIntroTitle,tvIntroSubtitle,tvIntroUnread,barrierIntroActions,btnOpenChat"
         tools:visibility="visible" />
 
-    <ImageView
-        android:id="@+id/ivIntroIcon"
-        android:layout_width="88dp"
-        android:layout_height="88dp"
-        android:src="@drawable/ic_nav_chat_outlined"
-        android:alpha="0.4"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardIntroIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:contentDescription="@null"
-        app:layout_constraintBottom_toTopOf="@id/tvIntroTitle"
+        android:layout_marginTop="40dp"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="50dp"
+        app:cardElevation="6dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintVertical_bias="0.38" />
+        app:strokeColor="@color/divider"
+        app:strokeWidth="1dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_chat_intro_icon_circle"
+            android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/ivIntroIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_nav_chat_outlined"
+                app:tint="@color/primary" />
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tvIntroTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="28dp"
         android:gravity="center"
+        android:letterSpacing="0.01"
         android:text="@string/messages_intro_title"
         android:textColor="@color/text_primary"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ivIntroIcon" />
+        app:layout_constraintTop_toBottomOf="@id/cardIntroIcon" />
 
     <TextView
         android:id="@+id/tvIntroSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:layout_marginHorizontal="36dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginHorizontal="32dp"
         android:gravity="center"
-        android:lineSpacingMultiplier="1.15"
+        android:lineSpacingExtra="4dp"
+        android:lineSpacingMultiplier="1.0"
         android:text="@string/messages_intro_subtitle"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
@@ -106,14 +129,21 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnOpenChat"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
-        android:paddingHorizontal="40dp"
+        android:layout_marginHorizontal="24dp"
+        android:minHeight="52dp"
         android:text="@string/messages_open_chat"
+        android:textAllCaps="false"
+        android:textColor="@color/on_primary"
+        android:textSize="15sp"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/barrierIntroActions" />
+        app:layout_constraintTop_toBottomOf="@id/barrierIntroActions"
+        app:layout_constraintWidth_max="320dp" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/groupError"

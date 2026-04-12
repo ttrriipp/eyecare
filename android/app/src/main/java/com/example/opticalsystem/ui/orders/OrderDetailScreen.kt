@@ -91,7 +91,10 @@ fun OrderDetailScreen(viewModel: OrderDetailViewModel, onBack: () -> Unit) {
             .fillMaxSize()
             .background(colorResource(R.color.background)),
     ) {
-        SurfaceHeader(order = (orderResult as? Resource.Success)?.data, onBack = onBack)
+        OrderDetailHeader(
+            order = (orderResult as? Resource.Success)?.data,
+            onBack = onBack,
+        )
 
         Box(
             modifier = Modifier
@@ -186,31 +189,48 @@ fun OrderDetailScreen(viewModel: OrderDetailViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SurfaceHeader(order: Order?, onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorResource(R.color.surface))
-            .padding(start = 8.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back_24),
-                contentDescription = stringResource(R.string.back),
-                tint = colorResource(R.color.text_primary),
-            )
-        }
-        Column(modifier = Modifier.padding(start = 4.dp)) {
+private fun OrderDetailHeader(order: Order?, onBack: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorResource(R.color.primary))
+                .padding(start = 8.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back_24),
+                    contentDescription = stringResource(R.string.back),
+                    tint = colorResource(R.color.on_primary),
+                )
+            }
             Text(
-                text = order?.orderNumber.orEmpty(),
-                color = colorResource(R.color.text_primary),
-                fontSize = 17.sp,
+                text = stringResource(R.string.order_detail_title),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 4.dp),
+                color = colorResource(R.color.on_primary),
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
             )
-            if (order != null) {
+        }
+        if (order != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colorResource(R.color.background))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    text = order.orderNumber,
+                    color = colorResource(R.color.text_primary),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
                 Text(
                     text = StatusHelper.formatDateShort(order.createdAt),
+                    modifier = Modifier.padding(top = 2.dp),
                     color = colorResource(R.color.text_secondary),
                     fontSize = 12.sp,
                 )

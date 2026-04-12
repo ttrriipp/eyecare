@@ -139,10 +139,12 @@
     <string name="order_details_title">Order details</string>
     <string name="back_to_cart">Back</string>
     <string name="almost_done">Almost done</string>
-    <string name="link_appointment_optional">Link appointment (optional)</string>
+    <string name="link_appointment_optional">Link to an upcoming appointment?</string>
+    <string name="link_appointment_optional_suffix">(optional)</string>
     <string name="no_appointment_selected_note">No appointment selected. Staff will confirm your order shortly.</string>
-    <string name="order_notes_hint">Special instructions for staff (optional)</string>
-    <string name="customer_details">Customer details</string>
+    <string name="order_notes_section">Notes for staff (optional)</string>
+    <string name="order_notes_placeholder">e.g. Please include anti-reflective coating on the lenses.</string>
+    <string name="contact_details">Contact details</string>
     <string name="review_order">Review order</string>
     <string name="confirm_order_title">Confirm order</string>
     <string name="back_to_order_details">Back</string>
@@ -158,7 +160,7 @@
     <string name="order_placed_title">Order placed</string>
     <string name="order_submitted_title">Order submitted</string>
     <string name="order_number_compact">Order #%1$s</string>
-    <string name="order_placed_message">Your order is pending staff confirmation. No payment is due yet.</string>
+    <string name="order_placed_message">Your order is pending staff confirmation.\nNo payment is due yet.</string>
     <string name="timeline_order_submitted">Order submitted</string>
     <string name="timeline_order_submitted_sub">Awaiting staff review</string>
     <string name="timeline_staff_confirms">Staff confirms</string>
@@ -246,6 +248,9 @@
     <string name="profile_my_orders">My Orders</string>
     <string name="profile_my_bills">My Bills</string>
     <string name="logout">Logout</string>
+    <string name="logout_confirm_title">Log out?</string>
+    <string name="logout_confirm_message">You will need to sign in again to use your account.</string>
+    <string name="logout_confirm_action">Log out</string>
     <string name="profile_avatar">Profile avatar</string>
     <string name="cd_orders_menu">Orders</string>
     <string name="cd_bills_menu">Bills</string>

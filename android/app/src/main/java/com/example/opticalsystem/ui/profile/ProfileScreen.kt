@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,6 +20,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -67,6 +69,7 @@ fun ProfileScreen(
     }
 
     val loadingLogout = logoutResult is Resource.Loading
+    var showLogoutConfirm by remember { mutableStateOf(false) }
     var userName by remember { mutableStateOf("User") }
     var userEmail by remember { mutableStateOf("") }
     LaunchedEffect(profile) {
@@ -167,14 +170,14 @@ fun ProfileScreen(
                     onClick = onNavigateToBills,
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(Modifier.height(28.dp))
             OutlinedButton(
-                onClick = { viewModel.logout() },
+                onClick = { showLogoutConfirm = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 20.dp),
                 enabled = !loadingLogout,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = colorResource(R.color.status_cancelled),
                 ),
@@ -182,6 +185,46 @@ fun ProfileScreen(
             ) {
                 Text(stringResource(R.string.logout))
             }
+        }
+
+        if (showLogoutConfirm) {
+            AlertDialog(
+                onDismissRequest = { if (!loadingLogout) showLogoutConfirm = false },
+                title = {
+                    Text(
+                        stringResource(R.string.logout_confirm_title),
+                        color = colorResource(R.color.text_primary),
+                    )
+                },
+                text = {
+                    Text(
+                        stringResource(R.string.logout_confirm_message),
+                        color = colorResource(R.color.text_secondary),
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showLogoutConfirm = false
+                            viewModel.logout()
+                        },
+                        enabled = !loadingLogout,
+                    ) {
+                        Text(
+                            stringResource(R.string.logout_confirm_action),
+                            color = colorResource(R.color.status_cancelled),
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutConfirm = false },
+                        enabled = !loadingLogout,
+                    ) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
         }
     }
 }

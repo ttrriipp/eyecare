@@ -11,10 +11,16 @@
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:titleTextColor="@color/text_primary"
+        android:background="@color/primary"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        app:navigationIconTint="@color/on_primary"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium"
+        app:titleTextColor="@color/on_primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        tools:navigationIcon="@drawable/ic_back_24"
         tools:title="Support Chat" />
 
     <!-- Closed conversation banner -->
@@ -101,23 +107,30 @@
         android:layout_height="wrap_content"
         android:background="@color/surface"
         android:elevation="4dp"
-        android:orientation="horizontal"
-        android:padding="8dp"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="20dp"
-            app:boxCornerRadiusTopEnd="20dp"
-            app:boxCornerRadiusBottomStart="20dp"
             app:boxCornerRadiusBottomEnd="20dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            app:boxCornerRadiusBottomStart="20dp"
+            app:boxCornerRadiusTopEnd="20dp"
+            app:boxCornerRadiusTopStart="20dp"
+            app:boxStrokeColor="@color/chat_input_stroke"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp"
+            app:hintTextColor="@color/chat_input_hint">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etMessageBody"
@@ -126,12 +139,13 @@
                 android:hint="@string/message_hint"
                 android:inputType="textMultiLine|textCapSentences"
                 android:maxLines="4"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSend"
-            style="@style/Widget.MaterialComponents.Button.Icon"
+            style="@style/Widget.Material3.Button.Icon"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
@@ -140,10 +154,12 @@
             android:insetTop="0dp"
             android:insetRight="0dp"
             android:insetBottom="0dp"
+            app:backgroundTint="@color/chat_send_background_tint"
             app:cornerRadius="24dp"
             app:icon="@drawable/ic_send"
             app:iconGravity="textStart"
-            app:iconPadding="0dp" />
+            app:iconPadding="0dp"
+            app:iconTint="@color/chat_send_icon_tint" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

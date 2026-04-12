@@ -29,7 +29,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,9 +61,7 @@ fun CheckoutScreen(
             .fillMaxSize()
             .background(colorResource(R.color.background)),
     ) {
-        CheckoutHeader(
-            backLabel = stringResource(R.string.back_to_cart),
-            subtitle = stringResource(R.string.almost_done),
+        CheckoutFlowHeader(
             title = stringResource(R.string.order_details_title),
             onBack = onBack,
         )
@@ -92,11 +89,17 @@ fun CheckoutScreen(
                         color = colorResource(R.color.text_primary),
                         fontWeight = FontWeight.Bold,
                     )
+                    Text(
+                        text = stringResource(R.string.link_appointment_optional_suffix),
+                        modifier = Modifier.padding(top = 2.dp),
+                        color = colorResource(R.color.text_secondary),
+                        fontSize = 12.sp,
+                    )
                     when (val res = upcoming) {
                         is Resource.Loading -> {
                             CircularProgressIndicator(
                                 modifier = Modifier
-                                    .padding(top = 16.dp)
+                                    .padding(top = 12.dp)
                                     .size(32.dp)
                                     .align(Alignment.CenterHorizontally),
                             )
@@ -141,9 +144,10 @@ fun CheckoutScreen(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        text = stringResource(R.string.order_notes_hint),
-                        color = colorResource(R.color.text_primary),
-                        fontWeight = FontWeight.Bold,
+                        text = stringResource(R.string.order_notes_section),
+                        color = colorResource(R.color.text_secondary),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                     OutlinedTextField(
                         value = orderNotes,
@@ -152,7 +156,9 @@ fun CheckoutScreen(
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                             .heightIn(min = 120.dp),
-                        label = { Text(stringResource(R.string.order_notes_hint)) },
+                        placeholder = {
+                            Text(stringResource(R.string.order_notes_placeholder))
+                        },
                         minLines = 5,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = colorResource(R.color.surface),
@@ -173,9 +179,10 @@ fun CheckoutScreen(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        text = stringResource(R.string.customer_details),
-                        color = colorResource(R.color.text_primary),
-                        fontWeight = FontWeight.Bold,
+                        text = stringResource(R.string.contact_details),
+                        color = colorResource(R.color.text_secondary),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                     when (val res = profile) {
                         is Resource.Success -> {
@@ -208,70 +215,57 @@ fun CheckoutScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 10.dp,
-                    bottom = 12.dp,
-                ),
-            ) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 Button(
                     onClick = onReviewOrder,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(R.color.primary),
                     ),
                 ) {
-                    Text(stringResource(R.string.review_order))
+                    Text(
+                        text = stringResource(R.string.review_order),
+                        color = colorResource(R.color.on_primary),
+                        fontSize = 15.sp,
+                    )
                 }
             }
         }
     }
 }
 
+/** Full-width primary bar: back icon + page title (same pattern as cart top bar). */
 @Composable
-private fun CheckoutHeader(
-    backLabel: String,
-    subtitle: String,
+internal fun CheckoutFlowHeader(
     title: String,
     onBack: () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorResource(R.color.primary))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 8.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back_24),
-                    contentDescription = stringResource(R.string.back),
-                    tint = colorResource(R.color.text_primary),
-                )
-            }
-            Text(
-                text = backLabel,
-                color = colorResource(R.color.on_primary),
-                fontSize = 17.sp,
+        IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.ic_back_24),
+                contentDescription = stringResource(R.string.back),
+                tint = colorResource(R.color.on_primary),
             )
         }
         Text(
-            text = subtitle,
-            modifier = Modifier.padding(top = 6.dp),
-            color = Color(0xB3FFFFFF),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
             text = title,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp),
             color = colorResource(R.color.on_primary),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,

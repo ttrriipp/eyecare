@@ -98,20 +98,21 @@ fun OrdersScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
+                .background(colorResource(R.color.primary))
+                .padding(start = 8.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back_24),
                     contentDescription = stringResource(R.string.back),
-                    tint = colorResource(R.color.text_primary),
+                    tint = colorResource(R.color.on_primary),
                 )
             }
             Text(
                 text = stringResource(R.string.orders_title),
                 modifier = Modifier.weight(1f).padding(start = 4.dp),
-                color = colorResource(R.color.text_primary),
+                color = colorResource(R.color.on_primary),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
             )

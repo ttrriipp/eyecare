@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -189,8 +189,10 @@ fun ProductDetailScreen(
         )
     }
 
+    // Parent NavHost already applies outer Scaffold insets; avoid doubling top/bottom gaps.
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -263,11 +265,18 @@ fun ProductDetailScreen(
                         reviewComment = myFeedback?.comment.orEmpty()
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    // Pin CTA to bottom; scroll only the content above it (avoids a tall empty column).
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                    ) {
+                        val scrollState = rememberScrollState()
                         Column(
                             modifier = Modifier
-                                .weight(1f)
-                                .verticalScroll(rememberScrollState()),
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                                .padding(bottom = 88.dp),
                         ) {
                             ImageGalleryCard(product = product)
                             ProductInfoBlock(
@@ -312,35 +321,49 @@ fun ProductDetailScreen(
                                 },
                                 onRequestDelete = { showDeleteDialog = true },
                             )
-                            Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
 
                         val addEnabled = addToCartEnabled(product, selectedVariant)
-                        OutlinedButton(
-                            onClick = {
-                                if (requiresColorSelection(product) && selectedVariant == null) {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            context.getString(R.string.select_in_stock_color_first),
-                                        )
-                                    }
-                                    return@OutlinedButton
-                                }
-                                viewModel.addToCart(product, 1, selectedVariant)
-                            },
+                        val footerBg = colorResource(R.color.background)
+                        Column(
                             modifier = Modifier
+                                .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
-                                .navigationBarsPadding()
-                                .padding(16.dp)
-                                .height(52.dp),
-                            enabled = addEnabled,
-                            shape = RoundedCornerShape(26.dp),
-                            border = BorderStroke(1.5.dp, colorResource(R.color.primary)),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = colorResource(R.color.primary),
-                            ),
+                                .background(footerBg),
                         ) {
-                            Text(stringResource(R.string.add_to_order))
+                            HorizontalDivider(
+                                thickness = 1.dp,
+                                color = colorResource(R.color.divider),
+                            )
+                            OutlinedButton(
+                                onClick = {
+                                    if (requiresColorSelection(product) && selectedVariant == null) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                context.getString(R.string.select_in_stock_color_first),
+                                            )
+                                        }
+                                        return@OutlinedButton
+                                    }
+                                    viewModel.addToCart(product, 1, selectedVariant)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp)
+                                    .height(52.dp),
+                                enabled = addEnabled,
+                                shape = RoundedCornerShape(26.dp),
+                                border = BorderStroke(1.5.dp, colorResource(R.color.primary)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = footerBg,
+                                    disabledContainerColor = footerBg,
+                                    contentColor = colorResource(R.color.primary),
+                                    disabledContentColor = colorResource(R.color.text_secondary),
+                                ),
+                            ) {
+                                Text(stringResource(R.string.add_to_order))
+                            }
                         }
                     }
                 }

@@ -16,12 +16,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,10 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -90,9 +87,7 @@ fun OrderConfirmScreen(
             .fillMaxSize()
             .background(colorResource(R.color.background)),
     ) {
-        CheckoutConfirmHeader(
-            backLabel = stringResource(R.string.back_to_order_details),
-            subtitle = stringResource(R.string.last_step),
+        CheckoutFlowHeader(
             title = stringResource(R.string.confirm_order_title),
             onBack = onBack,
         )
@@ -244,18 +239,11 @@ fun OrderConfirmScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 10.dp,
-                    bottom = 12.dp,
-                ),
-            ) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 val placing = orderResult is Resource.Loading
                 Button(
                     onClick = { viewModel.placeOrder(orderNotes) },
@@ -278,10 +266,11 @@ fun OrderConfirmScreen(
                         Text(
                             text = stringResource(R.string.checkout_place_order),
                             color = colorResource(R.color.on_primary),
+                            fontSize = 15.sp,
                         )
                     }
                 }
-                Button(
+                OutlinedButton(
                     onClick = onEditOrder,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -289,60 +278,14 @@ fun OrderConfirmScreen(
                         .padding(top = 8.dp),
                     enabled = !placing,
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(R.color.primary),
-                    ),
                 ) {
                     Text(
                         text = stringResource(R.string.edit_order),
-                        color = colorResource(R.color.on_primary),
+                        fontSize = 15.sp,
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CheckoutConfirmHeader(
-    backLabel: String,
-    subtitle: String,
-    title: String,
-    onBack: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorResource(R.color.primary))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back_24),
-                    contentDescription = stringResource(R.string.back),
-                    tint = colorResource(R.color.text_primary),
-                )
-            }
-            Text(
-                text = backLabel,
-                color = colorResource(R.color.on_primary),
-                fontSize = 17.sp,
-            )
-        }
-        Text(
-            text = subtitle,
-            modifier = Modifier.padding(top = 6.dp),
-            color = Color(0xB3FFFFFF),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = title,
-            color = colorResource(R.color.on_primary),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 
