@@ -109,13 +109,7 @@
                             @foreach($customers as $c)
                                 <tr class="bg-white dark:bg-zinc-900">
                                     <td class="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
-                                        <a
-                                            href="{{ route('users.customers.show', $c) }}"
-                                            class="text-sky-600 hover:underline dark:text-sky-400"
-                                            wire:navigate
-                                        >
-                                            {{ $c->name }}
-                                        </a>
+                                        {{ $c->name }}
                                     </td>
                                     <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">
                                         {{ $c->email }}
