@@ -1,16 +1,11 @@
 package com.example.opticalsystem.ui.auth
 
 import android.widget.ImageView
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.opticalsystem.R
@@ -45,15 +40,3 @@ internal fun authFieldColors() = OutlinedTextFieldDefaults.colors(
     cursorColor = colorResource(R.color.login_primary),
 )
 
-@Composable
-fun EyeCareAuthTheme(content: @Composable () -> Unit) {
-    val ctx = LocalContext.current
-    val scheme = lightColorScheme(
-        primary = Color(ContextCompat.getColor(ctx, R.color.login_primary)),
-        onPrimary = Color.White,
-        surface = Color(ContextCompat.getColor(ctx, R.color.login_surface)),
-        onSurface = Color(ContextCompat.getColor(ctx, R.color.login_title)),
-        outline = Color(ContextCompat.getColor(ctx, R.color.login_outline)),
-    )
-    MaterialTheme(colorScheme = scheme, content = content)
-}

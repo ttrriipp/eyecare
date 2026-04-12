@@ -50,8 +50,8 @@ class CheckoutViewModel @Inject constructor(
         .map { items -> items.sumOf { it.quantity } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    private val _orderResult = MutableLiveData<Resource<Order>>()
-    val orderResult: LiveData<Resource<Order>> = _orderResult
+    private val _orderResult = MutableLiveData<Resource<Order>?>(null)
+    val orderResult: LiveData<Resource<Order>?> = _orderResult
     private val _upcomingAppointments = MutableLiveData<Resource<List<Appointment>>>()
     val upcomingAppointments: LiveData<Resource<List<Appointment>>> = _upcomingAppointments
     private val _profile = MutableLiveData<Resource<User>>()
@@ -99,5 +99,9 @@ class CheckoutViewModel @Inject constructor(
             }
             _orderResult.value = result
         }
+    }
+
+    fun clearOrderResult() {
+        _orderResult.value = null
     }
 }

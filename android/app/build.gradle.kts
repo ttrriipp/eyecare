@@ -84,8 +84,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     // Navigation
-    implementation(libs.androidx.navigation.fragment)
-    implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.fragment.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Hilt
     implementation(libs.hilt.android)

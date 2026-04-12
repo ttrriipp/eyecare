@@ -39,17 +39,29 @@ class ProductDetailViewModel @Inject constructor(
     private val _product = MutableLiveData<Resource<Product>>()
     val product: LiveData<Resource<Product>> = _product
 
-    private val _cartMessage = MutableLiveData<String>()
-    val cartMessage: LiveData<String> = _cartMessage
+    private val _cartMessage = MutableLiveData<String?>(null)
+    val cartMessage: LiveData<String?> = _cartMessage
+
+    fun clearCartMessage() {
+        _cartMessage.value = null
+    }
 
     private val _feedbacks = MutableLiveData<Resource<FeedbackListResponse>>()
     val feedbacks: LiveData<Resource<FeedbackListResponse>> = _feedbacks
 
-    private val _submitFeedback = MutableLiveData<Resource<Feedback>>()
-    val submitFeedback: LiveData<Resource<Feedback>> = _submitFeedback
+    private val _submitFeedback = MutableLiveData<Resource<Feedback>?>(null)
+    val submitFeedback: LiveData<Resource<Feedback>?> = _submitFeedback
 
-    private val _deleteReview = MutableLiveData<Resource<Unit>>()
-    val deleteReview: LiveData<Resource<Unit>> = _deleteReview
+    private val _deleteReview = MutableLiveData<Resource<Unit>?>(null)
+    val deleteReview: LiveData<Resource<Unit>?> = _deleteReview
+
+    fun clearSubmitFeedbackResult() {
+        _submitFeedback.value = null
+    }
+
+    fun clearDeleteReviewResult() {
+        _deleteReview.value = null
+    }
 
     private val _myFeedback = MutableLiveData<Feedback?>()
     val myFeedback: LiveData<Feedback?> = _myFeedback

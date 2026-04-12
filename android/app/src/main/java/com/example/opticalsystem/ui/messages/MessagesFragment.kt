@@ -8,9 +8,8 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.NavOptions
-import androidx.navigation.fragment.findNavController
 import com.example.opticalsystem.R
+import com.example.opticalsystem.navigation.FragmentNavBridge
 import com.example.opticalsystem.databinding.FragmentMessagesBinding
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
@@ -94,13 +93,9 @@ class MessagesFragment : Fragment() {
 
         viewModel.navigateToThreadId.observe(viewLifecycleOwner) { id ->
             if (id != null) {
-                val options = NavOptions.Builder()
-                    .setPopUpTo(R.id.conversationThreadFragment, true)
-                    .build()
-                findNavController().navigate(
-                    R.id.action_nav_orders_to_conversationThread,
-                    bundleOf("conversationId" to id),
-                    options,
+                requireActivity().supportFragmentManager.setFragmentResult(
+                    FragmentNavBridge.OPEN_CONVERSATION,
+                    bundleOf(FragmentNavBridge.KEY_CONVERSATION_ID to id),
                 )
                 viewModel.onNavigatedToThread()
             }
