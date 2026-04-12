@@ -14,15 +14,12 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->string('subject')->nullable();
-            $table->enum('status', ['open', 'closed'])->default('open');
             $table->timestamp('last_message_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
-            // Indexes
             $table->index('user_id');
-            $table->index('status');
+            $table->unique('user_id');
         });
     }
 

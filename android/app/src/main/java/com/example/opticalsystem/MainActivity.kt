@@ -44,12 +44,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         orderStatusNotifier.createNotificationChannel()
         requestNotificationPermissionIfNeeded()
-        // Top/side insets only. Do not pad the root bottom — that leaves a strip above the
-        // system nav and makes BottomNavigationView look "floating". Navigation bar inset is
-        // applied on BottomNavigationView in MainFragment (and auth screens handle bottom inset).
+        // Top/side insets on the root; bottom uses IME height when the keyboard is open so
+        // the whole UI (including the bottom nav) shifts up. When the keyboard is closed,
+        // IME bottom is 0 — navigation bar inset stays on BottomNavigationView in MainFragment.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                ime.bottom,
+            )
             insets
         }
 

@@ -21,10 +21,14 @@ class ConversationSeeder extends Seeder
             return;
         }
 
-        $conversation = Conversation::create([
-            'user_id' => $customer->id,
-            'last_message_at' => now()->subMinutes(5),
-        ]);
+        $conversation = Conversation::firstOrCreate(
+            ['user_id' => $customer->id],
+            ['last_message_at' => now()->subMinutes(5)],
+        );
+
+        if ($conversation->messages()->exists()) {
+            return;
+        }
 
         $this->addMessages($conversation->id, [
             [$customer->id, 'Hi, I wanted to ask about my lens prescription. My doctor gave me a new one — do I need to come in for a fitting?', now()->subHours(3)],
@@ -32,6 +36,10 @@ class ConversationSeeder extends Seeder
             [$customer->id, 'Great, can I walk in or do I need an appointment?', now()->subHours(2)->subMinutes(20)],
             [$staff->id, 'Walk-ins are welcome during business hours (Mon–Sat, 9AM–6PM). We usually process lens replacements on the spot if the frames are with us.', now()->subHours(1)->subMinutes(50)],
             [$customer->id, 'Perfect, I\'ll come by this Saturday. Thank you!', now()->subMinutes(5)],
+        ]);
+
+        $conversation->update([
+            'last_message_at' => $conversation->messages()->max('created_at'),
         ]);
     }
 

@@ -21,22 +21,26 @@ class MessagingViewModel @Inject constructor(
     private val _conversationState = MutableLiveData<Resource<Unit>>()
     val conversationState: LiveData<Resource<Unit>> = _conversationState
 
-    /** When non-null, navigate to this thread: real id, or `0` before the first message exists. */
+    /** Fired when the user chooses to open the chat; `0` if the thread is not created yet. */
     private val _navigateToThreadId = MutableLiveData<Int?>()
     val navigateToThreadId: LiveData<Int?> = _navigateToThreadId
 
     private val _unreadCount = MutableLiveData(0)
     val unreadCount: LiveData<Int> = _unreadCount
 
+    private var cachedThreadId: Int = 0
+
     private var pollingJob: Job? = null
 
-    fun loadConversations() {
-        _conversationState.value = Resource.Loading
+    fun loadConversations(showLoading: Boolean = true) {
+        if (showLoading) {
+            _conversationState.value = Resource.Loading
+        }
         viewModelScope.launch {
             when (val result = conversationRepository.getConversations()) {
                 is Resource.Success -> {
-                    val first = result.data.firstOrNull()
-                    _navigateToThreadId.value = first?.id ?: 0
+                    cachedThreadId = result.data.firstOrNull()?.id ?: 0
+                    refreshUnreadCount()
                     _conversationState.value = Resource.Success(Unit)
                 }
                 is Resource.Error -> _conversationState.value = Resource.Error(result.message)
@@ -45,18 +49,26 @@ class MessagingViewModel @Inject constructor(
         }
     }
 
+    fun openChat() {
+        _navigateToThreadId.value = cachedThreadId
+    }
+
     fun onNavigatedToThread() {
         _navigateToThreadId.value = null
+    }
+
+    private suspend fun refreshUnreadCount() {
+        when (val result = conversationRepository.getUnreadCount()) {
+            is Resource.Success -> _unreadCount.value = result.data
+            else -> { /* keep previous */ }
+        }
     }
 
     fun startPolling() {
         if (pollingJob?.isActive == true) return
         pollingJob = viewModelScope.launch {
             while (isActive) {
-                when (val result = conversationRepository.getUnreadCount()) {
-                    is Resource.Success -> _unreadCount.value = result.data
-                    else -> { /* silent fail — don't disrupt UI */ }
-                }
+                refreshUnreadCount()
                 delay(10_000)
             }
         }

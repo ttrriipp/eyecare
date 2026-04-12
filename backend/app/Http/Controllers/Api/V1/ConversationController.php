@@ -41,7 +41,7 @@ class ConversationController extends Controller
     }
 
     /**
-     * Start a new conversation (customer only — enforced in Form Request).
+     * Ensure the customer's single message thread exists (idempotent).
      */
     public function store(StartConversationRequest $request): JsonResponse
     {
@@ -51,7 +51,7 @@ class ConversationController extends Controller
         );
 
         return response()->json([
-            'message' => 'Conversation started successfully.',
+            'message' => 'Conversation ready.',
             'conversation' => new ConversationResource($conversation),
         ], 201);
     }

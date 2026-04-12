@@ -8,8 +8,8 @@ use App\Models\User;
 class ConversationPolicy
 {
     /**
-     * Customers may only view their own conversations.
-     * Staff and admin may view all.
+     * Customers may only view their own thread.
+     * Staff and admin may view all customer threads.
      */
     public function view(User $user, Conversation $conversation): bool
     {

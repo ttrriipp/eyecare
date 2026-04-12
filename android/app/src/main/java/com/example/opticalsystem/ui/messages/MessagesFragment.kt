@@ -35,12 +35,15 @@ class MessagesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.btnOpenChat.setOnClickListener { viewModel.openChat() }
+
         observeViewModel()
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadConversations()
+        val skipLoading = viewModel.conversationState.value is Resource.Success
+        viewModel.loadConversations(showLoading = !skipLoading)
     }
 
     override fun onStart() {
@@ -59,20 +62,33 @@ class MessagesFragment : Fragment() {
                 is Resource.Loading -> {
                     binding.progressBar.isVisible = true
                     binding.groupError.isVisible = false
-                    binding.groupEmptyState.isVisible = false
-                    binding.groupClosedState.isVisible = false
+                    binding.groupIntro.isVisible = false
                 }
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
+                    binding.groupError.isVisible = false
+                    binding.groupIntro.isVisible = true
                 }
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false
                     binding.groupError.isVisible = true
-                    binding.groupEmptyState.isVisible = false
-                    binding.groupClosedState.isVisible = false
+                    binding.groupIntro.isVisible = false
                     binding.tvError.text = state.message
                     binding.btnRetry.setOnClickListener { viewModel.loadConversations() }
                 }
+            }
+        }
+
+        viewModel.unreadCount.observe(viewLifecycleOwner) { count ->
+            if (count > 0) {
+                binding.tvIntroUnread.text = resources.getQuantityString(
+                    R.plurals.messages_intro_unread,
+                    count,
+                    count,
+                )
+                binding.tvIntroUnread.isVisible = true
+            } else {
+                binding.tvIntroUnread.isVisible = false
             }
         }
 

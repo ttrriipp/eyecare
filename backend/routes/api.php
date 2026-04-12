@@ -81,9 +81,6 @@ Route::prefix('v1')->group(function () {
 
             // Bill void (admin only)
             Route::put('bills/{bill}/void', [BillingController::class, 'void']);
-
-            // Direct Messaging — reopen (admin only)
-            Route::patch('conversations/{conversation}/reopen', [ConversationController::class, 'reopen']);
         });
 
         // Admin + Staff routes
@@ -106,7 +103,7 @@ Route::prefix('v1')->group(function () {
 
         // Customer-only routes
         Route::middleware('role:customer')->group(function () {
-            // Direct Messaging — only customers may open a new conversation
+            // Direct Messaging — idempotent: ensures the single persistent thread exists
             Route::post('conversations', [ConversationController::class, 'store']);
         });
     });

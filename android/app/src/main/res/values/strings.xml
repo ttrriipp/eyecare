@@ -247,9 +247,13 @@
     <string name="profile_my_bills">My Bills</string>
     
     <!-- Direct Messaging -->
-    <string name="messages_empty_title">No active conversations</string>
-    <string name="messages_empty_subtitle">If you have a question or need support, start a conversation with us.</string>
-    <string name="message_us">Message Us</string>
+    <string name="messages_intro_title">Chat with the clinic</string>
+    <string name="messages_intro_subtitle">Ask about orders, appointments, or eyewear — our team reads messages during business hours and will reply here.</string>
+    <string name="messages_open_chat">Open chat</string>
+    <plurals name="messages_intro_unread">
+        <item quantity="one">You have %d unread message</item>
+        <item quantity="other">You have %d unread messages</item>
+    </plurals>
     <string name="conversation_closed">Conversation Closed</string>
     <string name="conversation_closed_start_new">This conversation has been closed.</string>
     <string name="start_new_conversation">Start New Conversation</string>

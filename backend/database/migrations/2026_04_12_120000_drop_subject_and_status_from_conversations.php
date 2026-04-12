@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasColumn('conversations', 'subject')) {
+            return;
+        }
+
         // One row per customer: merge duplicate user_id threads into the oldest id.
         $duplicateUserIds = DB::table('conversations')
             ->select('user_id')
@@ -43,6 +47,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::hasColumn('conversations', 'subject')) {
+            return;
+        }
+
         Schema::table('conversations', function (Blueprint $table) {
             $table->dropUnique(['user_id']);
         });

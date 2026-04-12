@@ -56,7 +56,9 @@ class MainFragment : Fragment() {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { v, insets ->
             val navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            v.updatePadding(bottom = navBars.bottom)
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            // Root already pads for IME; avoid stacking nav-bar padding while the keyboard is up.
+            v.updatePadding(bottom = if (ime.bottom > 0) 0 else navBars.bottom)
             insets
         }
     }
