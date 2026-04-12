@@ -17,21 +17,18 @@ class ConversationResource extends JsonResource
             ->count();
 
         return [
-            'id'              => $this->id,
-            'subject'         => $this->subject,
-            'status'          => $this->status->value,
-            'status_label'    => $this->status->label(),
+            'id' => $this->id,
             'last_message_at' => $this->last_message_at?->toISOString(),
-            'user'            => $this->whenLoaded('user', fn () => [
-                'id'   => $this->user?->id,
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user?->id,
                 'name' => $this->user?->name,
             ]),
-            'message_count'   => $this->whenCounted('messages', fn () => $this->messages_count),
-            'unread_count'    => $this->when(
+            'message_count' => $this->whenCounted('messages', fn () => $this->messages_count),
+            'unread_count' => $this->when(
                 $this->relationLoaded('messages'),
                 $unreadCount
             ),
-            'created_at'      => $this->created_at->toISOString(),
+            'created_at' => $this->created_at->toISOString(),
         ];
     }
 }

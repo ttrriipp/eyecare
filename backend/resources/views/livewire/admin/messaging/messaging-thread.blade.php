@@ -1,20 +1,5 @@
 <div class="flex min-h-0 flex-1 flex-col bg-zinc-50/50 dark:bg-zinc-900/50">
 
-    @if($this->conversation->isClosed())
-        <div class="flex shrink-0 flex-col items-center justify-center border-b border-amber-200 bg-amber-50 px-4 py-3 text-center sm:flex-row sm:justify-between dark:border-amber-900/50 dark:bg-amber-500/10">
-            <div class="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-500">
-                <flux:icon name="lock-closed" class="h-4 w-4" />
-                <span>{{ __('This conversation is closed.') }}</span>
-            </div>
-            
-            @if(auth()->user()?->isAdmin())
-                <flux:button wire:click="reopenConversation" size="sm" variant="subtle" class="mt-2 sm:mt-0">
-                    {{ __('Reopen') }}
-                </flux:button>
-            @endif
-        </div>
-    @endif
-
     {{-- Messages list --}}
     <div
         id="messages-container"
@@ -26,7 +11,7 @@
                     <flux:icon name="chat-bubble-bottom-center-text" class="h-6 w-6 text-zinc-400" />
                 </div>
                 <h3 class="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('No messages to show') }}</h3>
-                <p class="mt-1 max-w-xs text-sm text-zinc-500">{{ __('Wait for the user to send a message, or send one yourself to start the conversation.') }}</p>
+                <p class="mt-1 max-w-xs text-sm text-zinc-500 dark:text-zinc-400">{{ __('Wait for the user to send a message, or send one yourself to start the conversation.') }}</p>
             </div>
         @else
             @foreach($this->threadMessages as $message)
@@ -35,11 +20,11 @@
                     // Customer messages are left-aligned, staff/admin messages are right-aligned.
                 @endphp
 
-                <div 
+                <div
                     wire:key="msg-{{ $message->id }}"
                     @class([
                         'flex w-full',
-                        'justify-start' => $isCustomer || $message->sender_id === null, // null sender implies walk-in or customer? usually customer
+                        'justify-start' => $isCustomer || $message->sender_id === null,
                         'justify-end' => !$isCustomer && $message->sender_id !== null,
                     ])
                 >
@@ -60,13 +45,15 @@
                                 @endif
                             </span>
                         </div>
-                        
+
                         <div @class([
-                            'rounded-2xl px-4 py-2 text-sm shadow-sm',
-                            'rounded-tl-none bg-white border border-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200' => $isCustomer || $message->sender_id === null,
-                            'rounded-tr-none bg-sky-600 text-white dark:bg-sky-500' => !$isCustomer && $message->sender_id !== null,
+                            'rounded-2xl px-4 py-2 text-sm shadow-sm break-words [word-break:break-word]',
+                            // Incoming: explicit dark text on light bubble (light mode) and light text on dark bubble (dark mode)
+                            'rounded-tl-none border border-zinc-200 bg-zinc-100 !text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:!text-zinc-50' => $isCustomer || $message->sender_id === null,
+                            // Outgoing (staff): always white on solid sky (both themes)
+                            'rounded-tr-none bg-sky-600 !text-white dark:bg-sky-600' => !$isCustomer && $message->sender_id !== null,
                         ])>
-                            {!! nl2br(e($message->body)) !!}
+                            <span class="block whitespace-pre-wrap">{!! nl2br(e($message->body)) !!}</span>
                         </div>
                     </div>
                 </div>
@@ -78,37 +65,21 @@
     <div class="shrink-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <form wire:submit="sendMessage" class="flex flex-col gap-3">
             <div class="relative">
-                <flux:textarea 
-                    wire:model.live.debounce.150ms="body" 
-                    placeholder="{{ $this->conversation->isClosed() ? __('Conversation closed') : __('Type your message...') }}" 
-                    rows="3" 
+                <flux:textarea
+                    wire:model.live.debounce.150ms="body"
+                    placeholder="{{ __('Type your message...') }}"
+                    rows="3"
                     resize="none"
-                    class="w-full pr-12 text-sm"
-                    :disabled="$this->conversation->isClosed()"
+                    class="w-full pr-12 text-sm text-zinc-900 placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                 />
             </div>
-            
-            <div class="flex items-center justify-between">
-                <div>
-                    @if($this->conversation->isOpen() && auth()->user()?->isAdminOrStaff())
-                        <flux:button 
-                            wire:click="closeConversation"
-                            wire:confirm="{{ __('Are you sure you want to close this conversation? The customer will no longer be able to reply.') }}"
-                            type="button" 
-                            size="sm" 
-                            variant="danger" 
-                            class="!px-2"
-                        >
-                            {{ __('Close Conversation') }}
-                        </flux:button>
-                    @endif
-                </div>
-                
-                <flux:button 
-                    type="submit" 
-                    variant="primary" 
-                    size="sm" 
-                    :disabled="$this->conversation->isClosed() || empty(trim($body))"
+
+            <div class="flex items-center justify-end">
+                <flux:button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    :disabled="empty(trim($body))"
                 >
                     {{ __('Send') }}
                 </flux:button>
@@ -119,7 +90,7 @@
     @script
     <script>
         const scrollContainer = document.getElementById('messages-container');
-        
+
         // Auto-scroll on initial load
         if (scrollContainer) {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;

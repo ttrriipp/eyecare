@@ -8,7 +8,6 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.opticalsystem.R
 import com.example.opticalsystem.databinding.FragmentConversationThreadBinding
@@ -37,7 +36,8 @@ class ConversationThreadFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupToolbar()
+        binding.toolbar.navigationIcon = null
+
         setupRecyclerView()
         setupInputBar()
         observeViewModel()
@@ -54,12 +54,6 @@ class ConversationThreadFragment : Fragment() {
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────
-
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().popBackStack()
-        }
-    }
 
     private fun setupRecyclerView() {
         messageAdapter = MessageAdapter()
@@ -105,20 +99,9 @@ class ConversationThreadFragment : Fragment() {
             }
         }
 
-        viewModel.conversation.observe(viewLifecycleOwner) { conversation ->
-            val isClosed = conversation?.isClosed == true
-            binding.bannerClosed.isVisible = isClosed
-            binding.inputBar.isVisible = !isClosed
-            binding.toolbar.title = when {
-                isClosed -> getString(R.string.conversation_closed)
-                else -> conversation?.subject?.takeIf { it.isNotBlank() }
-                    ?: getString(R.string.conversation_default_title)
-            }
-            // "Start a new conversation" button inside closed banner
-            binding.btnNewConversationBanner.setOnClickListener {
-                findNavController().popBackStack()
-                // Trigger a new conversation via the parent entry fragment
-            }
+        viewModel.conversation.observe(viewLifecycleOwner) {
+            binding.bannerClosed.isVisible = false
+            binding.toolbar.title = getString(R.string.conversation_default_title)
         }
 
         viewModel.isSending.observe(viewLifecycleOwner) { sending ->

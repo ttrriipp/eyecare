@@ -16,6 +16,9 @@ import android.text.TextUtils
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.opticalsystem.R
@@ -25,6 +28,7 @@ import com.example.opticalsystem.util.Resource
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProductListFragment : Fragment() {
@@ -60,12 +64,27 @@ class ProductListFragment : Fragment() {
         setupSearch()
         setupSortControl()
         setupCartButton()
+        observeCartBadge()
         observeViewModel()
     }
 
     private fun setupCartButton() {
         binding.btnCart.setOnClickListener {
             findNavController().navigate(R.id.action_nav_explore_to_cart)
+        }
+    }
+
+    private fun observeCartBadge() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.cartItemCount.collect { count ->
+                    val badgeCount = count.coerceAtMost(99)
+                    binding.tvCartBadge.isVisible = count > 0
+                    if (count > 0) {
+                        binding.tvCartBadge.text = if (count > 99) "99+" else badgeCount.toString()
+                    }
+                }
+            }
         }
     }
 

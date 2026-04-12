@@ -21,12 +21,11 @@ class ConversationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status']);
         $perPage = $request->integer('per_page', 15);
 
         $conversations = $this->conversationService->listForUser(
             user: $request->user(),
-            filters: $filters,
+            filters: [],
             perPage: $perPage,
         );
 
@@ -34,9 +33,9 @@ class ConversationController extends Controller
             'data' => ConversationResource::collection($conversations),
             'meta' => [
                 'current_page' => $conversations->currentPage(),
-                'last_page'    => $conversations->lastPage(),
-                'per_page'     => $conversations->perPage(),
-                'total'        => $conversations->total(),
+                'last_page' => $conversations->lastPage(),
+                'per_page' => $conversations->perPage(),
+                'total' => $conversations->total(),
             ],
         ]);
     }
@@ -52,7 +51,7 @@ class ConversationController extends Controller
         );
 
         return response()->json([
-            'message'      => 'Conversation started successfully.',
+            'message' => 'Conversation started successfully.',
             'conversation' => new ConversationResource($conversation),
         ], 201);
     }
@@ -70,36 +69,6 @@ class ConversationController extends Controller
         );
 
         return response()->json([
-            'conversation' => new ConversationResource($conversation),
-        ]);
-    }
-
-    /**
-     * Close a conversation (staff or admin).
-     */
-    public function close(Request $request, Conversation $conversation): JsonResponse
-    {
-        $this->authorize('close', $conversation);
-
-        $conversation = $this->conversationService->closeConversation($conversation);
-
-        return response()->json([
-            'message'      => 'Conversation closed.',
-            'conversation' => new ConversationResource($conversation),
-        ]);
-    }
-
-    /**
-     * Reopen a conversation (admin only).
-     */
-    public function reopen(Request $request, Conversation $conversation): JsonResponse
-    {
-        $this->authorize('reopen', $conversation);
-
-        $conversation = $this->conversationService->reopenConversation($conversation);
-
-        return response()->json([
-            'message'      => 'Conversation reopened.',
             'conversation' => new ConversationResource($conversation),
         ]);
     }

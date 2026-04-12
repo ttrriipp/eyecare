@@ -8,8 +8,7 @@ class SendMessageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Any authenticated user may attempt to send; policy enforces
-        // conversation ownership and open-status checks.
+        // Any authenticated user may attempt to send; policy enforces access rules.
         return $this->user() !== null;
     }
 
@@ -24,7 +23,7 @@ class SendMessageRequest extends FormRequest
     {
         return [
             'body.required' => 'Message body is required.',
-            'body.max'      => 'Message body may not exceed 5000 characters.',
+            'body.max' => 'Message body may not exceed 5000 characters.',
         ];
     }
 }

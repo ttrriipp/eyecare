@@ -2,12 +2,10 @@
 
 namespace App\Services;
 
-use App\Enums\ConversationStatus;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Validation\ValidationException;
 
 class MessageService
 {
@@ -35,23 +33,15 @@ class MessageService
     }
 
     /**
-     * Send a new message in a conversation.
-     * Validates the conversation is still open, creates the message,
-     * and bumps last_message_at on the conversation.
+     * Send a new message in a conversation and bump last_message_at.
      */
     public function sendMessage(User $user, Conversation $conversation, array $data): Message
     {
-        if (! $conversation->isOpen()) {
-            throw ValidationException::withMessages([
-                'conversation' => 'Cannot send a message to a closed conversation.',
-            ]);
-        }
-
         $message = Message::create([
             'conversation_id' => $conversation->id,
-            'sender_id'       => $user->id,
-            'body'            => $data['body'],
-            'is_read'         => false,
+            'sender_id' => $user->id,
+            'body' => $data['body'],
+            'is_read' => false,
         ]);
 
         $conversation->update(['last_message_at' => now()]);

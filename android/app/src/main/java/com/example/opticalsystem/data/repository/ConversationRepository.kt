@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.opticalsystem.data.api.ConversationApi
 import com.example.opticalsystem.data.model.Conversation
 import com.example.opticalsystem.data.model.Message
+import com.example.opticalsystem.data.model.SendMessageResult
 import com.example.opticalsystem.data.model.SendMessageRequest
 import com.example.opticalsystem.data.model.StartConversationRequest
 import com.example.opticalsystem.util.Resource
@@ -52,9 +53,9 @@ class ConversationRepository @Inject constructor(
         return if (code >= 500) "Server error ($code). Please try again." else fallback
     }
 
-    suspend fun getConversations(status: String? = null): Resource<List<Conversation>> {
+    suspend fun getConversations(): Resource<List<Conversation>> {
         return try {
-            val response = conversationApi.getConversations(status = status)
+            val response = conversationApi.getConversations()
             if (response.isSuccessful && response.body() != null) {
                 Resource.Success(response.body()!!.data)
             } else {
@@ -84,9 +85,9 @@ class ConversationRepository @Inject constructor(
         }
     }
 
-    suspend fun startConversation(subject: String?): Resource<Conversation> {
+    suspend fun startConversation(): Resource<Conversation> {
         return try {
-            val response = conversationApi.startConversation(StartConversationRequest(subject = subject))
+            val response = conversationApi.startConversation(StartConversationRequest())
             if (response.isSuccessful && response.body() != null) {
                 Resource.Success(response.body()!!.conversation)
             } else {
@@ -96,6 +97,41 @@ class ConversationRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "startConversation failed", e)
+            Resource.Error(networkError(e))
+        }
+    }
+
+    suspend fun getConversation(id: Int): Resource<Conversation> {
+        return try {
+            val response = conversationApi.getConversation(id)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!.conversation)
+            } else {
+                Resource.Error(
+                    parseError(response.code(), response.errorBody()?.string(), "Failed to load conversation"),
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "getConversation failed", e)
+            Resource.Error(networkError(e))
+        }
+    }
+
+    suspend fun sendMessageToMyConversation(body: String): Resource<SendMessageResult> {
+        return try {
+            val response = conversationApi.sendMessageToMyConversation(SendMessageRequest(body = body))
+            if (response.isSuccessful && response.body() != null) {
+                val bodyResponse = response.body()!!
+                val conv = bodyResponse.conversation
+                    ?: return Resource.Error("Invalid server response (missing conversation).")
+                Resource.Success(SendMessageResult(message = bodyResponse.data, conversation = conv))
+            } else {
+                Resource.Error(
+                    parseError(response.code(), response.errorBody()?.string(), "Failed to send message"),
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "sendMessageToMyConversation failed", e)
             Resource.Error(networkError(e))
         }
     }
@@ -128,22 +164,6 @@ class ConversationRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "sendMessage failed", e)
-            Resource.Error(networkError(e))
-        }
-    }
-
-    suspend fun closeConversation(conversationId: Int): Resource<Conversation> {
-        return try {
-            val response = conversationApi.closeConversation(conversationId)
-            if (response.isSuccessful && response.body() != null) {
-                Resource.Success(response.body()!!.conversation)
-            } else {
-                Resource.Error(
-                    parseError(response.code(), response.errorBody()?.string(), "Failed to close conversation"),
-                )
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "closeConversation failed", e)
             Resource.Error(networkError(e))
         }
     }

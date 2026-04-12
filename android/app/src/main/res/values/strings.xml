@@ -254,8 +254,8 @@
     <string name="conversation_closed_start_new">This conversation has been closed.</string>
     <string name="start_new_conversation">Start New Conversation</string>
     <string name="retry">Retry</string>
-    <string name="conversation_closed_banner">This conversation is closed</string>
-    <string name="conversation_closed_banner_sub">You cannot reply to a closed conversation.</string>
+    <string name="conversation_closed_banner">Marked resolved</string>
+    <string name="conversation_closed_banner_sub">You can still send messages here anytime.</string>
     <string name="message_hint">Type a message...</string>
     <string name="conversation_default_title">Chat</string>
 </resources>

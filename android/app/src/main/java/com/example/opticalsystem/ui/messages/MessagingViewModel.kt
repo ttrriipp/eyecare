@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.opticalsystem.data.model.Conversation
 import com.example.opticalsystem.data.repository.ConversationRepository
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,40 +18,26 @@ class MessagingViewModel @Inject constructor(
     private val conversationRepository: ConversationRepository,
 ) : ViewModel() {
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    private val _conversationState = MutableLiveData<Resource<Unit>>()
+    val conversationState: LiveData<Resource<Unit>> = _conversationState
 
-    private val _conversationState = MutableLiveData<Resource<List<Conversation>>>()
-    val conversationState: LiveData<Resource<List<Conversation>>> = _conversationState
-
-    /** Non-null once a conversation is started/found. Used to navigate to the thread. */
-    private val _navigateToThread = MutableLiveData<Conversation?>()
-    val navigateToThread: LiveData<Conversation?> = _navigateToThread
+    /** When non-null, navigate to this thread: real id, or `0` before the first message exists. */
+    private val _navigateToThreadId = MutableLiveData<Int?>()
+    val navigateToThreadId: LiveData<Int?> = _navigateToThreadId
 
     private val _unreadCount = MutableLiveData(0)
     val unreadCount: LiveData<Int> = _unreadCount
 
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
-
     private var pollingJob: Job? = null
-
-    // ── Load ──────────────────────────────────────────────────────────────────
 
     fun loadConversations() {
         _conversationState.value = Resource.Loading
         viewModelScope.launch {
-            val result = conversationRepository.getConversations()
-            when (result) {
+            when (val result = conversationRepository.getConversations()) {
                 is Resource.Success -> {
-                    val conversations = result.data
-                    val openConversation = conversations.firstOrNull { it.isOpen }
-                    if (openConversation != null) {
-                        // Customer has an open conversation — navigate directly to it.
-                        _navigateToThread.value = openConversation
-                    } else {
-                        // No open conversation: show empty state (may include a closed one).
-                        _conversationState.value = Resource.Success(conversations)
-                    }
+                    val first = result.data.firstOrNull()
+                    _navigateToThreadId.value = first?.id ?: 0
+                    _conversationState.value = Resource.Success(Unit)
                 }
                 is Resource.Error -> _conversationState.value = Resource.Error(result.message)
                 is Resource.Loading -> {}
@@ -61,30 +46,8 @@ class MessagingViewModel @Inject constructor(
     }
 
     fun onNavigatedToThread() {
-        _navigateToThread.value = null
+        _navigateToThreadId.value = null
     }
-
-    // ── Start a new conversation ──────────────────────────────────────────────
-
-    fun startConversation(subject: String? = null) {
-        _conversationState.value = Resource.Loading
-        viewModelScope.launch {
-            when (val result = conversationRepository.startConversation(subject)) {
-                is Resource.Success -> _navigateToThread.value = result.data
-                is Resource.Error -> {
-                    _error.value = result.message
-                    _conversationState.value = Resource.Success(emptyList())
-                }
-                is Resource.Loading -> {}
-            }
-        }
-    }
-
-    fun clearError() {
-        _error.value = null
-    }
-
-    // ── Unread badge polling ──────────────────────────────────────────────────
 
     fun startPolling() {
         if (pollingJob?.isActive == true) return

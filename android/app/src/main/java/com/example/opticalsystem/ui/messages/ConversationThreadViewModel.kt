@@ -22,7 +22,10 @@ class ConversationThreadViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val conversationId: Int = savedStateHandle.get<Int>("conversationId") ?: -1
+    private val navConversationId: Int = savedStateHandle.get<Int>("conversationId") ?: 0
+
+    /** `0` until the first message is sent (server creates the thread). */
+    private var resolvedConversationId: Int = navConversationId.coerceAtLeast(0)
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -48,12 +51,20 @@ class ConversationThreadViewModel @Inject constructor(
     // ── Init ──────────────────────────────────────────────────────────────────
 
     init {
-        loadMessages()
+        if (resolvedConversationId > 0) {
+            loadMessages()
+        } else {
+            _messages.value = Resource.Success(emptyList())
+        }
     }
 
     // ── Load ──────────────────────────────────────────────────────────────────
 
     fun loadMessages() {
+        if (resolvedConversationId <= 0) {
+            _messages.value = Resource.Success(emptyList())
+            return
+        }
         if (_messages.value !is Resource.Success) {
             _messages.value = Resource.Loading
         }
@@ -63,10 +74,12 @@ class ConversationThreadViewModel @Inject constructor(
     }
 
     private suspend fun fetchMessages() {
-        when (val result = conversationRepository.getMessages(conversationId)) {
+        if (resolvedConversationId <= 0) {
+            return
+        }
+        when (val result = conversationRepository.getMessages(resolvedConversationId)) {
             is Resource.Success -> {
                 _messages.value = Resource.Success(result.data)
-                // Reload conversation status in case it changed.
                 loadConversation()
             }
             is Resource.Error -> {
@@ -79,10 +92,11 @@ class ConversationThreadViewModel @Inject constructor(
     }
 
     private suspend fun loadConversation() {
-        when (val result = conversationRepository.getConversations()) {
-            is Resource.Success -> {
-                _conversation.value = result.data.firstOrNull { it.id == conversationId }
-            }
+        if (resolvedConversationId <= 0) {
+            return
+        }
+        when (val result = conversationRepository.getConversation(resolvedConversationId)) {
+            is Resource.Success -> _conversation.value = result.data
             else -> {}
         }
     }
@@ -94,12 +108,11 @@ class ConversationThreadViewModel @Inject constructor(
         _isSending.value = true
         _sendError.value = null
 
-        // Optimistic append
         val currentMessages = (_messages.value as? Resource.Success)?.data.orEmpty()
         val optimisticMsg = Message(
             id = Int.MIN_VALUE,
-            conversationId = conversationId,
-            sender = null, // will be replaced on real response
+            conversationId = resolvedConversationId.coerceAtLeast(0),
+            sender = null,
             body = body,
             isRead = false,
             readAt = null,
@@ -109,22 +122,42 @@ class ConversationThreadViewModel @Inject constructor(
         _scrollToBottom.value = true
 
         viewModelScope.launch {
-            when (val result = conversationRepository.sendMessage(conversationId, body)) {
-                is Resource.Success -> {
-                    // Replace optimistic with real message
-                    val updated = (_messages.value as? Resource.Success)?.data.orEmpty()
-                        .dropLast(1) + result.data
-                    _messages.value = Resource.Success(updated)
-                    _scrollToBottom.value = true
+            if (resolvedConversationId <= 0) {
+                when (val result = conversationRepository.sendMessageToMyConversation(body)) {
+                    is Resource.Success -> {
+                        val payload = result.data
+                        resolvedConversationId = payload.conversation.id
+                        _conversation.value = payload.conversation
+                        val updated = (_messages.value as? Resource.Success)?.data.orEmpty()
+                            .filter { it.id != Int.MIN_VALUE } + payload.message
+                        _messages.value = Resource.Success(updated)
+                        _scrollToBottom.value = true
+                    }
+                    is Resource.Error -> {
+                        val rolled = (_messages.value as? Resource.Success)?.data.orEmpty()
+                            .filter { it.id != Int.MIN_VALUE }
+                        _messages.value = Resource.Success(rolled)
+                        _sendError.value = result.message
+                    }
+                    is Resource.Loading -> {}
                 }
-                is Resource.Error -> {
-                    // Rollback optimistic
-                    val rolled = (_messages.value as? Resource.Success)?.data.orEmpty()
-                        .filter { it.id != Int.MIN_VALUE }
-                    _messages.value = Resource.Success(rolled)
-                    _sendError.value = result.message
+            } else {
+                when (val result = conversationRepository.sendMessage(resolvedConversationId, body)) {
+                    is Resource.Success -> {
+                        val updated = (_messages.value as? Resource.Success)?.data.orEmpty()
+                            .filter { it.id != Int.MIN_VALUE } + result.data
+                        _messages.value = Resource.Success(updated)
+                        _scrollToBottom.value = true
+                        loadConversation()
+                    }
+                    is Resource.Error -> {
+                        val rolled = (_messages.value as? Resource.Success)?.data.orEmpty()
+                            .filter { it.id != Int.MIN_VALUE }
+                        _messages.value = Resource.Success(rolled)
+                        _sendError.value = result.message
+                    }
+                    is Resource.Loading -> {}
                 }
-                is Resource.Loading -> {}
             }
             _isSending.value = false
         }
@@ -145,6 +178,9 @@ class ConversationThreadViewModel @Inject constructor(
         pollingJob = viewModelScope.launch {
             while (isActive) {
                 delay(10_000)
+                if (resolvedConversationId <= 0) {
+                    continue
+                }
                 when (val result = conversationRepository.getUnreadCount()) {
                     is Resource.Success -> {
                         val count = result.data

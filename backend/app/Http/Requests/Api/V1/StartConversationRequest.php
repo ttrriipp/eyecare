@@ -14,8 +14,6 @@ class StartConversationRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'subject' => ['nullable', 'string', 'max:255'],
-        ];
+        return [];
     }
 }

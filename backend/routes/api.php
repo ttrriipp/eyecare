@@ -54,6 +54,9 @@ Route::prefix('v1')->group(function () {
         // NOTE: unread-count must be registered before {conversation} to avoid
         // the literal string being resolved as a conversation ID.
         Route::get('conversations/unread-count', [ConversationController::class, 'unreadCount']);
+        // Must be registered before {conversation} routes so "my" is not treated as an ID.
+        Route::post('conversations/my/messages', [MessageController::class, 'storeForMyConversation'])
+            ->middleware('role:customer');
         Route::get('conversations', [ConversationController::class, 'index']);
         Route::get('conversations/{conversation}', [ConversationController::class, 'show']);
         Route::get('conversations/{conversation}/messages', [MessageController::class, 'index']);
@@ -96,9 +99,6 @@ Route::prefix('v1')->group(function () {
             Route::put('bills/{bill}/pay', [BillingController::class, 'markAsPaid']);
             Route::put('bills/{bill}/official-receipt', [BillingController::class, 'updateOfficialReceipt']);
             Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
-
-            // Direct Messaging — close (staff or admin)
-            Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);
 
             // Feedback visibility (staff or admin)
             Route::put('feedbacks/{feedback}/visibility', [FeedbackController::class, 'setVisibility']);

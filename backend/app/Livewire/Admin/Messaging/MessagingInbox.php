@@ -19,9 +19,6 @@ class MessagingInbox extends Component
 {
     use WithPagination;
 
-    /** 'open' | 'closed' */
-    public string $statusFilter = 'open';
-
     public ?int $selectedConversationId = null;
 
     /** Track last-known unread count for silent-refresh logic. */
@@ -31,16 +28,6 @@ class MessagingInbox extends Component
     {
         $this->lastUnreadCount = app(ConversationService::class)
             ->getUnreadCount(auth()->user());
-    }
-
-    // ── Filter ───────────────────────────────────────────────────────────────
-
-    public function setStatusFilter(string $status): void
-    {
-        $this->statusFilter = $status;
-        $this->selectedConversationId = null;
-        $this->resetPage();
-        unset($this->conversations);
     }
 
     // ── Polling ───────────────────────────────────────────────────────────────
@@ -65,7 +52,7 @@ class MessagingInbox extends Component
     {
         return app(ConversationService::class)->listForUser(
             user: auth()->user(),
-            filters: ['status' => $this->statusFilter],
+            filters: [],
             perPage: 20,
         );
     }
@@ -86,18 +73,6 @@ class MessagingInbox extends Component
 
     #[On('conversation-updated')]
     public function onConversationUpdated(): void
-    {
-        unset($this->conversations);
-    }
-
-    #[On('conversation-closed')]
-    public function onConversationClosed(): void
-    {
-        unset($this->conversations);
-    }
-
-    #[On('conversation-reopened')]
-    public function onConversationReopened(): void
     {
         unset($this->conversations);
     }

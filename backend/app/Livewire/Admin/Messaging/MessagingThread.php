@@ -69,30 +69,6 @@ class MessagingThread extends Component
         $this->dispatch('scroll-to-bottom');
     }
 
-    public function closeConversation(): void
-    {
-        $this->authorize('close', Conversation::findOrFail($this->conversationId));
-
-        app(ConversationService::class)->closeConversation(
-            Conversation::findOrFail($this->conversationId),
-        );
-
-        unset($this->conversation, $this->threadMessages);
-        $this->dispatch('conversation-closed');
-    }
-
-    public function reopenConversation(): void
-    {
-        $this->authorize('reopen', Conversation::findOrFail($this->conversationId));
-
-        app(ConversationService::class)->reopenConversation(
-            Conversation::findOrFail($this->conversationId),
-        );
-
-        unset($this->conversation, $this->threadMessages);
-        $this->dispatch('conversation-reopened');
-    }
-
     // ── Render ─────────────────────────────────────────────────────────────
 
     public function render(): View

@@ -19,10 +19,6 @@ data class MessageSender(
 
 data class Conversation(
     val id: Int,
-    val subject: String?,
-    val status: String,
-    @SerializedName("status_label")
-    val statusLabel: String,
     @SerializedName("last_message_at")
     val lastMessageAt: String?,
     val user: ConversationUser?,
@@ -32,10 +28,7 @@ data class Conversation(
     val unreadCount: Int?,
     @SerializedName("created_at")
     val createdAt: String,
-) {
-    val isOpen: Boolean get() = status == "open"
-    val isClosed: Boolean get() = status == "closed"
-}
+)
 
 data class Message(
     val id: Int,
@@ -53,9 +46,8 @@ data class Message(
 
 // ── API request / response bodies ────────────────────────────────────────────
 
-data class StartConversationRequest(
-    val subject: String?,
-)
+/** Empty JSON body for POST /conversations (idempotent get-or-create). */
+class StartConversationRequest
 
 data class SendMessageRequest(
     val body: String,
@@ -82,4 +74,11 @@ data class MessageListResponse(
 data class SendMessageResponse(
     val message: String,
     val data: Message,
+    /** Present on `POST conversations/my/messages` (first message creates the thread). */
+    val conversation: Conversation? = null,
+)
+
+data class SendMessageResult(
+    val message: Message,
+    val conversation: Conversation,
 )

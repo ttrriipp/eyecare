@@ -69,7 +69,7 @@
         <argument
             android:name="conversationId"
             app:argType="integer"
-            android:defaultValue="-1" />
+            android:defaultValue="0" />
     </fragment>
 
     <fragment

@@ -2,36 +2,28 @@
 
 namespace App\Services;
 
-use App\Enums\ConversationStatus;
 use App\Enums\UserRole;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Pagination\LengthAwarePaginator as ConcretePaginator;
 
 class ConversationService
 {
     /**
      * Return paginated conversations scoped by the caller's role.
-     * Customers: own conversations only.
+     * Customers: own single thread only.
      * Staff/Admin: all conversations.
      * Ordered by last_message_at descending.
      */
     public function listForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Conversation::query()->with('user')->withCount('messages');
-
         if ($user->isCustomer()) {
-            $query->forUser($user->id);
+            return $this->listCanonicalCustomerConversation($user, $perPage);
         }
 
-        if (! empty($filters['status'])) {
-            $status = ConversationStatus::tryFrom($filters['status']);
-            if ($status !== null) {
-                $query->where('status', $status);
-            }
-        }
+        $query = Conversation::query()->with('user')->withCount('messages');
 
         $query->orderByRaw('last_message_at IS NULL ASC, last_message_at DESC');
 
@@ -39,27 +31,48 @@ class ConversationService
     }
 
     /**
-     * Create a new conversation for a customer.
-     * Enforces the one-open-at-a-time rule: throws a ValidationException
-     * if the customer already has an open conversation.
+     * @return LengthAwarePaginator<int, Conversation>
      */
-    public function startConversation(User $user, array $data): Conversation
+    private function listCanonicalCustomerConversation(User $user, int $perPage): ConcretePaginator
     {
-        $existing = Conversation::forUser($user->id)->open()->first();
+        $canonical = Conversation::query()
+            ->with('user')
+            ->withCount('messages')
+            ->forUser($user->id)
+            ->orderBy('id')
+            ->first();
+
+        if ($canonical === null) {
+            return new ConcretePaginator(collect(), 0, $perPage, 1);
+        }
+
+        return new ConcretePaginator(collect([$canonical]), 1, $perPage, 1);
+    }
+
+    /**
+     * Return the single persistent thread for a customer, creating the row only when this runs.
+     */
+    public function getOrCreateForCustomer(User $user, array $data = []): Conversation
+    {
+        $existing = Conversation::forUser($user->id)->orderBy('id')->first();
 
         if ($existing !== null) {
-            throw ValidationException::withMessages([
-                'conversation' => 'You already have an open conversation. Please continue there or wait for it to be closed before starting a new one.',
-            ]);
+            return $existing->load('user');
         }
 
         $conversation = Conversation::create([
             'user_id' => $user->id,
-            'subject' => $data['subject'] ?? null,
-            'status'  => ConversationStatus::Open,
         ]);
 
         return $conversation->load('user');
+    }
+
+    /**
+     * Idempotent: returns the customer's single thread or creates it.
+     */
+    public function startConversation(User $user, array $data): Conversation
+    {
+        return $this->getOrCreateForCustomer($user, $data);
     }
 
     /**
@@ -76,30 +89,10 @@ class ConversationService
     }
 
     /**
-     * Close a conversation (staff or admin).
-     */
-    public function closeConversation(Conversation $conversation): Conversation
-    {
-        $conversation->update(['status' => ConversationStatus::Closed]);
-
-        return $conversation->fresh();
-    }
-
-    /**
-     * Reopen a conversation (admin only).
-     */
-    public function reopenConversation(Conversation $conversation): Conversation
-    {
-        $conversation->update(['status' => ConversationStatus::Open]);
-
-        return $conversation->fresh();
-    }
-
-    /**
      * Return the role-aware unread message count for the given user.
      *
-     * Customer: messages in their own conversations not sent by them.
-     * Staff/Admin: messages in open conversations sent by customers.
+     * Customer: messages in their own conversation not sent by them.
+     * Staff/Admin: unread messages from customers in any conversation.
      */
     public function getUnreadCount(User $user): int
     {
@@ -111,9 +104,7 @@ class ConversationService
                 ->count();
         }
 
-        // Staff / Admin: unread messages from customers in all open conversations.
         return Message::query()
-            ->whereHas('conversation', fn ($q) => $q->open())
             ->whereHas('sender', fn ($q) => $q->where('role', UserRole::Customer->value))
             ->unread()
             ->count();
