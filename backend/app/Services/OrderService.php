@@ -59,6 +59,21 @@ class OrderService
     }
 
     /**
+     * Status history rows for a single order (staff/admin audit).
+     *
+     * @return LengthAwarePaginator<int, OrderStatusHistory>
+     */
+    public function listStatusHistoryForOrder(int $orderId, int $perPage = 20): LengthAwarePaginator
+    {
+        return OrderStatusHistory::query()
+            ->where('order_id', $orderId)
+            ->with(['actor'])
+            ->orderByDesc('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
      * List orders with filters and pagination.
      * Staff/admin see all orders; customers see only their own.
      */

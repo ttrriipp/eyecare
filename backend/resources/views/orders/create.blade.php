@@ -1,11 +1,7 @@
 @php
     $rawItems = old('items');
     if ($rawItems === null) {
-        $rows = [
-            ['product_variant_id' => '', 'quantity' => 1],
-            ['product_variant_id' => '', 'quantity' => 1],
-            ['product_variant_id' => '', 'quantity' => 1],
-        ];
+        $rows = [['product_variant_id' => '', 'quantity' => 1]];
     } else {
         $rows = [];
         foreach (array_values($rawItems) as $row) {
@@ -14,17 +10,22 @@
                 'quantity' => isset($row['quantity']) ? max(1, (int) $row['quantity']) : 1,
             ];
         }
-        while (count($rows) < 3) {
+        if (count($rows) < 1) {
             $rows[] = ['product_variant_id' => '', 'quantity' => 1];
         }
     }
     $nextLineIndex = count($rows);
     $defaultCustomerType = old('customer_type', $customers->isEmpty() ? 'walk_in' : 'registered');
     $showRegisteredFields = $customers->isNotEmpty() && $defaultCustomerType === 'registered';
+    $oldUserIdForAppointments = old('user_id') ? (string) old('user_id') : null;
+    $initialAppointmentOptions = $oldUserIdForAppointments
+        ? ($appointmentsByUserId[$oldUserIdForAppointments] ?? [])
+        : [];
+    $hasAppointmentsModule = \Illuminate\Support\Facades\Schema::hasTable('appointments');
 @endphp
 
 <x-layouts::app :title="__('Create order')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 rounded-xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
@@ -55,14 +56,14 @@
             <form
                 method="POST"
                 action="{{ route('orders.store') }}"
-                class="space-y-6"
+                class="flex min-h-0 flex-1 flex-col"
                 id="staff-order-form"
             >
                 @csrf
 
                 @if($errors->any())
                     <div
-                        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/50 dark:text-red-100"
+                        class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/50 dark:text-red-100"
                         role="alert"
                     >
                         <p class="font-medium">{{ __('Please fix the following:') }}</p>
@@ -76,7 +77,7 @@
 
                 @if($customers->isEmpty())
                     <div
-                        class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100"
+                        class="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100"
                         role="status"
                     >
                         {{ __('No registered customer accounts yet. Use walk-in and enter name and phone, or add customer accounts to attach orders to a profile.') }}
@@ -84,7 +85,7 @@
                 @endif
 
                 <div
-                    class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
+                    class="flex-1 space-y-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                 >
                     <div class="space-y-4" id="customer-type-section">
                         <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -120,11 +121,19 @@
 
                         <div
                             id="registered-customer-fields"
-                            class="space-y-1.5 @if(! $showRegisteredFields) hidden @endif"
+                            class="space-y-2 @if(! $showRegisteredFields) hidden @endif"
                         >
-                            <label for="user_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label for="customer-account-search" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                 {{ __('Account') }}
                             </label>
+                            <flux:input
+                                id="customer-account-search"
+                                type="search"
+                                :label="false"
+                                autocomplete="off"
+                                placeholder="{{ __('Search by name, email, or phone…') }}"
+                                class="max-w-xl"
+                            />
                             <select
                                 id="user_id"
                                 name="user_id"
@@ -132,7 +141,20 @@
                             >
                                 <option value="">{{ __('Select a registered customer…') }}</option>
                                 @foreach($customers as $customer)
-                                    <option value="{{ $customer->id }}" @selected(old('user_id') == $customer->id)>
+                                    @php
+                                        $searchBlob = strtolower(
+                                            trim(
+                                                $customer->name.' '.
+                                                ($customer->email ?? '').' '.
+                                                ($customer->phone ?? '')
+                                            )
+                                        );
+                                    @endphp
+                                    <option
+                                        value="{{ $customer->id }}"
+                                        data-search="{{ e($searchBlob) }}"
+                                        @selected(old('user_id') == $customer->id)
+                                    >
                                         {{ $customer->name }}
                                         @if($customer->email)
                                             — {{ $customer->email }}
@@ -141,7 +163,7 @@
                                 @endforeach
                             </select>
                             @error('user_id')
-                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -152,7 +174,7 @@
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <div class="space-y-1.5">
                                     <label for="walk_in_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ __('Walk-in name') }} <span class="text-red-600 dark:text-red-400">*</span>
+                                        {{ __('Name') }} <span class="text-red-600 dark:text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -195,16 +217,14 @@
                             {{ __('Line items') }} <span class="text-red-600 dark:text-red-400">*</span>
                         </span>
 
-                        <div
-                            class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"
-                        >
+                        <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
                             <div
-                                class="hidden border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-400 sm:grid sm:grid-cols-[1fr_7.5rem_2.75rem] sm:items-center sm:gap-2"
+                                class="hidden border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-400 md:grid md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center md:gap-3"
                             >
                                 <div class="text-start">{{ __('Product') }}</div>
-                                <div class="text-center">{{ __('Qty') }}</div>
+                                <div class="text-center">{{ __('Quantity') }}</div>
                                 <div class="text-center">
-                                    <span class="sr-only">{{ __('Actions') }}</span>
+                                    <span class="sr-only">{{ __('Remove') }}</span>
                                 </div>
                             </div>
                             <div
@@ -214,11 +234,11 @@
                             >
                                 @foreach($rows as $i => $row)
                                     <div
-                                        class="order-line grid grid-cols-1 items-center gap-3 px-3 py-3 sm:grid-cols-[1fr_7.5rem_2.75rem] sm:items-center sm:gap-2"
+                                        class="order-line grid grid-cols-1 items-center gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center md:gap-3"
                                         data-order-line
                                     >
                                         <div class="min-w-0">
-                                            <label class="mb-1 block text-xs text-zinc-500 sm:hidden">
+                                            <label class="mb-1 block text-xs text-zinc-500 md:hidden">
                                                 {{ __('Product') }}
                                             </label>
                                             <select
@@ -227,29 +247,25 @@
                                             >
                                                 <option value="">{{ __('—') }}</option>
                                                 @foreach($products as $product)
-                                                    @continue(!$product->defaultVariant)
-                                                    <option
-                                                        value="{{ $product->defaultVariant->id }}"
-                                                        @selected((string) ($row['product_variant_id'] ?? '') === (string) $product->defaultVariant->id)
-                                                    >
-                                                        {{ $product->name }}
-                                                        @if($product->sku)
-                                                            ({{ $product->sku }})
-                                                        @endif
-                                                        — {{ \App\Support\Money::peso($product->price) }}
-                                                    </option>
+                                                    @foreach($product->variants as $variant)
+                                                        <option
+                                                            value="{{ $variant->id }}"
+                                                            @selected((string) ($row['product_variant_id'] ?? '') === (string) $variant->id)
+                                                        >
+                                                            {{ $product->name }}
+                                                            — {{ $variant->sku ?? '—' }}
+                                                        </option>
+                                                    @endforeach
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div
-                                            class="qty-control flex items-center justify-center gap-1 sm:w-[7.5rem] sm:shrink-0"
-                                        >
-                                            <label class="mr-auto text-xs text-zinc-500 sm:hidden">
-                                                {{ __('Qty') }}
+                                        <div class="qty-control flex items-center justify-center gap-1 md:shrink-0">
+                                            <label class="mr-auto text-xs text-zinc-500 md:hidden">
+                                                {{ __('Quantity') }}
                                             </label>
                                             <button
                                                 type="button"
-                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                                                class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                                                 data-qty-adjust="dec"
                                                 aria-label="{{ __('Decrease quantity') }}"
                                             >
@@ -262,21 +278,21 @@
                                                 min="1"
                                                 step="1"
                                                 inputmode="numeric"
-                                                class="h-9 w-12 shrink-0 rounded-md border border-zinc-300 bg-white px-1 text-center text-sm tabular-nums text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                                                class="h-10 w-12 shrink-0 rounded-md border border-zinc-300 bg-white px-1 text-center text-sm tabular-nums text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                                             />
                                             <button
                                                 type="button"
-                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                                                class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                                                 data-qty-adjust="inc"
                                                 aria-label="{{ __('Increase quantity') }}"
                                             >
                                                 +
                                             </button>
                                         </div>
-                                        <div class="flex justify-end sm:justify-center">
+                                        <div class="flex items-center justify-end md:justify-center">
                                             <button
                                                 type="button"
-                                                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                                                class="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                                                 data-remove-order-line
                                                 title="{{ __('Remove line') }}"
                                                 aria-label="{{ __('Remove line') }}"
@@ -291,11 +307,14 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-3">
-                            <flux:button type="button" variant="outline" icon="plus" id="add-order-line">
-                                {{ __('Add line') }}
-                            </flux:button>
-                        </div>
+                        <button
+                            type="button"
+                            id="add-order-line"
+                            class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                        >
+                            <flux:icon name="plus" class="size-5 shrink-0" />
+                            {{ __('Add line') }}
+                        </button>
 
                         @error('items')
                             <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -313,11 +332,12 @@
                             step="0.01"
                             min="0"
                             :label="false"
+                            class="max-w-xs"
                             value="{{ old('discount_amount', '0') }}"
-                            placeholder="{{ __('Optional manual discount (e.g. SC/PWD)') }}"
+                            placeholder="0.00"
                         />
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ __('Recorded manually and deducted from the order total.') }}
+                            {{ __('This amount is deducted manually from the order total (e.g. senior/PWD adjustments).') }}
                         </p>
                         @error('discount_amount')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -332,56 +352,92 @@
                             id="notes"
                             name="notes"
                             rows="3"
-                            placeholder="{{ __('Optional notes for staff…') }}"
+                            placeholder="{{ __('Internal notes for staff…') }}"
                             class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600"
                         >{{ old('notes') }}</textarea>
                         @error('notes')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
-                </div>
 
-                <div class="flex flex-wrap items-center gap-3">
-                    <flux:button type="submit" variant="primary" icon="check">
-                        {{ __('Create order') }}
-                    </flux:button>
-                    <flux:button variant="ghost" :href="route('orders.index')" wire:navigate>
-                        {{ __('Cancel') }}
-                    </flux:button>
+                    @if($hasAppointmentsModule && $customers->isNotEmpty())
+                        <div
+                            id="appointment-link-section"
+                            class="space-y-1.5 @if(! $showRegisteredFields) hidden @endif"
+                        >
+                            <label for="appointment_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                {{ __('Link appointment') }}
+                                <span class="font-normal text-zinc-500 dark:text-zinc-400">({{ __('optional') }})</span>
+                            </label>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                {{ __('Upcoming appointments for the selected customer (date, time, and type).') }}
+                            </p>
+                            <select
+                                id="appointment_id"
+                                name="appointment_id"
+                                class="block w-full max-w-xl rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                            >
+                                <option value="">{{ __('None') }}</option>
+                                @foreach($initialAppointmentOptions as $opt)
+                                    <option value="{{ $opt['id'] }}" @selected((string) old('appointment_id') === (string) $opt['id'])>
+                                        {{ $opt['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('appointment_id')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+
+                    <div
+                        class="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <a
+                            href="{{ route('orders.index') }}"
+                            wire:navigate
+                            class="inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-center text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        >
+                            {{ __('Cancel') }}
+                        </a>
+                        <button
+                            type="submit"
+                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-500 focus-visible:outline focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400 dark:focus-visible:ring-offset-zinc-900"
+                        >
+                            <flux:icon name="check" class="size-5 shrink-0" />
+                            {{ __('Create order') }}
+                        </button>
+                    </div>
                 </div>
             </form>
 
             <template id="order-line-template">
                 <div
-                    class="order-line grid grid-cols-1 items-center gap-3 px-3 py-3 sm:grid-cols-[1fr_7.5rem_2.75rem] sm:items-center sm:gap-2"
+                    class="order-line grid grid-cols-1 items-center gap-3 px-3 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center md:gap-3"
                     data-order-line
                 >
                     <div class="min-w-0">
-                        <label class="mb-1 block text-xs text-zinc-500 sm:hidden">{{ __('Product') }}</label>
+                        <label class="mb-1 block text-xs text-zinc-500 md:hidden">{{ __('Product') }}</label>
                         <select
                             name="items[__INDEX__][product_variant_id]"
                             class="block w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                         >
                             <option value="">{{ __('—') }}</option>
                             @foreach($products as $product)
-                                @continue(!$product->defaultVariant)
-                                <option value="{{ $product->defaultVariant->id }}">
-                                    {{ $product->name }}
-                                    @if($product->sku)
-                                        ({{ $product->sku }})
-                                    @endif
-                                    — {{ \App\Support\Money::peso($product->price) }}
-                                </option>
+                                @foreach($product->variants as $variant)
+                                    <option value="{{ $variant->id }}">
+                                        {{ $product->name }}
+                                        — {{ $variant->sku ?? '—' }}
+                                    </option>
+                                @endforeach
                             @endforeach
                         </select>
                     </div>
-                    <div
-                        class="qty-control flex items-center justify-center gap-1 sm:w-[7.5rem] sm:shrink-0"
-                    >
-                        <label class="mr-auto text-xs text-zinc-500 sm:hidden">{{ __('Qty') }}</label>
+                    <div class="qty-control flex items-center justify-center gap-1 md:shrink-0">
+                        <label class="mr-auto text-xs text-zinc-500 md:hidden">{{ __('Quantity') }}</label>
                         <button
                             type="button"
-                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                             data-qty-adjust="dec"
                             aria-label="{{ __('Decrease quantity') }}"
                         >
@@ -394,21 +450,21 @@
                             min="1"
                             step="1"
                             inputmode="numeric"
-                            class="h-9 w-12 shrink-0 rounded-md border border-zinc-300 bg-white px-1 text-center text-sm tabular-nums text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                            class="h-10 w-12 shrink-0 rounded-md border border-zinc-300 bg-white px-1 text-center text-sm tabular-nums text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
                         />
                         <button
                             type="button"
-                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-zinc-100 text-lg font-medium leading-none text-zinc-800 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                             data-qty-adjust="inc"
                             aria-label="{{ __('Increase quantity') }}"
                         >
                             +
                         </button>
                     </div>
-                    <div class="flex justify-end sm:justify-center">
+                    <div class="flex items-center justify-end md:justify-center">
                         <button
                             type="button"
-                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                            class="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                             data-remove-order-line
                             title="{{ __('Remove line') }}"
                             aria-label="{{ __('Remove line') }}"
@@ -420,6 +476,8 @@
                     </div>
                 </div>
             </template>
+
+            <script type="application/json" id="customer-appointments-json">@json($appointmentsByUserId)</script>
 
             <script>
                 (function () {
@@ -506,6 +564,7 @@
                 (function () {
                     const regFields = document.getElementById('registered-customer-fields');
                     const walkFields = document.getElementById('walk-in-customer-fields');
+                    const aptSection = document.getElementById('appointment-link-section');
                     if (!regFields || !walkFields) return;
 
                     const radios = document.querySelectorAll('#staff-order-form input[name="customer_type"]');
@@ -520,19 +579,86 @@
 
                         regFields.classList.toggle('hidden', !showReg);
                         walkFields.classList.toggle('hidden', showReg);
+                        if (aptSection) {
+                            aptSection.classList.toggle('hidden', !showReg);
+                        }
 
                         regFields.querySelectorAll('select, input').forEach(function (el) {
+                            if (el.id === 'customer-account-search') return;
                             el.disabled = !showReg;
                         });
                         walkFields.querySelectorAll('input').forEach(function (el) {
                             el.disabled = showReg;
                         });
+
+                        if (!showReg && aptSection) {
+                            const apt = document.getElementById('appointment_id');
+                            if (apt) apt.value = '';
+                        }
                     }
 
                     radios.forEach(function (r) {
                         r.addEventListener('change', syncCustomerFields);
                     });
                     syncCustomerFields();
+                })();
+
+                (function () {
+                    const searchInput = document.getElementById('customer-account-search');
+                    const userSelect = document.getElementById('user_id');
+                    if (!searchInput || !userSelect) return;
+
+                    function filterCustomers() {
+                        const q = searchInput.value.trim().toLowerCase();
+                        const opts = userSelect.querySelectorAll('option');
+                        opts.forEach(function (opt, i) {
+                            if (i === 0) {
+                                opt.hidden = false;
+                                return;
+                            }
+                            const blob = (opt.getAttribute('data-search') || opt.textContent || '').toLowerCase();
+                            opt.hidden = q !== '' && !blob.includes(q);
+                        });
+                    }
+
+                    searchInput.addEventListener('input', filterCustomers);
+                    filterCustomers();
+                })();
+
+                (function () {
+                    const jsonEl = document.getElementById('customer-appointments-json');
+                    const userSelect = document.getElementById('user_id');
+                    const aptSelect = document.getElementById('appointment_id');
+                    if (!jsonEl || !userSelect || !aptSelect) return;
+
+                    let byUser = {};
+                    try {
+                        byUser = JSON.parse(jsonEl.textContent || '{}');
+                    } catch (e) {
+                        byUser = {};
+                    }
+
+                    function fillAppointments() {
+                        const uid = String(userSelect.value || '');
+                        const list = byUser[uid] || [];
+
+                        while (aptSelect.options.length > 0) {
+                            aptSelect.remove(0);
+                        }
+                        const none = document.createElement('option');
+                        none.value = '';
+                        none.textContent = @json(__('None'));
+                        aptSelect.appendChild(none);
+
+                        list.forEach(function (row) {
+                            const o = document.createElement('option');
+                            o.value = String(row.id);
+                            o.textContent = row.label;
+                            aptSelect.appendChild(o);
+                        });
+                    }
+
+                    userSelect.addEventListener('change', fillAppointments);
                 })();
             </script>
         @endif

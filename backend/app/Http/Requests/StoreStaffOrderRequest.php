@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\UserRole;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class StoreStaffOrderRequest extends FormRequest
@@ -25,6 +26,21 @@ class StoreStaffOrderRequest extends FormRequest
                 'walk_in_name' => null,
                 'walk_in_phone' => null,
             ]);
+        }
+
+        if ($this->input('customer_type') === 'walk_in') {
+            $this->merge(['appointment_id' => null]);
+        }
+
+        if (! Schema::hasTable('appointments')) {
+            $this->merge(['appointment_id' => null]);
+        } else {
+            $appointmentId = $this->input('appointment_id');
+            if ($appointmentId === '' || $appointmentId === null) {
+                $this->merge(['appointment_id' => null]);
+            } elseif (is_numeric($appointmentId)) {
+                $this->merge(['appointment_id' => (int) $appointmentId]);
+            }
         }
 
         $items = $this->input('items', []);
@@ -82,6 +98,25 @@ class StoreStaffOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            ...$this->appointmentIdRules(),
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    private function appointmentIdRules(): array
+    {
+        if (! Schema::hasTable('appointments')) {
+            return [];
+        }
+
+        return [
+            'appointment_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('appointments', 'id'),
+            ],
         ];
     }
 

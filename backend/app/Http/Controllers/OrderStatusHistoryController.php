@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Models\Order;
 use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
@@ -39,6 +40,24 @@ class OrderStatusHistoryController extends Controller
             'entries' => $entries,
             'filters' => $filters,
             'staffUsers' => $staffUsers,
+        ]);
+    }
+
+    /**
+     * Full status history for one order (admin + staff).
+     */
+    public function forOrder(Request $request, Order $order): View
+    {
+        $user = $request->user();
+        if (! $user?->isAdminOrStaff()) {
+            abort(403);
+        }
+
+        $entries = $this->orderService->listStatusHistoryForOrder($order->id, perPage: 30);
+
+        return view('orders.status-history-order', [
+            'order' => $order,
+            'entries' => $entries,
         ]);
     }
 }

@@ -81,6 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->name('orders.status.update');
+    Route::get('orders/{order}/status-history', [OrderStatusHistoryController::class, 'forOrder'])
+        ->name('orders.status-history.order');
     Route::get('orders/{order}', [OrderController::class, 'show'])
         ->name('orders.show');
 

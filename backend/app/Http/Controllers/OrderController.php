@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AppointmentStatus;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreStaffOrderRequest;
 use App\Http\Requests\UpdateWebOrderStatusRequest;
+use App\Models\Appointment;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -83,13 +86,35 @@ class OrderController extends Controller
 
         $products = Product::query()
             ->active()
-            ->with('defaultVariant')
+            ->with([
+                'variants' => fn ($q) => $q->where('is_active', true)->orderBy('id'),
+            ])
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        $appointmentsByUserId = [];
+        if (Schema::hasTable('appointments') && $customers->isNotEmpty()) {
+            $appointmentsByUserId = Appointment::query()
+                ->whereIn('user_id', $customers->pluck('id'))
+                ->where('scheduled_at', '>=', now())
+                ->whereIn('status', [AppointmentStatus::Scheduled, AppointmentStatus::Confirmed])
+                ->orderBy('scheduled_at')
+                ->get(['id', 'user_id', 'scheduled_at', 'appointment_type'])
+                ->groupBy(fn (Appointment $a) => (string) $a->user_id)
+                ->map(
+                    fn ($group) => $group->map(fn (Appointment $a) => [
+                        'id' => $a->id,
+                        'label' => $a->scheduled_at->timezone(config('app.timezone'))->format('M j, Y g:i A')
+                            .' — '.($a->appointment_type ?: __('Appointment')),
+                    ])->values()->all(),
+                )
+                ->all();
+        }
 
         return view('orders.create', [
             'customers' => $customers,
             'products' => $products,
+            'appointmentsByUserId' => $appointmentsByUserId,
         ]);
     }
 
