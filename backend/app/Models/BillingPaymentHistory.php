@@ -22,6 +22,7 @@ class BillingPaymentHistory extends Model
     protected $fillable = [
         'bill_id',
         'actor_user_id',
+        'authorized_by_user_id',
         'action',
         'amount',
         'payment_method',
@@ -58,5 +59,10 @@ class BillingPaymentHistory extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    public function authorizer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'authorized_by_user_id');
     }
 }

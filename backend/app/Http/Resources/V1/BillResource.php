@@ -15,6 +15,7 @@ class BillResource extends JsonResource
             'order' => new OrderResource($this->whenLoaded('order')),
             'appointment_id' => $this->appointment_id,
             'invoice_number' => $this->invoice_number,
+            'official_receipt_number' => $this->official_receipt_number,
             'amount' => $this->amount,
             'amount_paid' => $this->amount_paid,
             'balance_due' => $this->balance_due,

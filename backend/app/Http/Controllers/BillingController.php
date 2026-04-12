@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\RecordBillPaymentRequest;
+use App\Http\Requests\RefundBillRequest;
+use App\Http\Requests\UpdateBillOfficialReceiptRequest;
 use App\Models\Bill;
 use App\Services\BillingService;
 use Illuminate\Http\RedirectResponse;
@@ -56,13 +59,48 @@ class BillingController extends Controller
             }
         }
 
-        if ($user->isStaff()) {
-            $bill->load(['paymentHistories.actor']);
+        if ($user->isAdminOrStaff()) {
+            $bill->load(['paymentHistories.actor', 'paymentHistories.authorizer']);
         }
 
         return view('billing.show', [
             'bill' => $bill,
         ]);
+    }
+
+    /**
+     * Printable invoice / receipt (same access as show).
+     */
+    public function print(Request $request, Bill $bill): View
+    {
+        $user = $request->user();
+        $bill = $this->billingService->find($bill->id);
+
+        if ($user->isCustomer()) {
+            $bill->loadMissing('order');
+            if (! $bill->order || (int) $bill->order->user_id !== (int) $user->id) {
+                abort(403);
+            }
+        }
+
+        return view('billing.print', [
+            'bill' => $bill,
+        ]);
+    }
+
+    /**
+     * Staff/admin: set BIR official receipt number (separate from internal invoice #).
+     */
+    public function updateOfficialReceipt(UpdateBillOfficialReceiptRequest $request, Bill $bill): RedirectResponse
+    {
+        $bill = $this->billingService->updateOfficialReceiptNumber(
+            $bill,
+            $request->validated('official_receipt_number'),
+        );
+
+        return redirect()
+            ->route('orders.billing.show', $bill)
+            ->with('status', __('Official receipt number saved for :invoice.', ['invoice' => $bill->invoice_number]));
     }
 
     /**
@@ -102,18 +140,25 @@ class BillingController extends Controller
     }
 
     /**
-     * Admin only: refund paid bill (plan).
+     * Admin only: record a refund (partial or full) with audit trail.
      */
-    public function refund(Request $request, Bill $bill): RedirectResponse
+    public function refund(RefundBillRequest $request, Bill $bill): RedirectResponse
     {
-        if (! $request->user()?->isAdmin()) {
-            abort(403);
-        }
+        $validated = $request->validated();
 
-        $bill = $this->billingService->refund($bill, $request->user());
+        $bill = $this->billingService->refund(
+            $bill,
+            $request->user(),
+            (float) $validated['refund_amount'],
+            PaymentMethod::from($validated['refund_method']),
+            (int) $request->user()->id,
+            $validated['note'] ?? null,
+        );
 
         return redirect()
             ->route('orders.billing.show', $bill)
-            ->with('status', __('Invoice :invoice marked as refunded.', ['invoice' => $bill->invoice_number]));
+            ->with('status', $bill->isPartiallyRefunded()
+                ? __('Partial refund recorded for :invoice.', ['invoice' => $bill->invoice_number])
+                : __('Invoice :invoice fully refunded.', ['invoice' => $bill->invoice_number]));
     }
 }

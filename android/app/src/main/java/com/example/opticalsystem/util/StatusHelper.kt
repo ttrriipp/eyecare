@@ -82,6 +82,10 @@ object StatusHelper {
                 ContextCompat.getColor(context, R.color.payment_refunded),
                 ContextCompat.getColor(context, R.color.payment_refunded_bg),
             )
+            "partially_refunded" -> Pair(
+                ContextCompat.getColor(context, R.color.payment_partially_paid),
+                ContextCompat.getColor(context, R.color.payment_partially_paid_bg),
+            )
             "voided" -> Pair(
                 ContextCompat.getColor(context, R.color.payment_voided),
                 ContextCompat.getColor(context, R.color.payment_voided_bg),

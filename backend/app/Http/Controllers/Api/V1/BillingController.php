@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\MarkBillPaidRequest;
+use App\Http\Requests\Api\V1\RefundBillRequest;
+use App\Http\Requests\UpdateBillOfficialReceiptRequest;
 use App\Http\Resources\V1\BillResource;
 use App\Models\Bill;
 use App\Services\BillingService;
@@ -76,6 +79,22 @@ class BillingController extends Controller
     }
 
     /**
+     * Set BIR official receipt number (staff/admin).
+     */
+    public function updateOfficialReceipt(UpdateBillOfficialReceiptRequest $request, Bill $bill): JsonResponse
+    {
+        $bill = $this->billingService->updateOfficialReceiptNumber(
+            $bill,
+            $request->validated('official_receipt_number'),
+        );
+
+        return response()->json([
+            'message' => 'Official receipt number saved.',
+            'bill' => new BillResource($bill),
+        ]);
+    }
+
+    /**
      * Void an unpaid bill (admin only).
      */
     public function void(Request $request, Bill $bill): JsonResponse
@@ -93,18 +112,23 @@ class BillingController extends Controller
     }
 
     /**
-     * Refund a paid bill (admin only).
+     * Record a refund (admin only).
      */
-    public function refund(Request $request, Bill $bill): JsonResponse
+    public function refund(RefundBillRequest $request, Bill $bill): JsonResponse
     {
-        if (! $request->user()->isAdmin()) {
-            abort(403, 'Only administrators can issue refunds.');
-        }
+        $validated = $request->validated();
 
-        $bill = $this->billingService->refund($bill, $request->user());
+        $bill = $this->billingService->refund(
+            $bill,
+            $request->user(),
+            (float) $validated['refund_amount'],
+            PaymentMethod::from($validated['refund_method']),
+            (int) $request->user()->id,
+            $validated['note'] ?? null,
+        );
 
         return response()->json([
-            'message' => 'Bill refunded.',
+            'message' => $bill->isPartiallyRefunded() ? 'Partial refund recorded.' : 'Bill fully refunded.',
             'bill' => new BillResource($bill),
         ]);
     }

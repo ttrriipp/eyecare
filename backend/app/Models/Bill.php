@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Bill extends Model
 {
@@ -18,6 +19,7 @@ class Bill extends Model
         'order_id',
         'appointment_id',
         'invoice_number',
+        'official_receipt_number',
         'amount',
         'amount_paid',
         'balance_due',
@@ -73,10 +75,15 @@ class Bill extends Model
     public function scopeSearch(Builder $query, string $term): Builder
     {
         return $query->where(function (Builder $q) use ($term) {
-            $q->where('invoice_number', 'like', "%{$term}%")
-                ->orWhereHas('order', function (Builder $oq) use ($term) {
-                    $oq->where('order_number', 'like', "%{$term}%");
-                });
+            $q->where('invoice_number', 'like', "%{$term}%");
+
+            if (Schema::hasColumn($q->getModel()->getTable(), 'official_receipt_number')) {
+                $q->orWhere('official_receipt_number', 'like', "%{$term}%");
+            }
+
+            $q->orWhereHas('order', function (Builder $oq) use ($term) {
+                $oq->where('order_number', 'like', "%{$term}%");
+            });
         });
     }
 
@@ -95,5 +102,10 @@ class Bill extends Model
     public function isPartiallyPaid(): bool
     {
         return $this->payment_status === PaymentStatus::PartiallyPaid;
+    }
+
+    public function isPartiallyRefunded(): bool
+    {
+        return $this->payment_status === PaymentStatus::PartiallyRefunded;
     }
 }

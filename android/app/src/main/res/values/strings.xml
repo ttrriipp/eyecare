@@ -224,6 +224,7 @@
     <string name="bills_empty_subtitle">Your billing history will appear here.</string>
     <string name="bill_detail_title">Bill Details</string>
     <string name="bill_invoice_number">Invoice Number</string>
+    <string name="bill_official_receipt">Official receipt (OR) #</string>
     <string name="bill_amount">Amount</string>
     <string name="bill_total_amount">Total Amount</string>
     <string name="bill_amount_paid">Amount Paid</string>
@@ -237,6 +238,7 @@
     <string name="bill_status_partially_paid">Partially Paid</string>
     <string name="bill_status_paid">Paid</string>
     <string name="bill_status_refunded">Refunded</string>
+    <string name="bill_status_partially_refunded">Partially Refunded</string>
     <string name="bill_status_voided">Voided</string>
     <string name="bill_not_paid">Not yet paid</string>
 

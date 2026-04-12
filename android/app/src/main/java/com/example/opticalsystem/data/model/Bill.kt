@@ -11,6 +11,8 @@ data class Bill(
     val appointmentId: Int?,
     @SerializedName("invoice_number")
     val invoiceNumber: String,
+    @SerializedName("official_receipt_number")
+    val officialReceiptNumber: String? = null,
     val amount: String,
     @SerializedName("amount_paid")
     val amountPaid: String?,

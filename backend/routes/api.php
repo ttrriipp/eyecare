@@ -95,6 +95,7 @@ Route::prefix('v1')->group(function () {
 
             // Bill payment
             Route::put('bills/{bill}/pay', [BillingController::class, 'markAsPaid']);
+            Route::put('bills/{bill}/official-receipt', [BillingController::class, 'updateOfficialReceipt']);
 
             // Direct Messaging — close (staff or admin)
             Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);

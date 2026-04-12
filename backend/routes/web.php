@@ -65,18 +65,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:admin')
         ->name('orders.status-history.index');
 
-    Route::get('orders/billing', [BillingController::class, 'index'])
+    Route::get('billing', [BillingController::class, 'index'])
         ->name('orders.billing.index');
-    Route::get('orders/billing/payment-history', [BillingPaymentHistoryController::class, 'index'])
+    Route::get('billing/payment-history', [BillingPaymentHistoryController::class, 'index'])
         ->middleware('role:admin')
         ->name('orders.billing.payment-history.index');
-    Route::get('orders/billing/{bill}', [BillingController::class, 'show'])
+    Route::get('billing/{bill}', [BillingController::class, 'show'])
         ->name('orders.billing.show');
-    Route::put('orders/billing/{bill}/pay', [BillingController::class, 'pay'])
+    Route::get('billing/{bill}/print', [BillingController::class, 'print'])
+        ->name('orders.billing.print');
+    Route::put('billing/{bill}/pay', [BillingController::class, 'pay'])
         ->name('orders.billing.pay');
-    Route::put('orders/billing/{bill}/void', [BillingController::class, 'void'])
+    Route::put('billing/{bill}/official-receipt', [BillingController::class, 'updateOfficialReceipt'])
+        ->name('orders.billing.official-receipt');
+    Route::put('billing/{bill}/void', [BillingController::class, 'void'])
         ->name('orders.billing.void');
-    Route::put('orders/billing/{bill}/refund', [BillingController::class, 'refund'])
+    Route::put('billing/{bill}/refund', [BillingController::class, 'refund'])
         ->name('orders.billing.refund');
 
     Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])

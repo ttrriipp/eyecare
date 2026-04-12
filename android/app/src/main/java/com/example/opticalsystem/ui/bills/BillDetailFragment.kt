@@ -77,6 +77,17 @@ class BillDetailFragment : Fragment() {
 
         StatusHelper.applyPaymentStatusBadge(binding.tvPaymentStatus, bill.paymentStatus, bill.paymentStatusLabel)
 
+        val terminal = bill.paymentStatus == "voided"
+            || bill.paymentStatus == "refunded"
+            || bill.paymentStatus == "partially_refunded"
+
+        if (!bill.officialReceiptNumber.isNullOrBlank()) {
+            binding.rowOfficialReceipt.isVisible = true
+            binding.tvOfficialReceipt.text = bill.officialReceiptNumber
+        } else {
+            binding.rowOfficialReceipt.isVisible = false
+        }
+
         // Amount paid
         if (!bill.amountPaid.isNullOrBlank()) {
             binding.rowAmountPaid.isVisible = true
@@ -85,8 +96,9 @@ class BillDetailFragment : Fragment() {
             binding.rowAmountPaid.isVisible = false
         }
 
-        // Balance due
-        if (!bill.balanceDue.isNullOrBlank()) {
+        // Balance due (hide when voided / refunded / partially refunded, or zero balance)
+        val balanceVal = bill.balanceDue?.toDoubleOrNull() ?: 0.0
+        if (!terminal && balanceVal > 0 && !bill.balanceDue.isNullOrBlank()) {
             binding.rowBalanceDue.isVisible = true
             binding.tvBalanceDue.text = StatusHelper.formatPrice(bill.balanceDue)
         } else {

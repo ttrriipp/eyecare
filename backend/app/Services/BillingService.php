@@ -9,6 +9,7 @@ use App\Models\BillingPaymentHistory;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class BillingService
@@ -58,17 +59,22 @@ class BillingService
     public function listPaymentHistory(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
         $query = BillingPaymentHistory::query()
-            ->with(['bill.order', 'actor'])
+            ->with(['bill.order', 'actor', 'authorizer'])
             ->orderByDesc('created_at');
 
         if (! empty($filters['search'])) {
             $term = $filters['search'];
             $query->where(function ($q) use ($term) {
                 $q->whereHas('bill', function ($bq) use ($term) {
-                    $bq->where('invoice_number', 'like', "%{$term}%")
-                        ->orWhereHas('order', function ($oq) use ($term) {
-                            $oq->where('order_number', 'like', "%{$term}%");
-                        });
+                    $bq->where('invoice_number', 'like', "%{$term}%");
+
+                    if (Schema::hasColumn((new Bill)->getTable(), 'official_receipt_number')) {
+                        $bq->orWhere('official_receipt_number', 'like', "%{$term}%");
+                    }
+
+                    $bq->orWhereHas('order', function ($oq) use ($term) {
+                        $oq->where('order_number', 'like', "%{$term}%");
+                    });
                 })->orWhereHas('actor', function ($aq) use ($term) {
                     $aq->where('name', 'like', "%{$term}%")
                         ->orWhere('email', 'like', "%{$term}%");
@@ -116,6 +122,19 @@ class BillingService
     }
 
     /**
+     * Ensure the order has a bill (idempotent). Used when the order is confirmed.
+     */
+    public function ensureBillForOrder(Order $order): Bill
+    {
+        $existing = Bill::query()->where('order_id', $order->id)->first();
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return $this->createForOrder($order);
+    }
+
+    /**
      * Record bill payment (partial or full).
      */
     public function recordPayment(
@@ -124,7 +143,7 @@ class BillingService
         string $paymentMethod,
         ?int $collectedBy = null
     ): Bill {
-        if (in_array($bill->payment_status, [PaymentStatus::Voided, PaymentStatus::Refunded], true)) {
+        if (in_array($bill->payment_status, [PaymentStatus::Voided, PaymentStatus::Refunded, PaymentStatus::PartiallyRefunded], true)) {
             throw ValidationException::withMessages([
                 'payment_status' => "Cannot record payment for a '{$bill->payment_status->label()}' bill.",
             ]);
@@ -172,10 +191,26 @@ class BillingService
                 $fromStatus,
                 $bill->payment_status,
                 null,
+                null,
             );
         }
 
         return $bill;
+    }
+
+    /**
+     * Set or clear the BIR official receipt (OR) number — separate from the internal invoice number.
+     */
+    public function updateOfficialReceiptNumber(Bill $bill, ?string $officialReceiptNumber): Bill
+    {
+        $normalized = $officialReceiptNumber !== null ? trim($officialReceiptNumber) : null;
+        if ($normalized === '') {
+            $normalized = null;
+        }
+
+        $bill->update(['official_receipt_number' => $normalized]);
+
+        return $bill->fresh(['order.user', 'collector']);
     }
 
     /**
@@ -191,7 +226,10 @@ class BillingService
 
         $fromStatus = $bill->payment_status;
 
-        $bill->update(['payment_status' => PaymentStatus::Voided]);
+        $bill->update([
+            'payment_status' => PaymentStatus::Voided,
+            'balance_due' => 0,
+        ]);
 
         $bill = $bill->fresh(['order.user']);
 
@@ -204,25 +242,68 @@ class BillingService
             $fromStatus,
             PaymentStatus::Voided,
             null,
+            null,
         );
 
         return $bill;
     }
 
     /**
-     * Refund a paid bill (admin only).
+     * Record a physical refund (partial or full). Creates a billing_payment_histories row with amount, method, and authorizer.
+     * Full reversal → Refunded; restocking-style partial → PartiallyRefunded until net amount_paid reaches zero.
      */
-    public function refund(Bill $bill, User $actor): Bill
-    {
-        if (! $bill->payment_status->canTransitionTo(PaymentStatus::Refunded)) {
+    public function refund(
+        Bill $bill,
+        ?User $actor,
+        float $refundAmount,
+        PaymentMethod $refundMethod,
+        ?int $authorizedByUserId,
+        ?string $note,
+    ): Bill {
+        if (! in_array($bill->payment_status, [
+            PaymentStatus::PartiallyPaid,
+            PaymentStatus::Paid,
+            PaymentStatus::PartiallyRefunded,
+        ], true)) {
             throw ValidationException::withMessages([
-                'payment_status' => "Cannot refund a '{$bill->payment_status->label()}' bill.",
+                'payment_status' => __('This bill cannot be refunded in its current state.'),
             ]);
         }
 
-        $fromStatus = $bill->payment_status;
+        if ($refundAmount <= 0) {
+            throw ValidationException::withMessages([
+                'refund_amount' => __('Refund amount must be greater than zero.'),
+            ]);
+        }
 
-        $bill->update(['payment_status' => PaymentStatus::Refunded]);
+        $amountPaid = round((float) $bill->amount_paid, 2);
+        if (round($refundAmount, 2) > $amountPaid) {
+            throw ValidationException::withMessages([
+                'refund_amount' => __('Refund amount cannot exceed amount paid (:max).', [
+                    'max' => number_format($amountPaid, 2, '.', ''),
+                ]),
+            ]);
+        }
+
+        if ($authorizedByUserId !== null) {
+            $authorizer = User::query()->find($authorizedByUserId);
+            if (! $authorizer?->isAdminOrStaff()) {
+                throw ValidationException::withMessages([
+                    'authorized_by_user_id' => __('Authorizer must be an admin or staff member.'),
+                ]);
+            }
+        }
+
+        $fromStatus = $bill->payment_status;
+        $newAmountPaid = round($amountPaid - $refundAmount, 2);
+        $toStatus = $newAmountPaid <= 0 ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded;
+
+        $bill->update([
+            'payment_status' => $toStatus,
+            'amount_paid' => max($newAmountPaid, 0),
+            'balance_due' => 0,
+            'paid_at' => null,
+        ]);
 
         $bill = $bill->fresh(['order.user']);
 
@@ -230,11 +311,12 @@ class BillingService
             $bill,
             $actor,
             BillingPaymentHistory::ACTION_REFUNDED,
-            null,
-            null,
+            round($refundAmount, 2),
+            $refundMethod,
             $fromStatus,
-            PaymentStatus::Refunded,
-            null,
+            $toStatus,
+            $note,
+            $authorizedByUserId,
         );
 
         return $bill;
@@ -255,25 +337,42 @@ class BillingService
         $fromStatus = $bill->payment_status;
 
         if ($bill->isUnpaid()) {
-            $bill->update(['payment_status' => PaymentStatus::Voided]);
-        } elseif ($bill->isPartiallyPaid() || $bill->isPaid()) {
-            $bill->update(['payment_status' => PaymentStatus::Refunded]);
-        } else {
+            $bill->update([
+                'payment_status' => PaymentStatus::Voided,
+                'balance_due' => 0,
+            ]);
+            $bill = $bill->fresh();
+
+            if ($bill->payment_status !== $fromStatus) {
+                $this->recordBillingActivity(
+                    $bill,
+                    $actor,
+                    BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION,
+                    null,
+                    null,
+                    $fromStatus,
+                    $bill->payment_status,
+                    __('Bill updated because the order was cancelled.'),
+                    null,
+                );
+            }
+
             return;
         }
 
-        $bill = $bill->fresh();
+        if ($bill->isPartiallyPaid() || $bill->isPaid() || $bill->isPartiallyRefunded()) {
+            $paid = round((float) $bill->amount_paid, 2);
+            if ($paid <= 0) {
+                return;
+            }
 
-        if ($bill->payment_status !== $fromStatus) {
-            $this->recordBillingActivity(
+            $this->refund(
                 $bill,
                 $actor,
-                BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION,
-                null,
-                null,
-                $fromStatus,
-                $bill->payment_status,
-                __('Bill updated because the order was cancelled.'),
+                $paid,
+                PaymentMethod::BankTransfer,
+                ($actor !== null && $actor->isAdminOrStaff()) ? $actor->id : null,
+                __('Full refund recorded because the order was cancelled.'),
             );
         }
     }
@@ -308,10 +407,12 @@ class BillingService
         PaymentStatus $fromStatus,
         PaymentStatus $toStatus,
         ?string $note,
+        ?int $authorizedByUserId = null,
     ): void {
         BillingPaymentHistory::query()->create([
             'bill_id' => $bill->id,
             'actor_user_id' => $actor?->id,
+            'authorized_by_user_id' => $authorizedByUserId,
             'action' => $action,
             'amount' => $amount !== null ? round($amount, 2) : null,
             'payment_method' => $paymentMethod?->value,

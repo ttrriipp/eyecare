@@ -37,8 +37,11 @@ class BillAdapter(
             val total = StatusHelper.formatPrice(bill.amount)
             binding.tvBillAmount.text = "$paid / $total"
 
+            val terminal = bill.paymentStatus == "voided"
+                || bill.paymentStatus == "refunded"
+                || bill.paymentStatus == "partially_refunded"
             val balanceVal = bill.balanceDue?.toDoubleOrNull() ?: 0.0
-            if (balanceVal > 0 && bill.paymentStatus != "unpaid") {
+            if (!terminal && balanceVal > 0 && bill.paymentStatus != "unpaid") {
                 binding.tvBalanceDue.isVisible = true
                 binding.tvBalanceDue.text = "Balance: ${StatusHelper.formatPrice(bill.balanceDue!!)}"
             } else {

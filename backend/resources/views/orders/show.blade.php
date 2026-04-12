@@ -222,6 +222,12 @@
                             <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Invoice number') }}</dt>
                             <dd class="font-mono text-zinc-900 dark:text-zinc-100">{{ $order->bill->invoice_number }}</dd>
                         </div>
+                        @if(filled($order->bill->official_receipt_number))
+                            <div>
+                                <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Official receipt (OR) #') }}</dt>
+                                <dd class="font-mono text-zinc-900 dark:text-zinc-100">{{ $order->bill->official_receipt_number }}</dd>
+                            </div>
+                        @endif
                         <div>
                             <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Amount') }}</dt>
                             <dd class="tabular-nums text-zinc-900 dark:text-zinc-100">

@@ -176,7 +176,7 @@ class OrderService
                 'total_amount' => $finalAmount,
             ]);
 
-            // Billing is intentionally deferred until staff confirmation / in-person payment stage.
+            // Bill is created when staff confirms the order (see updateStatus → Confirmed).
             $order->load(array_merge($this->orderRelations(), ['bill']));
 
             $this->recordStaffOrderActivity(
@@ -206,7 +206,11 @@ class OrderService
 
         $order->update(['status' => $newStatus]);
 
-        $order = $order->fresh($this->orderRelations());
+        if ($newStatus === OrderStatus::Confirmed) {
+            $this->billingService->ensureBillForOrder($order);
+        }
+
+        $order = $order->fresh(array_merge($this->orderRelations(), ['bill']));
 
         $this->recordStaffOrderActivity(
             $order,

@@ -182,6 +182,16 @@
                                             @break
                                         @case(\App\Models\BillingPaymentHistory::ACTION_REFUNDED)
                                             {{ __('Recorded refund') }}
+                                            @if($row->payment_method)
+                                                <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                    {{ __('Method: :m', ['m' => $row->payment_method->label()]) }}
+                                                </div>
+                                            @endif
+                                            @if($row->authorizer)
+                                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                    {{ __('Authorized by: :name', ['name' => $row->authorizer->name]) }}
+                                                </div>
+                                            @endif
                                             @break
                                         @case(\App\Models\BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION)
                                             {{ __('Updated from order cancellation') }}

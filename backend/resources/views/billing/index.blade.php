@@ -18,7 +18,6 @@
                     class="mt-1.5"
                     :items="[
                         ['label' => __('Home'), 'href' => route('dashboard')],
-                        ['label' => __('Orders'), 'href' => route('orders.index')],
                         ['label' => __('Billing')],
                     ]"
                 />
@@ -46,7 +45,7 @@
                                     type="text"
                                     data-preserve-focus="billing-search"
                                     class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 pr-14 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                                    placeholder="{{ __('Invoice #, order #…') }}"
+                                    placeholder="{{ __('Invoice #, OR #, order #…') }}"
                                     value="{{ $filters['search'] ?? '' }}"
                                     autocomplete="off"
                                     oninput="sessionStorage.setItem('preserveFocusInput', this.id); sessionStorage.setItem('preserveFocusPos', String(this.selectionStart ?? this.value.length)); sessionStorage.setItem(`liveSearchValue:${location.pathname}:${this.id}`, this.value); sessionStorage.setItem(`liveSearchPending:${location.pathname}:${this.id}`, '1'); clearTimeout(this.form._searchTimer); this.form._searchTimer = setTimeout(() => this.form.requestSubmit(), 250);"
@@ -153,6 +152,7 @@
                             @foreach($bills as $bill)
                                 @php
                                     $ps = $bill->payment_status;
+                                    $terminalRow = in_array($ps, [\App\Enums\PaymentStatus::Voided, \App\Enums\PaymentStatus::Refunded], true);
                                 @endphp
                                 <tr class="bg-white transition-colors dark:bg-zinc-900">
                                     <td class="px-4 py-3">
@@ -196,8 +196,9 @@
                                                 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200' => $ps === \App\Enums\PaymentStatus::Unpaid,
                                                 'bg-sky-100 text-sky-900 dark:bg-sky-950/80 dark:text-sky-200' => $ps === \App\Enums\PaymentStatus::PartiallyPaid,
                                                 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-200' => $ps === \App\Enums\PaymentStatus::Paid,
-                                                'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $ps === \App\Enums\PaymentStatus::Voided,
+                                                'bg-orange-100 text-orange-900 dark:bg-orange-950/80 dark:text-orange-200' => $ps === \App\Enums\PaymentStatus::PartiallyRefunded,
                                                 'bg-violet-100 text-violet-900 dark:bg-violet-950/80 dark:text-violet-200' => $ps === \App\Enums\PaymentStatus::Refunded,
+                                                'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' => $ps === \App\Enums\PaymentStatus::Voided,
                                             ])
                                         >
                                             {{ $bill->payment_status->label() }}
@@ -205,7 +206,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100">
                                         <div>{{ \App\Support\Money::peso($bill->amount_paid) }} / {{ \App\Support\Money::peso($bill->amount) }}</div>
-                                        @if((float) $bill->balance_due > 0)
+                                        @if(! $terminalRow && (float) $bill->balance_due > 0)
                                             <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
                                                 {{ __('Bal: :amount', ['amount' => \App\Support\Money::peso($bill->balance_due)]) }}
                                             </div>
