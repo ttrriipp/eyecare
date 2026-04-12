@@ -486,7 +486,12 @@
                     <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
                         <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Reorder levels & batch / expiry') }}</h2>
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Saves metadata only (no stock movement).') }}</p>
-                        <form method="POST" action="{{ route('products.inventory.meta.update', $product) }}" class="mt-4 space-y-4">
+                        <form
+                            id="product-inventory-meta-form"
+                            method="POST"
+                            action="{{ route('products.inventory.meta.update', $product) }}"
+                            class="mt-4 space-y-4"
+                        >
                             @csrf
                             @method('PUT')
                             <div class="overflow-x-auto">
@@ -529,15 +534,39 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <flux:button type="submit" variant="primary" size="sm">{{ __('Save inventory settings') }}</flux:button>
+                            <flux:modal.trigger name="confirm-inventory-meta-save">
+                                <flux:button type="button" variant="primary" size="sm">{{ __('Save inventory settings') }}</flux:button>
+                            </flux:modal.trigger>
                         </form>
+
+                        <flux:modal name="confirm-inventory-meta-save" focusable class="max-w-lg">
+                            <div class="space-y-2 pr-8">
+                                <flux:heading size="lg">{{ __('Save inventory settings?') }}</flux:heading>
+                                <flux:subheading>
+                                    {{ __('Reorder levels, batch, and expiry fields will be updated. On-hand quantity is not changed here.') }}
+                                </flux:subheading>
+                            </div>
+                            <div class="mt-6 flex justify-end gap-2">
+                                <flux:modal.close>
+                                    <flux:button variant="ghost" type="button">{{ __('Cancel') }}</flux:button>
+                                </flux:modal.close>
+                                <flux:button type="submit" variant="primary" form="product-inventory-meta-form">
+                                    {{ __('Save inventory settings') }}
+                                </flux:button>
+                            </div>
+                        </flux:modal>
                     </div>
                 @endif
 
                 <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
                     <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Manual stock adjustment') }}</h2>
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Use for received shipments, write-offs, or corrections.') }}</p>
-                    <form method="POST" action="{{ route('inventory.update', $product) }}" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <form
+                        id="product-adjustment-form"
+                        method="POST"
+                        action="{{ route('inventory.update', $product) }}"
+                        class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    >
                         @csrf
                         @method('PUT')
                         <div class="space-y-1.5 sm:col-span-2 lg:col-span-1">
@@ -565,9 +594,28 @@
                             <input name="reason" type="text" required value="{{ old('reason') }}" placeholder="{{ __('e.g. Received shipment') }}" class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100">
                         </div>
                         <div class="sm:col-span-2 lg:col-span-3">
-                            <flux:button type="submit" variant="primary" size="sm">{{ __('Apply adjustment') }}</flux:button>
+                            <flux:modal.trigger name="confirm-product-adjustment">
+                                <flux:button type="button" variant="primary" size="sm">{{ __('Apply adjustment') }}</flux:button>
+                            </flux:modal.trigger>
                         </div>
                     </form>
+
+                    <flux:modal name="confirm-product-adjustment" focusable class="max-w-lg">
+                        <div class="space-y-2 pr-8">
+                            <flux:heading size="lg">{{ __('Apply this stock adjustment?') }}</flux:heading>
+                            <flux:subheading>
+                                {{ __('Inventory will be updated and logged in adjustment history.') }}
+                            </flux:subheading>
+                        </div>
+                        <div class="mt-6 flex justify-end gap-2">
+                            <flux:modal.close>
+                                <flux:button variant="ghost" type="button">{{ __('Cancel') }}</flux:button>
+                            </flux:modal.close>
+                            <flux:button type="submit" variant="primary" form="product-adjustment-form">
+                                {{ __('Apply adjustment') }}
+                            </flux:button>
+                        </div>
+                    </flux:modal>
                 </div>
 
                 @if($adjustmentHistory !== null)
