@@ -105,13 +105,16 @@ class ConversationThreadFragment : Fragment() {
             when (state) {
                 is Resource.Loading -> {
                     binding.progressBar.isVisible = true
+                    binding.tvEmptyThreadHint.isVisible = false
                 }
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
                     messageAdapter.submitMessages(state.data)
+                    binding.tvEmptyThreadHint.isVisible = state.data.isEmpty()
                 }
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false
+                    binding.tvEmptyThreadHint.isVisible = false
                     Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
                         .setAction(getString(R.string.retry)) { viewModel.loadMessages() }
                         .show()

@@ -103,5 +103,7 @@ class CheckoutViewModel @Inject constructor(
 
     fun clearOrderResult() {
         _orderResult.value = null
+        orderNotes.value = ""
+        selectedAppointmentId.value = null
     }
 }

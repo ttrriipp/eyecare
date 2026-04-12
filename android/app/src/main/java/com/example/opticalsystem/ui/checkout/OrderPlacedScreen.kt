@@ -1,5 +1,6 @@
 package com.example.opticalsystem.ui.checkout
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,6 +53,8 @@ fun OrderPlacedScreen(
     val onPrimary = colorResource(R.color.on_primary)
     val divider = colorResource(R.color.divider)
     val surface = colorResource(R.color.surface)
+
+    BackHandler { onBackToCatalog() }
 
     val steps = listOf(
         TimelineStep(

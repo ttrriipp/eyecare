@@ -95,6 +95,7 @@ class ProductSeeder extends Seeder
         $accessories = ProductCategory::where('slug', 'accessories')->first();
 
         // Four sample products — default_variant fields must match category flags (admin forms).
+        // `seed_image` is a filename under public/images/products/ (bundled catalog photos).
         $products = [
 
             // 1. Eyeglass frame: color, frame size, material, lens type (+ optional AR)
@@ -116,6 +117,7 @@ class ProductSeeder extends Seeder
                     'cost_per_unit' => 600.00,
                     'ar_model_url' => 'https://models.eyecare.test/frames/classic-full-rim.glb',
                 ],
+                'seed_image' => 'classic_full_rim_frame_black.webp',
             ],
 
             // 2. Contacts: power + duration (mapped to category behavior flags)
@@ -134,6 +136,7 @@ class ProductSeeder extends Seeder
                     'duration' => 'Daily',
                     'cost_per_unit' => 480.00,
                 ],
+                'seed_image' => 'contact_lens.jpg',
             ],
 
             // 3. Sunglasses: same shape as frames + sunglass lens options
@@ -155,6 +158,7 @@ class ProductSeeder extends Seeder
                     'cost_per_unit' => 750.00,
                     'ar_model_url' => 'https://models.eyecare.test/sunglasses/polarized-uv.glb',
                 ],
+                'seed_image' => 'polarized_sunglasses.jpg',
             ],
 
             // 4. Accessory: color only for this category
@@ -172,6 +176,7 @@ class ProductSeeder extends Seeder
                     'color' => 'Gray',
                     'cost_per_unit' => 15.00,
                 ],
+                'seed_image' => 'microfiber_cloth.jpg',
             ],
         ];
 
@@ -193,6 +198,19 @@ class ProductSeeder extends Seeder
                 $variantPayload['duration'] = 'Monthly';
             }
             $productService->updateVariant($variant, $variantPayload);
+
+            $seedImage = $row['seed_image'] ?? null;
+            if (is_string($seedImage) && $seedImage !== '' && $variant->images()->doesntExist()) {
+                $relative = 'images/products/'.$seedImage;
+                $absolute = public_path($relative);
+                if (! is_file($absolute)) {
+                    throw new \RuntimeException(
+                        'Seed product image missing: '.$relative.' (expected for '.$product->name.')',
+                    );
+                }
+                // Root-relative URL so thumbnails work on any host/port (avoid asset()/APP_URL mismatch).
+                $productService->addImage($product, $variant, '/'.$relative, 0);
+            }
         }
     }
 }

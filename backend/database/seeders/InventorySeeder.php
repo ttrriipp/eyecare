@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\InventoryAdjustmentReason;
 use App\Enums\UserRole;
 use App\Models\Inventory;
 use App\Models\Product;
@@ -72,10 +73,10 @@ class InventorySeeder extends Seeder
             );
 
             if ($product->name === 'Classic Full-Rim Frame') {
-                $inventoryService->adjust($variant, 'set', 30, 'initial_count', null, $adjustedBy);
-                $inventoryService->adjust($variant, 'remove', 2, 'damaged', null, $adjustedBy);
+                $inventoryService->adjust($variant, 'set', 30, InventoryAdjustmentReason::DataCorrection->value, null, $adjustedBy);
+                $inventoryService->adjust($variant, 'remove', 2, InventoryAdjustmentReason::DamagedOrDefective->value, null, $adjustedBy);
             } else {
-                $inventoryService->adjust($variant, 'set', $targetQty, 'initial_count', null, $adjustedBy);
+                $inventoryService->adjust($variant, 'set', $targetQty, InventoryAdjustmentReason::DataCorrection->value, null, $adjustedBy);
             }
         }
     }

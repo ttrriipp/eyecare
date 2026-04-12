@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\InventoryAdjustmentReason;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -40,7 +42,9 @@ class InventoryController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
+        $inventoryTabUrl = route('products.show', $product).'?tab=inventory';
+
+        $validator = Validator::make($request->all(), [
             'product_variant_id' => [
                 'nullable',
                 'integer',
@@ -48,14 +52,22 @@ class InventoryController extends Controller
             ],
             'adjustment_type' => ['required', 'string', Rule::in(['add', 'subtract', 'set'])],
             'quantity' => ['required', 'integer', 'min:0'],
-            'reason' => ['required', 'string', 'max:255'],
+            'reason' => ['required', 'string', Rule::enum(InventoryAdjustmentReason::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->to($inventoryTabUrl)
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
 
         if (in_array($validated['adjustment_type'], ['add', 'subtract'], true) && (int) $validated['quantity'] < 1) {
             throw ValidationException::withMessages([
                 'quantity' => __('Enter at least 1 unit for add or remove adjustments.'),
-            ]);
+            ])->redirectTo($inventoryTabUrl);
         }
 
         $variant = $this->resolveVariantForStockUpdate($product, $validated['product_variant_id'] ?? null);
@@ -70,7 +82,7 @@ class InventoryController extends Controller
             if ($deltaUnits > $before) {
                 throw ValidationException::withMessages([
                     'quantity' => __('Cannot remove more than :n units on hand.', ['n' => $before]),
-                ]);
+                ])->redirectTo($inventoryTabUrl);
             }
             $after = $before - $deltaUnits;
         } else {
@@ -96,7 +108,7 @@ class InventoryController extends Controller
         $label = $variant->sku ?: $product->name;
 
         return redirect()
-            ->to(route('products.show', $product).'?tab=inventory')
+            ->to($inventoryTabUrl)
             ->with('status', __('Stock updated for :name.', ['name' => $label]));
     }
 

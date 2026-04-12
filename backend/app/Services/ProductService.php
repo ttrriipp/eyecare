@@ -662,14 +662,18 @@ class ProductService
      */
     private function deletePhysicalFile(string $imageUrl): void
     {
-        // Extract relative path from the full URL
+        // Extract path from a full URL or a root-relative path like /images/products/file.jpg
         $parsed = parse_url($imageUrl, PHP_URL_PATH);
-
-        if (! $parsed) {
+        if (! is_string($parsed) || $parsed === '') {
             return;
         }
 
-        $filePath = public_path($parsed);
+        $relative = ltrim($parsed, '/');
+        if ($relative === '') {
+            return;
+        }
+
+        $filePath = public_path(str_replace('/', DIRECTORY_SEPARATOR, $relative));
 
         if (File::exists($filePath)) {
             File::delete($filePath);

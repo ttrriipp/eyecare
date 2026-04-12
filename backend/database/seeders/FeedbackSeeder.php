@@ -11,19 +11,24 @@ class FeedbackSeeder extends Seeder
 {
     public function run(): void
     {
-        $customer = User::where('role', 'customer')->first();
+        $juan = User::where('email', 'customer@eyecare.test')->first();
+        if ($juan) {
+            Feedback::query()->where('user_id', $juan->id)->delete();
+        }
+
+        $reviewer = User::where('email', 'maria@eyecare.test')->first();
         $admin = User::where('role', 'admin')->first();
 
         $products = Product::where('is_active', true)->orderBy('id')->take(4)->get();
 
-        if (! $customer || $products->isEmpty()) {
-            $this->command->warn('FeedbackSeeder skipped: no customer or products found.');
+        if (! $reviewer || $products->isEmpty()) {
+            $this->command->warn('FeedbackSeeder skipped: maria@eyecare.test or products missing.');
 
             return;
         }
 
         // Indices follow ProductSeeder order: frame, contacts, sunglasses, accessory.
-        // Indices 0–1 align with the first completed order (frame + contacts) for verified purchases.
+        // 0–1 match Maria’s completed order (frame + contacts) in OrderSeeder.
         $reviews = [
             [
                 'product_index' => 0,
@@ -31,7 +36,7 @@ class FeedbackSeeder extends Seeder
                 'comment' => 'Excellent quality frames! Very comfortable to wear all day. The acetate feels premium.',
                 'is_verified_purchase' => true,
                 'is_visible' => true,
-                'admin_reply' => 'Thank you for the kind words, Juan! We\'re glad the Classic Full-Rim is working out well for you. Visit us anytime for adjustments.',
+                'admin_reply' => 'Thank you for the kind words, Maria! We\'re glad the Classic Full-Rim is working out well for you. Visit us anytime for adjustments.',
                 'moderated_by' => $admin?->id,
                 'moderated_at' => now()->subDays(4),
             ],
@@ -62,7 +67,7 @@ class FeedbackSeeder extends Seeder
             $product = $products[$review['product_index']] ?? $products->first();
 
             Feedback::updateOrCreate(
-                ['user_id' => $customer->id, 'product_id' => $product->id],
+                ['user_id' => $reviewer->id, 'product_id' => $product->id],
                 [
                     'feedback_type' => 'product',
                     'appointment_id' => null,

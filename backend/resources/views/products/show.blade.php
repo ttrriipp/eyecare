@@ -561,37 +561,91 @@
                 <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
                     <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('Manual stock adjustment') }}</h2>
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Use for received shipments, write-offs, or corrections.') }}</p>
+                    @if($errors->hasAny(['product_variant_id', 'adjustment_type', 'quantity', 'reason', 'notes']))
+                        <div
+                            class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-100"
+                            role="alert"
+                        >
+                            <p class="font-medium">{{ __('Could not apply adjustment') }}</p>
+                            <ul class="mt-1 list-inside list-disc text-xs">
+                                @foreach($errors->only(['product_variant_id', 'adjustment_type', 'quantity', 'reason', 'notes']) as $fieldErrors)
+                                    @foreach($fieldErrors as $message)
+                                        <li>{{ $message }}</li>
+                                    @endforeach
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    {{-- novalidate: confirm button lives in a modal; native required + hidden fields under the backdrop often blocks submit with no visible hint. --}}
                     <form
                         id="product-adjustment-form"
                         method="POST"
                         action="{{ route('inventory.update', $product) }}"
                         class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                        novalidate
                     >
                         @csrf
                         @method('PUT')
+                        @php
+                            $adjustmentVariants = $product->variants->sortBy('id');
+                            $adjustmentDefaultVariantId = $adjustmentVariants->first()?->id;
+                        @endphp
                         <div class="space-y-1.5 sm:col-span-2 lg:col-span-1">
                             <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ __('Variant') }}</label>
-                            <select name="product_variant_id" required class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100">
-                                @foreach($product->variants->sortBy('id') as $v)
-                                    <option value="{{ $v->id }}">{{ $v->sku }}</option>
+                            <select
+                                name="product_variant_id"
+                                class="@error('product_variant_id') border-red-500 ring-1 ring-red-500 @else border-zinc-300 dark:border-zinc-600 @enderror block w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-zinc-950 dark:text-zinc-100"
+                            >
+                                @foreach($adjustmentVariants as $v)
+                                    <option value="{{ $v->id }}" @selected((string) old('product_variant_id', $adjustmentDefaultVariantId) === (string) $v->id)>{{ $v->sku }}</option>
                                 @endforeach
                             </select>
+                            @error('product_variant_id')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ __('Type') }}</label>
-                            <select name="adjustment_type" required class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100">
-                                <option value="add">{{ __('Add (received, etc.)') }}</option>
-                                <option value="subtract">{{ __('Remove (damage, etc.)') }}</option>
-                                <option value="set">{{ __('Set quantity (correction)') }}</option>
+                            <select
+                                name="adjustment_type"
+                                class="@error('adjustment_type') border-red-500 ring-1 ring-red-500 @else border-zinc-300 dark:border-zinc-600 @enderror block w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-zinc-950 dark:text-zinc-100"
+                            >
+                                <option value="add" @selected(old('adjustment_type', 'add') === 'add')>{{ __('Add (received, etc.)') }}</option>
+                                <option value="subtract" @selected(old('adjustment_type') === 'subtract')>{{ __('Remove (damage, etc.)') }}</option>
+                                <option value="set" @selected(old('adjustment_type') === 'set')>{{ __('Set quantity (correction)') }}</option>
                             </select>
+                            @error('adjustment_type')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ __('Quantity') }}</label>
-                            <input name="quantity" type="number" min="0" step="1" required value="{{ old('quantity') }}" class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100">
+                            <input
+                                name="quantity"
+                                type="number"
+                                min="0"
+                                step="1"
+                                value="{{ old('quantity') }}"
+                                class="@error('quantity') border-red-500 ring-1 ring-red-500 @else border-zinc-300 dark:border-zinc-600 @enderror block w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-zinc-950 dark:text-zinc-100"
+                            >
+                            @error('quantity')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="space-y-1.5 sm:col-span-2">
                             <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ __('Reason') }}</label>
-                            <input name="reason" type="text" required value="{{ old('reason') }}" placeholder="{{ __('e.g. Received shipment') }}" class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100">
+                            <select
+                                name="reason"
+                                class="@error('reason') border-red-500 ring-1 ring-red-500 @else border-zinc-300 dark:border-zinc-600 @enderror block w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-zinc-950 dark:text-zinc-100"
+                            >
+                                <option value="" disabled @selected(old('reason') === null || old('reason') === ''))>{{ __('Select a reason') }}</option>
+                                @foreach(\App\Enums\InventoryAdjustmentReason::cases() as $adjReason)
+                                    <option value="{{ $adjReason->value }}" @selected(old('reason') === $adjReason->value)>{{ $adjReason->label() }}</option>
+                                @endforeach
+                            </select>
+                            @error('reason')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="sm:col-span-2 lg:col-span-3">
                             <flux:modal.trigger name="confirm-product-adjustment">
@@ -655,7 +709,7 @@
                                                 <td class="py-2 pe-2 text-end tabular-nums font-medium {{ $adj->delta >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                                                     {{ $adj->delta >= 0 ? '+' : '' }}{{ $adj->delta }}
                                                 </td>
-                                                <td class="py-2 pe-2 max-w-[12rem] truncate text-xs" title="{{ $adj->reason }}">{{ $adj->reason }}</td>
+                                                <td class="py-2 pe-2 max-w-[12rem] truncate text-xs" title="{{ \App\Enums\InventoryAdjustmentReason::labelOrRaw($adj->reason) }}">{{ \App\Enums\InventoryAdjustmentReason::labelOrRaw($adj->reason) }}</td>
                                                 <td class="py-2 pe-2 text-xs">{{ $adj->adjustedBy?->name ?? __('System') }}</td>
                                             </tr>
                                         @endforeach

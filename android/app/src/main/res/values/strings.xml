@@ -298,4 +298,5 @@
     <string name="conversation_closed_banner_sub">You can still send messages here anytime.</string>
     <string name="message_hint">Type a message...</string>
     <string name="conversation_default_title">Chat</string>
+    <string name="conversation_empty_thread_hint">No messages yet. Type below to start a conversation — our team will reply during business hours.</string>
 </resources>

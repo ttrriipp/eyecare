@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Enums\InventoryAdjustmentReason;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +26,12 @@ class UpdateInventoryRequest extends FormRequest
                 'date',
                 Rule::requiredIf(fn () => $this->categoryRequiresExpiryTracking()),
             ],
-            'adjustment_reason' => ['nullable', 'string', 'max:255'],
+            'adjustment_reason' => [
+                Rule::requiredIf(fn () => $this->filled('quantity')),
+                'nullable',
+                'string',
+                Rule::enum(InventoryAdjustmentReason::class),
+            ],
             'notes' => ['nullable', 'string'],
         ];
     }
@@ -41,4 +47,3 @@ class UpdateInventoryRequest extends FormRequest
         return (bool) optional($product->category)->requires_expiry_tracking;
     }
 }
-

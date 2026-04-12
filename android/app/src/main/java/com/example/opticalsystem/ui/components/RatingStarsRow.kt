@@ -23,6 +23,66 @@ import androidx.compose.ui.unit.sp
 import com.example.opticalsystem.R
 
 /**
+ * Whole stars only (1–5). Use for per-review integer ratings so the 5th star is never a half icon that
+ * can look like a full star on some devices/fonts.
+ */
+@Composable
+fun DiscreteRatingStarsRow(
+    rating: Int,
+    modifier: Modifier = Modifier,
+    starSize: Dp = 14.dp,
+    showScore: Boolean = false,
+    trailingText: String? = null,
+    trailingTextSize: Float = 11f,
+) {
+    val clamped = rating.coerceIn(0, 5)
+    val starTint = colorResource(R.color.star_color)
+    val secondary = colorResource(R.color.text_secondary)
+    Row(
+        modifier = modifier.wrapContentHeight(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            repeat(5) { index ->
+                val starIndex = index + 1
+                val icon = if (starIndex <= clamped) Icons.Filled.Star else Icons.Outlined.Star
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(starSize),
+                    tint = starTint,
+                )
+            }
+        }
+        if (showScore) {
+            Text(
+                text = clamped.toString(),
+                modifier = Modifier.padding(start = 5.dp),
+                color = secondary,
+                fontSize = trailingTextSize.sp,
+                lineHeight = (trailingTextSize + 3).sp,
+                maxLines = 1,
+                style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
+            )
+        }
+        if (trailingText != null) {
+            Text(
+                text = trailingText,
+                modifier = Modifier.padding(start = if (showScore) 3.dp else 5.dp),
+                color = secondary,
+                fontSize = trailingTextSize.sp,
+                lineHeight = (trailingTextSize + 3).sp,
+                maxLines = 1,
+                style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
+            )
+        }
+    }
+}
+
+/**
  * Read-only 5-star display for catalog and product detail (avoids clipped [RatingBar] in Compose).
  */
 @Composable

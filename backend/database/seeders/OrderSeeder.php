@@ -16,7 +16,8 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $customer = User::where('role', 'customer')->first();
+        // Sample orders/bills attach to Maria — not customer@eyecare.test (keep that account empty for manual testing).
+        $orderCustomer = User::where('email', 'maria@eyecare.test')->first();
         $staff = User::where('role', 'staff')->first();
 
         $products = Product::where('is_active', true)
@@ -25,10 +26,14 @@ class OrderSeeder extends Seeder
             ->take(4)
             ->get();
 
-        if (! $customer || $products->isEmpty()) {
-            $this->command->warn('OrderSeeder skipped: no customer or products found.');
+        if ($products->isEmpty()) {
+            $this->command->warn('OrderSeeder skipped: no products found.');
 
             return;
+        }
+
+        if (! $orderCustomer) {
+            $this->command->warn('OrderSeeder: maria@eyecare.test not found; seeding walk-in sample only.');
         }
 
         // Order definitions.
@@ -39,7 +44,7 @@ class OrderSeeder extends Seeder
 
             // ── Order 1: Completed — paid in cash; OR issued ──────────────────
             [
-                'user_id' => $customer->id,
+                'user_id' => $orderCustomer?->id,
                 'processed_by' => $staff?->id,
                 'status' => OrderStatus::Completed,
                 'discount_amount' => 0.00,
@@ -57,7 +62,7 @@ class OrderSeeder extends Seeder
 
             // ── Order 2: Pending — unpaid, not yet processed ───────────────────
             [
-                'user_id' => $customer->id,
+                'user_id' => $orderCustomer?->id,
                 'processed_by' => null,
                 'status' => OrderStatus::Pending,
                 'discount_amount' => 0.00,
@@ -71,7 +76,7 @@ class OrderSeeder extends Seeder
 
             // ── Order 3: Confirmed — senior citizen discount applied ───────────
             [
-                'user_id' => $customer->id,
+                'user_id' => $orderCustomer?->id,
                 'processed_by' => $staff?->id,
                 'status' => OrderStatus::Confirmed,
                 'discount_amount' => 150.00,
@@ -104,7 +109,7 @@ class OrderSeeder extends Seeder
 
             // ── Order 5: Completed — partial then full payment (Maya) ─────────
             [
-                'user_id' => $customer->id,
+                'user_id' => $orderCustomer?->id,
                 'processed_by' => $staff?->id,
                 'status' => OrderStatus::Completed,
                 'discount_amount' => 0.00,
@@ -120,6 +125,17 @@ class OrderSeeder extends Seeder
                 'split_payment_history' => true,
             ],
         ];
+
+        if (! $orderCustomer) {
+            $orders = array_values(array_filter(
+                $orders,
+                static fn (array $o): bool => ($o['user_id'] ?? null) === null
+                    && filled($o['walk_in_name'] ?? null),
+            ));
+            if ($orders === []) {
+                return;
+            }
+        }
 
         $orderSeq = 1;
         $invoiceSeq = 1;

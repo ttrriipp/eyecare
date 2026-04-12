@@ -11,7 +11,15 @@ class ConversationSeeder extends Seeder
 {
     public function run(): void
     {
-        $customer = User::where('email', 'customer@eyecare.test')->first();
+        $juan = User::where('email', 'customer@eyecare.test')->first();
+        if ($juan) {
+            foreach (Conversation::withTrashed()->where('user_id', $juan->id)->cursor() as $conv) {
+                $conv->messages()->delete();
+                $conv->forceDelete();
+            }
+        }
+
+        $customer = User::where('email', 'maria@eyecare.test')->first();
         $staff = User::where('email', 'staff@eyecare.test')->first();
         $admin = User::where('email', 'admin@eyecare.test')->first();
 
@@ -32,7 +40,7 @@ class ConversationSeeder extends Seeder
 
         $this->addMessages($conversation->id, [
             [$customer->id, 'Hi, I wanted to ask about my lens prescription. My doctor gave me a new one — do I need to come in for a fitting?', now()->subHours(3)],
-            [$staff->id, 'Hello Juan! Yes, if you have a new prescription we recommend dropping by so we can verify the measurements and check your current frames are still suitable.', now()->subHours(2)->subMinutes(45)],
+            [$staff->id, 'Hello Maria! Yes, if you have a new prescription we recommend dropping by so we can verify the measurements and check your current frames are still suitable.', now()->subHours(2)->subMinutes(45)],
             [$customer->id, 'Great, can I walk in or do I need an appointment?', now()->subHours(2)->subMinutes(20)],
             [$staff->id, 'Walk-ins are welcome during business hours (Mon–Sat, 9AM–6PM). We usually process lens replacements on the spot if the frames are with us.', now()->subHours(1)->subMinutes(50)],
             [$customer->id, 'Perfect, I\'ll come by this Saturday. Thank you!', now()->subMinutes(5)],

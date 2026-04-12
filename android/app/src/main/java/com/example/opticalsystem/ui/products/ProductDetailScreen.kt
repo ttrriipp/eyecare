@@ -82,6 +82,7 @@ import com.example.opticalsystem.data.model.galleryImagesForDetail
 import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.ui.components.CartIconWithBadge
+import com.example.opticalsystem.ui.components.DiscreteRatingStarsRow
 import com.example.opticalsystem.ui.components.RatingStarsRow
 import com.example.opticalsystem.util.BackendImageUrl
 import com.example.opticalsystem.util.Resource
@@ -915,8 +916,8 @@ private fun FeedbackRow(feedback: Feedback) {
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
         )
-        RatingStarsRow(
-            rating = feedback.rating.toFloat(),
+        DiscreteRatingStarsRow(
+            rating = feedback.rating,
             starSize = 16.dp,
             showScore = false,
             trailingText = null,

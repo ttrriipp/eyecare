@@ -30,7 +30,7 @@ class UserSeeder extends Seeder
         ]);
 
         // ── Customers ─────────────────────────────────────────────────────────
-        // Primary test customer — used by OrderSeeder and FeedbackSeeder
+        // Primary test customer — no seeded orders/feedback/messages (manual testing). Maria carries seeded orders, reviews, and staff chat.
         User::factory()->customer()->create([
             'name' => 'Juan Dela Cruz',
             'email' => 'customer@eyecare.test',
@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
             'customer_notes' => 'Prefers lightweight frames. SC/PWD discount verified on file (manual). Reminder: sensitive to tight nose pads.',
         ]);
 
-        // Second customer for broader coverage (list/profile / empty-state flows)
+        // Second customer — seeded orders, product feedback, and messaging thread with staff
         User::factory()->customer()->create([
             'name' => 'Maria Santos',
             'email' => 'maria@eyecare.test',

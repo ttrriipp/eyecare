@@ -39,13 +39,11 @@
                 class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
             >
                 <option value="">{{ __('All reasons') }}</option>
-                <option value="restock">{{ __('Restock') }}</option>
-                <option value="sale_correction">{{ __('Sale correction') }}</option>
-                <option value="damaged">{{ __('Damaged') }}</option>
-                <option value="expired">{{ __('Expired') }}</option>
-                <option value="returned">{{ __('Returned') }}</option>
-                <option value="initial_count">{{ __('Initial count') }}</option>
-                <option value="other">{{ __('Other') }}</option>
+                @foreach(\App\Enums\InventoryAdjustmentReason::cases() as $r)
+                    <option value="{{ $r->value }}">{{ $r->label() }}</option>
+                @endforeach
+                <option value="initial_count">{{ __('Initial count (legacy)') }}</option>
+                <option value="damaged">{{ __('Damaged (legacy)') }}</option>
             </select>
         </div>
 

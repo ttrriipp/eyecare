@@ -93,14 +93,17 @@
                         {{ __('Reason') }}
                         <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
                     </label>
-                    <flux:input
+                    <select
                         id="reason"
                         name="reason"
-                        :label="false"
-                        value="{{ old('reason') }}"
                         required
-                        placeholder="{{ __('e.g. received shipment, damaged goods, stock count') }}"
-                    />
+                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                        <option value="" disabled @selected(old('reason') === null || old('reason') === ''))>{{ __('Select a reason') }}</option>
+                        @foreach(\App\Enums\InventoryAdjustmentReason::cases() as $adjReason)
+                            <option value="{{ $adjReason->value }}" @selected(old('reason') === $adjReason->value)>{{ $adjReason->label() }}</option>
+                        @endforeach
+                    </select>
                     @error('reason')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
