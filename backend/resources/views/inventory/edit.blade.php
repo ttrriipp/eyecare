@@ -57,6 +57,7 @@
                     >
                         <option value="add" @selected(old('adjustment_type', 'add') === 'add')>{{ __('Add to stock') }}</option>
                         <option value="subtract" @selected(old('adjustment_type') === 'subtract')>{{ __('Remove from stock') }}</option>
+                        <option value="set" @selected(old('adjustment_type') === 'set')>{{ __('Set quantity (correction)') }}</option>
                     </select>
                     @error('adjustment_type')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -72,15 +73,15 @@
                         id="quantity"
                         name="quantity"
                         type="number"
-                        min="1"
+                        min="0"
                         step="1"
                         :label="false"
                         value="{{ old('quantity') }}"
                         required
-                        placeholder="{{ __('Units to add or remove') }}"
+                        placeholder="{{ __('Units or new total for correction') }}"
                     />
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __('How many units to add or remove (not the new total).') }}
+                        {{ __('For add/remove: units to change. For set quantity: the new on-hand total.') }}
                     </p>
                     @error('quantity')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>

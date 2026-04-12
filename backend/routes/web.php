@@ -43,6 +43,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('products/{product}', [ProductController::class, 'destroy'])
         ->name('products.destroy');
 
+    Route::post('products/{product}/images', [ProductController::class, 'storeProductImage'])
+        ->name('products.images.store');
+    Route::patch('products/{product}/images/{productImage}', [ProductController::class, 'updateProductImage'])
+        ->name('products.images.update');
+    Route::patch('products/{product}/images/{productImage}/move', [ProductController::class, 'moveProductImage'])
+        ->name('products.images.move');
+    Route::delete('products/{product}/images/{productImage}', [ProductController::class, 'destroyProductImage'])
+        ->name('products.images.destroy');
+    Route::put('products/{product}/inventory/meta', [ProductController::class, 'updateProductInventoryMeta'])
+        ->name('products.inventory.meta.update');
+
     Route::get('orders', [OrderController::class, 'index'])
         ->name('orders.index');
     Route::get('orders/create', [OrderController::class, 'create'])
@@ -85,6 +96,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('feedbacks.reply');
         Route::put('feedbacks/{feedback}/visibility', [FeedbackController::class, 'setVisibility'])
             ->name('feedbacks.visibility');
+
+        Route::middleware('role:admin')->group(function () {
+            Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
+                ->name('feedbacks.destroy');
+        });
 
         Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
             ->name('admin.inventory.adjustments');

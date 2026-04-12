@@ -49,6 +49,11 @@ class FeedbackController extends Controller
             $request->validated('admin_reply'),
         );
 
+        $to = $request->validated('redirect_to');
+        if (is_string($to) && $to !== '') {
+            return redirect()->to($to)->with('status', __('Reply saved.'));
+        }
+
         return redirect()
             ->route('feedbacks.index', $request->query())
             ->with('status', __('Reply saved.'));
@@ -68,8 +73,26 @@ class FeedbackController extends Controller
             ? __('Review is visible on the product page again.')
             : __('Review hidden from the product page.');
 
+        $to = $request->validated('redirect_to');
+        if (is_string($to) && $to !== '') {
+            return redirect()->to($to)->with('status', $message);
+        }
+
         return redirect()
             ->route('feedbacks.index', $request->query())
             ->with('status', $message);
+    }
+
+    public function destroy(Request $request, Feedback $feedback): RedirectResponse
+    {
+        if (! $request->user()->isAdmin()) {
+            abort(403);
+        }
+
+        $this->feedbackService->delete($feedback);
+
+        return redirect()
+            ->back()
+            ->with('status', __('Review removed.'));
     }
 }

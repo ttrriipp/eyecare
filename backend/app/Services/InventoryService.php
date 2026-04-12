@@ -80,11 +80,17 @@ class InventoryService
         $reason = $data['adjustment_reason'] ?? null;
         unset($data['adjustment_reason']);
 
+        $forcedType = $data['force_adjustment_type'] ?? null;
+        unset($data['force_adjustment_type']);
+
         $inventory->update($data);
 
         if ($quantityAfter !== $quantityBefore) {
             $delta = $quantityAfter - $quantityBefore;
-            $type = $delta > 0 ? 'add' : 'subtract';
+
+            $type = is_string($forcedType) && $forcedType !== ''
+                ? $forcedType
+                : ($delta > 0 ? 'add' : 'subtract');
 
             $inventory->adjustments()->create([
                 'quantity_before' => $quantityBefore,

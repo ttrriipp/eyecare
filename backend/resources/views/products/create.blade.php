@@ -3,17 +3,14 @@
         [
             'price' => '',
             'cost_per_unit' => '',
-            'quantity' => 0,
-            'reorder_level' => 5,
-            'reorder_quantity' => 0,
+            'opening_quantity' => 0,
+            'sku' => '',
             'color' => '',
             'frame_size' => '',
             'material' => '',
             'lens_type' => '',
             'power' => '',
             'duration' => '',
-            'batch_number' => '',
-            'expires_at' => '',
             'ar_model_url' => '',
         ],
     ]);
@@ -57,117 +54,121 @@
             </flux:button>
         </div>
 
-                <form
-                    method="POST"
-                    action="{{ route('products.store') }}"
-                    enctype="multipart/form-data"
-                    id="product-create-form"
-                    class="space-y-6"
-                >
-                    @csrf
+        <form
+            method="POST"
+            action="{{ route('products.store') }}"
+            id="product-create-form"
+            class="space-y-6"
+        >
+            @csrf
 
-            {{-- Product information --}}
-                    <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
-                        <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+            <div class="rounded-xl border-2 border-sky-200 bg-white p-6 shadow-sm dark:border-sky-900/50 dark:bg-zinc-900 dark:shadow-none">
+                <h2 class="mb-5 text-sm font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-300">
                     {{ __('Product information') }}
-                        </h2>
+                </h2>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Product name') }}
-                                    <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
-                                </label>
-                                <flux:input
-                                    id="name"
-                                    name="name"
-                                    :label="false"
-                                    value="{{ old('name') }}"
-                                    required
-                                    autofocus
-                                />
-                                @error('name')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="brand" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Brand') }}
-                                </label>
-                        <flux:input id="brand" name="brand" :label="false" value="{{ old('brand') }}" />
-                                @error('brand')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="category_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Category') }}
-                                    <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
-                                </label>
-                        <select
-                                    id="category_id"
-                                    name="category_id"
-                                    required
-                            class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                                >
-                            <option value="" disabled @selected(! old('category_id'))>{{ __('Select a category…') }}</option>
-                                    @foreach($categories as $category)
-                                <option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                        </select>
-                                @error('category_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="space-y-1.5 sm:col-span-2">
-                                <label for="description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    {{ __('Description') }}
-                                </label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    rows="4"
-                                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-                                >{{ old('description') }}</textarea>
-                                @error('description')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="inline-flex cursor-pointer items-start gap-3 text-sm text-zinc-800 dark:text-zinc-200">
-                            <input type="hidden" name="is_active" value="0">
-                            <input
-                                type="checkbox"
-                                name="is_active"
-                                value="1"
-                                @checked(filter_var(old('is_active', '1'), FILTER_VALIDATE_BOOLEAN))
-                                class="mt-0.5 size-4 shrink-0 rounded border border-zinc-400 bg-white accent-sky-600 focus:ring-2 focus:ring-sky-500 dark:border-zinc-500 dark:bg-zinc-900"
-                            >
-                            <span>{{ __('Active — visible to customers') }}</span>
+                <div class="grid gap-5 lg:grid-cols-12 lg:items-end">
+                    <div class="space-y-1.5 lg:col-span-7">
+                        <label for="category_id" class="block text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                            {{ __('Category') }}
+                            <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
                         </label>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Drives which variant columns appear below.') }}</p>
+                        <select
+                            id="category_id"
+                            name="category_id"
+                            required
+                            class="mt-1 block w-full rounded-lg border-2 border-zinc-300 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                        >
+                            <option value="" disabled @selected(! old('category_id'))>{{ __('Select a category…') }}</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1.5 lg:col-span-5">
+                        <label for="product_status" class="block text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                            {{ __('Status') }}
+                        </label>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Inactive products are hidden from the storefront.') }}</p>
+                        <select
+                            id="product_status"
+                            name="is_active"
+                            class="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                        >
+                            <option value="1" @selected((string) old('is_active', '1') !== '0')>{{ __('Active') }}</option>
+                            <option value="0" @selected((string) old('is_active', '1') === '0')>{{ __('Inactive') }}</option>
+                        </select>
                         @error('is_active')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
+
+                <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-1.5">
+                        <label for="name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Product name') }}
+                            <span class="ml-0.5 text-red-500" aria-hidden="true">*</span>
+                        </label>
+                        <flux:input
+                            id="name"
+                            name="name"
+                            :label="false"
+                            value="{{ old('name') }}"
+                            required
+                            autofocus
+                        />
+                        @error('name')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="brand" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Brand') }}
+                        </label>
+                        <flux:input id="brand" name="brand" :label="false" value="{{ old('brand') }}" />
+                        @error('brand')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-1.5">
+                    <label for="description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ __('Description') }}
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    >{{ old('description') }}</textarea>
+                    @error('description')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            {{-- Variants table --}}
             <div class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none">
-                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
                         {{ __('Variants') }}
                     </h2>
-                    <p id="variants-category-hint" class="text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __('Columns update based on the selected category.') }}
-                    </p>
                 </div>
+
+                <div
+                    id="variant-category-notice"
+                    class="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100"
+                    role="status"
+                ></div>
 
                 @error('variants')
                     <p class="mb-3 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -176,27 +177,35 @@
                     <p class="mb-3 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
 
-                <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <table class="min-w-[80rem] w-full border-collapse text-left text-sm">
+                <div class="-mx-1 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <table class="min-w-[64rem] w-full border-collapse text-left text-sm">
                         <thead>
                             <tr class="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-400">
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Default') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Photos') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="color">{{ __('Color') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="frame_size">{{ __('Frame size') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="material">{{ __('Material') }}</th>
-                                <th class="variant-col px-2 py-2 min-w-[8rem] hidden" data-cat-field="lens_type">{{ __('Lens type') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="power">{{ __('Power') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="duration">{{ __('Duration') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Price (₱)') }} <span class="text-red-500">*</span></th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Cost (₱)') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Qty') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Reorder') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap">{{ __('Reorder qty') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="batch_number">{{ __('Batch') }}</th>
-                                <th class="variant-col px-2 py-2 whitespace-nowrap hidden" data-cat-field="expires_at">{{ __('Expires') }}</th>
-                                <th class="variant-col px-2 py-2 min-w-[10rem] hidden" data-cat-field="ar_model_url">{{ __('AR URL') }}</th>
-                                <th class="px-2 py-2 whitespace-nowrap"></th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap" title="{{ __('The variant used as the main thumbnail and default price in listings.') }}">
+                                    <span class="block">{{ __('Default') }}</span>
+                                    <span class="mt-0.5 block max-w-[7rem] text-[10px] font-normal normal-case leading-snug text-zinc-400 dark:text-zinc-500">{{ __('Primary in listings') }}</span>
+                                </th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap" title="{{ __('Leave blank to auto-generate PRD- + 8 characters. Override only if you need a specific code.') }}">
+                                    <span class="block">{{ __('SKU') }}</span>
+                                    <span class="mt-0.5 block max-w-[8rem] text-[10px] font-normal normal-case leading-snug text-zinc-400 dark:text-zinc-500">{{ __('Auto PRD-XXXXXXXX') }}</span>
+                                </th>
+                                <th class="variant-col px-2 py-2 align-bottom whitespace-nowrap hidden" data-cat-field="color">{{ __('Color') }}</th>
+                                <th class="variant-col px-2 py-2 align-bottom whitespace-nowrap hidden" data-cat-field="frame_size">{{ __('Frame size') }}</th>
+                                <th class="variant-col px-2 py-2 align-bottom whitespace-nowrap hidden" data-cat-field="material">{{ __('Material') }}</th>
+                                <th class="variant-col px-2 py-2 align-bottom min-w-[8rem] hidden" data-cat-field="lens_type">{{ __('Lens type') }}</th>
+                                <th class="variant-col px-2 py-2 align-bottom whitespace-nowrap hidden" data-cat-field="power">{{ __('Power') }}</th>
+                                <th class="variant-col px-2 py-2 align-bottom whitespace-nowrap hidden" data-cat-field="duration">{{ __('Duration') }}</th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap">{{ __('Price (₱)') }} <span class="text-red-500">*</span></th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap" title="{{ __('Your cost per unit for margin tracking (optional).') }}">
+                                    <span class="block">{{ __('Cost (₱)') }}</span>
+                                    <span class="mt-0.5 block text-[10px] font-normal normal-case text-zinc-400 dark:text-zinc-500">{{ __('Internal') }}</span>
+                                </th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap" title="{{ __('Starting on-hand quantity. Creates an opening stock adjustment when greater than zero.') }}">
+                                    <span class="block">{{ __('Opening qty') }}</span>
+                                    <span class="mt-0.5 block text-[10px] font-normal normal-case text-zinc-400 dark:text-zinc-500">{{ __('Default 0') }}</span>
+                                </th>
+                                <th class="variant-col px-2 py-2 align-bottom min-w-[10rem] hidden" data-cat-field="ar_model_url">{{ __('AR URL') }}</th>
+                                <th class="px-2 py-2 align-bottom whitespace-nowrap"></th>
                             </tr>
                         </thead>
                         <tbody id="variant-rows">
@@ -209,9 +218,21 @@
                                             value="{{ $idx }}"
                                             @checked($defaultVariantIndex === $idx)
                                             class="size-4 border-zinc-400 text-sky-600 focus:ring-sky-500"
+                                            title="{{ __('Primary variant for listings') }}"
                                         >
                                     </td>
-                                    @include('products.partials.variant-images-cell', ['idx' => $idx, 'existingImages' => []])
+                                    <td class="px-2 py-2 align-middle">
+                                        <input
+                                            type="text"
+                                            name="variants[{{ $idx }}][sku]"
+                                            value="{{ $row['sku'] ?? '' }}"
+                                            maxlength="12"
+                                            placeholder="{{ __('Auto') }}"
+                                            class="sku-field w-28 rounded border border-dashed border-zinc-300 bg-zinc-50 px-2 py-1 font-mono text-xs uppercase dark:border-zinc-600 dark:bg-zinc-900"
+                                            title="{{ __('Optional. Format PRD- + 8 letters or digits.') }}"
+                                        >
+                                        @error('variants.'.$idx.'.sku') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
+                                    </td>
                                     <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="color">
                                         <input type="text" name="variants[{{ $idx }}][color]" value="{{ $row['color'] ?? '' }}" maxlength="60" class="w-28 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
                                         @error('variants.'.$idx.'.color') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
@@ -292,24 +313,8 @@
                                         @error('variants.'.$idx.'.cost_per_unit') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
                                     </td>
                                     <td class="px-2 py-2 align-middle">
-                                        <input type="number" name="variants[{{ $idx }}][quantity]" value="{{ $row['quantity'] ?? 0 }}" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-                                        @error('variants.'.$idx.'.quantity') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
-                                    </td>
-                                    <td class="px-2 py-2 align-middle">
-                                        <input type="number" name="variants[{{ $idx }}][reorder_level]" value="{{ $row['reorder_level'] ?? 5 }}" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-                                        @error('variants.'.$idx.'.reorder_level') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
-                                    </td>
-                                    <td class="px-2 py-2 align-middle">
-                                        <input type="number" name="variants[{{ $idx }}][reorder_quantity]" value="{{ $row['reorder_quantity'] ?? 0 }}" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-                                        @error('variants.'.$idx.'.reorder_quantity') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
-                                    </td>
-                                    <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="batch_number">
-                                        <input type="text" name="variants[{{ $idx }}][batch_number]" value="{{ $row['batch_number'] ?? '' }}" maxlength="120" class="w-28 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
-                                        @error('variants.'.$idx.'.batch_number') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
-                                    </td>
-                                    <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="expires_at">
-                                        <input type="date" name="variants[{{ $idx }}][expires_at]" value="{{ $row['expires_at'] ?? '' }}" class="w-36 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
-                                        @error('variants.'.$idx.'.expires_at') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
+                                        <input type="number" name="variants[{{ $idx }}][opening_quantity]" value="{{ (int) ($row['opening_quantity'] ?? 0) }}" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
+                                        @error('variants.'.$idx.'.opening_quantity') <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p> @enderror
                                     </td>
                                     <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="ar_model_url">
                                         <input type="url" name="variants[{{ $idx }}][ar_model_url]" value="{{ $row['ar_model_url'] ?? '' }}" placeholder="https://…" class="w-44 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
@@ -326,36 +331,35 @@
                     </table>
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center gap-3">
-                    <button type="button" id="variant-add-row" class="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                        {{ __('Add variant row') }}
+                <div class="mt-3">
+                    <button
+                        type="button"
+                        id="variant-add-row"
+                        class="text-sm font-medium text-zinc-600 underline decoration-zinc-300 underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:decoration-zinc-600 dark:hover:text-zinc-100"
+                    >
+                        {{ __('+ Add variant row') }}
                     </button>
                 </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3">
-                        <flux:button :href="route('products.index')" variant="ghost" wire:navigate>
-                            {{ __('Cancel') }}
-                        </flux:button>
-                        <flux:button type="submit" variant="primary" icon="plus">
-                            {{ __('Create product') }}
-                        </flux:button>
-                    </div>
-                </form>
             </div>
+
+            <div class="flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+                <flux:button :href="route('products.index')" variant="ghost" wire:navigate class="sm:mr-auto">
+                    {{ __('Cancel') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary" icon="plus" class="sm:ml-auto">
+                    {{ __('Create product') }}
+                </flux:button>
+            </div>
+        </form>
+    </div>
 
     <template id="variant-row-template">
         <tr class="variant-row border-b border-zinc-100 dark:border-zinc-800" data-variant-index="__INDEX__">
             <td class="px-2 py-2 align-middle">
-                <input type="radio" name="default_variant_index" value="__INDEX__" class="size-4 border-zinc-400 text-sky-600 focus:ring-sky-500">
+                <input type="radio" name="default_variant_index" value="__INDEX__" class="size-4 border-zinc-400 text-sky-600 focus:ring-sky-500" title="{{ __('Primary variant for listings') }}">
             </td>
-            <td class="variant-images-cell px-2 py-2 align-top min-w-[12rem] max-w-[15rem]">
-                <label class="flex cursor-pointer flex-col gap-1 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-2.5 py-2 transition hover:border-sky-400 hover:bg-sky-50/60 dark:border-zinc-600 dark:bg-zinc-900/50 dark:hover:border-sky-500 dark:hover:bg-sky-950/30">
-                    <span class="text-xs font-semibold text-sky-700 dark:text-sky-400">{{ __('Add photos') }}</span>
-                    <span class="text-[10px] leading-snug text-zinc-500 dark:text-zinc-400">{{ __('Choose several files at once.') }}</span>
-                    <input type="file" name="variants[__INDEX__][images][]" accept="image/jpeg,image/png,image/webp,image/gif" multiple class="sr-only variant-images-input">
-                    </label>
-                <div class="variant-images-preview mt-2 flex flex-wrap gap-1" aria-live="polite"></div>
+            <td class="px-2 py-2 align-middle">
+                <input type="text" name="variants[__INDEX__][sku]" value="" maxlength="12" placeholder="{{ __('Auto') }}" class="sku-field w-28 rounded border border-dashed border-zinc-300 bg-zinc-50 px-2 py-1 font-mono text-xs uppercase dark:border-zinc-600 dark:bg-zinc-900">
             </td>
             <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="color">
                 <input type="text" name="variants[__INDEX__][color]" maxlength="60" class="w-28 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
@@ -429,19 +433,7 @@
                 <input type="number" name="variants[__INDEX__][cost_per_unit]" step="0.01" min="0" class="w-24 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
             </td>
             <td class="px-2 py-2 align-middle">
-                <input type="number" name="variants[__INDEX__][quantity]" value="0" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-            </td>
-            <td class="px-2 py-2 align-middle">
-                <input type="number" name="variants[__INDEX__][reorder_level]" value="5" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-            </td>
-            <td class="px-2 py-2 align-middle">
-                <input type="number" name="variants[__INDEX__][reorder_quantity]" value="0" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
-            </td>
-            <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="batch_number">
-                <input type="text" name="variants[__INDEX__][batch_number]" maxlength="120" class="w-28 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
-            </td>
-            <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="expires_at">
-                <input type="date" name="variants[__INDEX__][expires_at]" class="w-36 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
+                <input type="number" name="variants[__INDEX__][opening_quantity]" value="0" min="0" step="1" class="w-20 rounded border border-zinc-300 px-2 py-1 text-xs tabular-nums dark:border-zinc-600 dark:bg-zinc-800">
             </td>
             <td class="variant-col px-2 py-2 align-middle hidden" data-cat-field="ar_model_url">
                 <input type="url" name="variants[__INDEX__][ar_model_url]" placeholder="https://…" class="w-44 rounded border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600 dark:bg-zinc-800">
@@ -461,16 +453,72 @@
             const tbody = document.getElementById('variant-rows');
             const template = document.getElementById('variant-row-template');
             const addBtn = document.getElementById('variant-add-row');
+            const noticeEl = document.getElementById('variant-category-notice');
 
-            if (!categorySelect || !flagsEl || !tbody || !template) return;
+            if (!categorySelect || !flagsEl || !tbody || !template || !noticeEl) return;
 
             const categoryFlags = JSON.parse(flagsEl.textContent || '{}');
 
-            const FIELD_KEYS = ['color', 'frame_size', 'material', 'lens_type', 'power', 'duration', 'batch_number', 'expires_at', 'ar_model_url'];
+            function randomSku() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let s = '';
+                for (let i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+                return 'PRD-' + s;
+            }
 
             function flagsForSelectedCategory() {
                 const id = categorySelect.value;
                 return categoryFlags[id] || null;
+            }
+
+            function labelFor(key) {
+                const map = {
+                    color: @json(__('Color')),
+                    frame_size: @json(__('Frame size')),
+                    material: @json(__('Material')),
+                    lens_type: @json(__('Lens type')),
+                    power: @json(__('Power')),
+                    duration: @json(__('Duration')),
+                    ar_model_url: @json(__('AR model URL')),
+                };
+                return map[key] || key;
+            }
+
+            function buildCategoryNotice(f) {
+                if (!f) {
+                    return @json(__('Select a category to see which variant fields apply.'));
+                }
+                const active = [];
+                const inactiveParts = [];
+                const req = @json(__('required'));
+
+                if (f.has_color) active.push(labelFor('color') + ' (' + req + ')'); else inactiveParts.push(labelFor('color'));
+                if (f.has_frame_size) active.push(labelFor('frame_size') + ' (' + req + ')'); else inactiveParts.push(labelFor('frame_size'));
+                if (f.has_material) active.push(labelFor('material') + ' (' + req + ')'); else inactiveParts.push(labelFor('material'));
+                if (f.has_lens_type) active.push(labelFor('lens_type') + ' (' + req + ')'); else inactiveParts.push(labelFor('lens_type'));
+                if (f.has_power_field) active.push(labelFor('power') + ' (' + req + ')'); else inactiveParts.push(labelFor('power'));
+                if (f.has_duration) active.push(labelFor('duration') + ' (' + req + ')'); else inactiveParts.push(labelFor('duration'));
+                if (f.has_ar_support) active.push(labelFor('ar_model_url') + ' (' + @json(__('optional')) + ')');
+
+                let msg = @json(__('Category:')) + ' ' + f.name + '. ';
+                if (active.length) {
+                    msg += @json(__('Shown and required where marked:')) + ' ' + active.join(', ') + '. ';
+                }
+                if (inactiveParts.length) {
+                    msg += @json(__('Not used for this category:')) + ' ' + inactiveParts.join(', ') + '. ';
+                }
+                if (f.requires_expiry_tracking) {
+                    msg += @json(__('Batch and expiry are set after save on the Inventory tab.'));
+                }
+                return msg.trim();
+            }
+
+            function refreshSkuPlaceholders() {
+                tbody.querySelectorAll('tr.variant-row .sku-field').forEach(function (input) {
+                    if (!input.value || input.value.trim() === '') {
+                        input.placeholder = randomSku();
+                    }
+                });
             }
 
             function applyColumnVisibility() {
@@ -488,12 +536,11 @@
                         lens_type: f.has_lens_type,
                         power: f.has_power_field,
                         duration: f.has_duration,
-                        batch_number: f.requires_expiry_tracking,
-                        expires_at: f.requires_expiry_tracking,
                         ar_model_url: f.has_ar_support,
                     };
                     el.classList.toggle('hidden', !map[key]);
                 });
+                noticeEl.textContent = buildCategoryNotice(f);
             }
 
             function reindexVariantRows() {
@@ -511,6 +558,7 @@
                     });
                 });
                 updateRemoveButtons();
+                refreshSkuPlaceholders();
             }
 
             function updateRemoveButtons() {
@@ -526,12 +574,9 @@
                 const idx = rows.length;
                 const html = template.innerHTML.replace(/__INDEX__/g, String(idx));
                 tbody.insertAdjacentHTML('beforeend', html);
-                const newRow = tbody.lastElementChild;
-                if (newRow) {
-                    const radios = tbody.querySelectorAll('input[name="default_variant_index"]');
-                    if (radios.length === 1) {
-                        radios[0].checked = true;
-                    }
+                const radios = tbody.querySelectorAll('input[name="default_variant_index"]');
+                if (radios.length === 1) {
+                    radios[0].checked = true;
                 }
                 reindexVariantRows();
                 applyColumnVisibility();
@@ -549,34 +594,6 @@
             });
 
             if (addBtn) addBtn.addEventListener('click', addRow);
-
-            tbody.addEventListener('change', function (e) {
-                const input = e.target;
-                if (!input || !input.classList || !input.classList.contains('variant-images-input')) return;
-                const cell = input.closest('.variant-images-cell');
-                if (!cell) return;
-                const preview = cell.querySelector('.variant-images-preview');
-                if (!preview) return;
-                preview.innerHTML = '';
-                if (!input.files || !input.files.length) return;
-                const max = 12;
-                for (let j = 0; j < Math.min(input.files.length, max); j++) {
-                    const file = input.files[j];
-                    if (!file.type.startsWith('image/')) continue;
-                    const wrap = document.createElement('span');
-                    wrap.className = 'relative h-10 w-10 shrink-0 overflow-hidden rounded border border-zinc-200 dark:border-zinc-600';
-                    const img = document.createElement('img');
-                    img.alt = '';
-                    img.className = 'h-full w-full object-cover';
-                    wrap.appendChild(img);
-                    preview.appendChild(wrap);
-                    const r = new FileReader();
-                    r.onload = function (ev) {
-                        img.src = ev.target.result;
-                    };
-                    r.readAsDataURL(file);
-                }
-            });
 
             categorySelect.addEventListener('change', applyColumnVisibility);
             applyColumnVisibility();

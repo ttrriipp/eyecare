@@ -242,6 +242,49 @@ class ProductService
     }
 
     /**
+     * Move an image earlier or later within its scope (shared gallery or one variant's images).
+     */
+    public function moveProductImageInScope(ProductImage $image, string $direction): void
+    {
+        if (! in_array($direction, ['up', 'down'], true)) {
+            return;
+        }
+
+        $query = ProductImage::query()->where('product_id', $image->product_id);
+        if ($image->product_variant_id === null) {
+            $query->whereNull('product_variant_id');
+        } else {
+            $query->where('product_variant_id', $image->product_variant_id);
+        }
+
+        $orderedIds = $query->orderBy('sort_order')->orderBy('id')->pluck('id')->values()->all();
+        $idx = array_search($image->id, $orderedIds, true);
+        if ($idx === false) {
+            return;
+        }
+
+        if ($direction === 'up' && $idx > 0) {
+            [$orderedIds[$idx - 1], $orderedIds[$idx]] = [$orderedIds[$idx], $orderedIds[$idx - 1]];
+        } elseif ($direction === 'down' && $idx < count($orderedIds) - 1) {
+            [$orderedIds[$idx + 1], $orderedIds[$idx]] = [$orderedIds[$idx], $orderedIds[$idx + 1]];
+        } else {
+            return;
+        }
+
+        $this->reassignSortOrderForImageIds($orderedIds);
+    }
+
+    /**
+     * @param  array<int, int>  $orderedIds
+     */
+    public function reassignSortOrderForImageIds(array $orderedIds): void
+    {
+        foreach ($orderedIds as $position => $id) {
+            ProductImage::query()->whereKey($id)->update(['sort_order' => $position]);
+        }
+    }
+
+    /**
      * Persist multiple catalog image uploads for a variant (e.g. Livewire admin flows).
      *
      * @param  array<int, UploadedFile>  $uploads
@@ -352,8 +395,7 @@ class ProductService
 
     /**
      * Create a variant for a product and seed its inventory row.
-     */
-    /**
+     *
      * @param  array<string, mixed>  $inventoryExtras  Optional keys: batch_number, expires_at (date string), reorder_quantity
      */
     public function createVariant(
@@ -362,6 +404,7 @@ class ProductService
         int $initialStock = 0,
         int $reorderLevel = 5,
         array $inventoryExtras = [],
+        ?int $openingAdjustmentUserId = null,
     ): ProductVariant {
         $product->loadMissing('category');
         $variantData = $this->normalizeVariantArModelUrl($product, $variantData);
@@ -372,7 +415,7 @@ class ProductService
         $expires = $inventoryExtras['expires_at'] ?? null;
         $reorderQty = (int) ($inventoryExtras['reorder_quantity'] ?? 0);
 
-        Inventory::create([
+        $inventory = Inventory::create([
             'product_variant_id' => $variant->id,
             'quantity' => $initialStock,
             'reorder_level' => $reorderLevel,
@@ -380,6 +423,17 @@ class ProductService
             'batch_number' => filled($batch) ? $batch : null,
             'expires_at' => filled($expires) ? $expires : null,
         ]);
+
+        if ($initialStock > 0 && $openingAdjustmentUserId !== null) {
+            $inventory->adjustments()->create([
+                'quantity_before' => 0,
+                'quantity_after' => $initialStock,
+                'delta' => $initialStock,
+                'adjustment_type' => 'opening_stock',
+                'reason' => __('Initial stock on product creation'),
+                'adjusted_by' => $openingAdjustmentUserId,
+            ]);
+        }
 
         return $variant->load('inventory');
     }

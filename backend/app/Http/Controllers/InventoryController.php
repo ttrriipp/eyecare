@@ -19,7 +19,7 @@ class InventoryController extends Controller
 
     public function edit(Request $request, Product $product): View
     {
-        if (! $request->user()?->isAdmin()) {
+        if (! $request->user()?->isAdminOrStaff()) {
             abort(403);
         }
 
@@ -36,7 +36,7 @@ class InventoryController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        if (! $request->user()?->isAdmin()) {
+        if (! $request->user()?->isAdminOrStaff()) {
             abort(403);
         }
 
@@ -46,18 +46,27 @@ class InventoryController extends Controller
                 'integer',
                 Rule::exists('product_variants', 'id')->where('product_id', $product->id),
             ],
-            'adjustment_type' => ['required', 'string', Rule::in(['add', 'subtract'])],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'adjustment_type' => ['required', 'string', Rule::in(['add', 'subtract', 'set'])],
+            'quantity' => ['required', 'integer', 'min:0'],
             'reason' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        if (in_array($validated['adjustment_type'], ['add', 'subtract'], true) && (int) $validated['quantity'] < 1) {
+            throw ValidationException::withMessages([
+                'quantity' => __('Enter at least 1 unit for add or remove adjustments.'),
+            ]);
+        }
 
         $variant = $this->resolveVariantForStockUpdate($product, $validated['product_variant_id'] ?? null);
         $inventory = $this->inventoryService->findForVariant($variant);
 
         $before = $inventory->quantity;
         $deltaUnits = (int) $validated['quantity'];
-        if ($validated['adjustment_type'] === 'subtract') {
+
+        if ($validated['adjustment_type'] === 'set') {
+            $after = max(0, $deltaUnits);
+        } elseif ($validated['adjustment_type'] === 'subtract') {
             if ($deltaUnits > $before) {
                 throw ValidationException::withMessages([
                     'quantity' => __('Cannot remove more than :n units on hand.', ['n' => $before]),
@@ -72,16 +81,22 @@ class InventoryController extends Controller
             ? trim((string) $validated['notes'])
             : $inventory->notes;
 
-        $this->inventoryService->update($inventory, [
+        $payload = [
             'quantity' => $after,
             'adjustment_reason' => $validated['reason'],
             'notes' => $notesPayload,
-        ], $request->user()?->id);
+        ];
+
+        if ($validated['adjustment_type'] === 'set') {
+            $payload['force_adjustment_type'] = 'correction';
+        }
+
+        $this->inventoryService->update($inventory, $payload, $request->user()?->id);
 
         $label = $variant->sku ?: $product->name;
 
         return redirect()
-            ->route('products.show', $product)
+            ->to(route('products.show', $product).'?tab=inventory')
             ->with('status', __('Stock updated for :name.', ['name' => $label]));
     }
 

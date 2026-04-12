@@ -15,6 +15,12 @@ class RespondToFeedbackRequest extends FormRequest
     {
         return [
             'admin_reply' => ['nullable', 'string', 'max:2000'],
+            'redirect_to' => [
+                'nullable',
+                'string',
+                'max:500',
+                'regex:/^\/products\/[1-9][0-9]*(\?[^#]*)?$/',
+            ],
         ];
     }
 }

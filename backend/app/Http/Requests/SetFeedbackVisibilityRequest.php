@@ -15,6 +15,12 @@ class SetFeedbackVisibilityRequest extends FormRequest
     {
         return [
             'is_visible' => ['required', 'boolean'],
+            'redirect_to' => [
+                'nullable',
+                'string',
+                'max:500',
+                'regex:/^\/products\/[1-9][0-9]*(\?[^#]*)?$/',
+            ],
         ];
     }
 }
