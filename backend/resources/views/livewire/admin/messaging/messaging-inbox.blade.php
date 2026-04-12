@@ -1,9 +1,10 @@
 <div
-    class="flex min-h-0 w-full max-h-[calc(100dvh-8rem)] flex-1 flex-col gap-4 overflow-hidden sm:max-h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-5rem)]"
+    wire:poll.5s="pollInbox"
+    class="flex h-[calc(100dvh-8rem)] w-full min-h-0 flex-1 flex-col gap-4 overflow-hidden sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-5rem)]"
 >
 
     {{-- ── Page header ─────────────────────────────────────────────────── --}}
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
                 {{ __('Messages') }}
@@ -19,7 +20,7 @@
 
         {{-- ── LEFT: Conversation list ─────────────────────────────────── --}}
         <div @class([
-            'min-w-0 flex min-h-0 flex-1 flex-col gap-3',
+            'flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3',
             'hidden lg:flex' => $selectedConversationId,
             'flex' => !$selectedConversationId,
         ])>
@@ -118,7 +119,7 @@
         {{-- ── RIGHT: Thread panel ────────────────────────────────────────── --}}
         @if($selectedConversationId)
             <div
-                class="flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 lg:w-[450px] lg:flex-none lg:self-stretch"
+                class="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 lg:w-[450px] lg:max-w-[450px] lg:flex-none lg:self-stretch"
             >
                 <div class="flex shrink-0 items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
                     <h3 class="font-medium text-zinc-900 dark:text-zinc-50">{{ __('Conversation') }}</h3>
@@ -132,10 +133,12 @@
                     </button>
                 </div>
 
-                <livewire:admin.messaging.messaging-thread
-                    :conversation-id="$selectedConversationId"
-                    :key="'thread-'.$selectedConversationId"
-                />
+                <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                    <livewire:admin.messaging.messaging-thread
+                        :conversation-id="$selectedConversationId"
+                        :key="'thread-'.$selectedConversationId"
+                    />
+                </div>
             </div>
         @endif
 

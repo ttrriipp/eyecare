@@ -4,10 +4,13 @@ import com.example.opticalsystem.data.model.AuthResponse
 import com.example.opticalsystem.data.model.LoginRequest
 import com.example.opticalsystem.data.model.ProfileResponse
 import com.example.opticalsystem.data.model.RegisterRequest
+import com.example.opticalsystem.data.model.UpdateProfileRequest
+import com.example.opticalsystem.data.model.UpdateProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApi {
 
@@ -22,4 +25,7 @@ interface AuthApi {
 
     @GET("profile")
     suspend fun profile(): Response<ProfileResponse>
+
+    @PUT("profile")
+    suspend fun updateProfile(@Body body: UpdateProfileRequest): Response<UpdateProfileResponse>
 }

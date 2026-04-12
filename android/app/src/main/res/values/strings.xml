@@ -4,6 +4,9 @@
     <string name="login_title">Login</string>
     <string name="login_subtitle">Welcome back</string>
     <string name="email">Email</string>
+    <string name="email_error_required">Please enter your email address.</string>
+    <string name="email_error_invalid">Enter a valid email address.</string>
+    <string name="email_error_too_long">Email address is too long.</string>
     <string name="password">Password</string>
     <string name="forgot_password">Forgot password?</string>
     <string name="login">Login</string>
@@ -16,6 +19,10 @@
     <string name="register_subtitle">Join us today</string>
     <string name="full_name">Full Name</string>
     <string name="phone">Phone (optional)</string>
+    <string name="phone_hint_registration">Optional. Use at least 10 digits (e.g. 09XX XXX XXXX or +63 9XX XXX XXXX).</string>
+    <string name="phone_error_too_short">Enter a complete phone number (at least 10 digits).</string>
+    <string name="phone_error_too_long">Phone number is too long (max 20 characters, up to 15 digits).</string>
+    <string name="phone_error_invalid_chars">Phone can only include digits, spaces, and + - ( ) .</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="register">Create Account</string>
     <string name="have_account">Already have an account?</string>
@@ -36,7 +43,7 @@
     <string name="back">Back</string>
 
     <!-- Backend root serving /public assets (logo/images). Example: http://10.0.2.2:8000/ -->
-    <string name="backend_root_url">http://10.0.2.2:6969/</string>
+    <string name="backend_root_url">http://192.168.1.16:6969/</string>
     <!-- Relative path inside backend public folder -->
     <string name="login_logo_public_path">images/logo-no-bg.png</string>
 
@@ -245,6 +252,25 @@
     <string name="bill_not_paid">Not yet paid</string>
 
     <!-- Profile Menu -->
+    <string name="profile_section_account">Account</string>
+    <string name="profile_section_clinic">Clinic</string>
+    <string name="profile_section_shopping">Shopping</string>
+    <string name="profile_edit_profile">Edit profile</string>
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_edit_subtitle">Update the details we use for your orders and visits.</string>
+    <string name="profile_field_name">Full name</string>
+    <string name="profile_field_phone">Phone</string>
+    <string name="profile_field_dob">Date of birth</string>
+    <string name="profile_field_dob_hint">YYYY-MM-DD</string>
+    <string name="profile_field_address">Address</string>
+    <string name="profile_save">Save changes</string>
+    <string name="profile_update_success">Profile updated</string>
+    <string name="profile_error_name_required">Please enter your name</string>
+    <string name="profile_member_since">Member since %1$s</string>
+    <string name="profile_notifications_sub">Order status alerts</string>
+    <string name="profile_browse_catalog">Browse catalog</string>
+    <string name="profile_browse_catalog_sub">Frames, lenses &amp; more</string>
+    <string name="profile_app_version">EyeCare v%1$s</string>
     <string name="profile_my_orders">My Orders</string>
     <string name="profile_my_bills">My Bills</string>
     <string name="logout">Logout</string>

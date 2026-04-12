@@ -42,3 +42,19 @@ fun ProductVariant.displayUnitPrice(product: Product): String {
 
 fun ProductVariant.primaryImageUrl(): String? =
     images?.firstOrNull()?.imageUrl
+
+/**
+ * Images for product detail gallery: variant-specific when the API returned any for the selection,
+ * otherwise product-level images (same as list/thumb behavior).
+ */
+fun galleryImagesForDetail(product: Product, selectedVariant: ProductVariant?): List<ProductImage> {
+    val fromVariant = selectedVariant?.images
+        ?.filter { it.imageUrl.isNotBlank() }
+        ?.sortedBy { it.sortOrder }
+    if (!fromVariant.isNullOrEmpty()) return fromVariant
+
+    val fromProduct = product.images?.filter { it.imageUrl.isNotBlank() }.orEmpty()
+    return fromProduct.ifEmpty {
+        listOf(ProductImage(id = 0, imageUrl = "", sortOrder = 0, createdAt = ""))
+    }
+}

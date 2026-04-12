@@ -2,6 +2,7 @@ package com.example.opticalsystem.navigation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,8 @@ import com.example.opticalsystem.ui.products.ProductDetailScreen
 import com.example.opticalsystem.ui.products.ProductDetailViewModel
 import com.example.opticalsystem.ui.products.ProductListScreen
 import com.example.opticalsystem.ui.products.ProductListViewModel
+import com.example.opticalsystem.ui.profile.EditProfileScreen
+import com.example.opticalsystem.ui.profile.EditProfileViewModel
 import com.example.opticalsystem.ui.profile.ProfileScreen
 import com.example.opticalsystem.ui.profile.ProfileViewModel
 import com.example.opticalsystem.ui.schedule.SchedulePlaceholderScreen
@@ -174,21 +177,43 @@ private fun NavGraphBuilder.mainGraph(
     ) { entry ->
         val conversationId = entry.arguments?.getInt("conversationId") ?: 0
         AndroidFragment<ConversationThreadFragment>(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
             arguments = bundleOf("conversationId" to conversationId),
         )
     }
     composable(AppRoutes.PROFILE) {
         val vm = hiltViewModel<ProfileViewModel>()
+        fun popToMainAndNavigate(route: String) {
+            navController.navigate(route) {
+                popUpTo(AppRoutes.MAIN_GRAPH) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
         ProfileScreen(
             viewModel = vm,
+            onNavigateToEditProfile = { navController.navigate(AppRoutes.EDIT_PROFILE) },
             onNavigateToOrders = { navController.navigate(AppRoutes.ORDERS) },
             onNavigateToBills = { navController.navigate(AppRoutes.BILLS) },
+            onNavigateToNotifications = { navController.navigate(AppRoutes.NOTIFICATIONS) },
+            onNavigateToCatalog = { popToMainAndNavigate(AppRoutes.CATALOG) },
             onLoggedOut = {
                 navController.navigate(AppRoutes.LOGIN) {
                     popUpTo(AppRoutes.MAIN_GRAPH) { inclusive = true }
                 }
             },
+        )
+    }
+    composable(AppRoutes.EDIT_PROFILE) {
+        val vm = hiltViewModel<EditProfileViewModel>()
+        EditProfileScreen(
+            viewModel = vm,
+            onBack = { navController.navigateUp() },
+            onSaved = { navController.navigateUp() },
         )
     }
     composable(AppRoutes.NOTIFICATIONS) {

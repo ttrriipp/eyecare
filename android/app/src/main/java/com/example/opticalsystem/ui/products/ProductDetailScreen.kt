@@ -78,6 +78,7 @@ import com.example.opticalsystem.data.model.ProductCategory
 import com.example.opticalsystem.data.model.ProductImage
 import com.example.opticalsystem.data.model.ProductVariant
 import com.example.opticalsystem.data.model.displayUnitPrice
+import com.example.opticalsystem.data.model.galleryImagesForDetail
 import com.example.opticalsystem.data.model.hasArTryOn
 import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.ui.components.CartIconWithBadge
@@ -278,7 +279,7 @@ fun ProductDetailScreen(
                                 .verticalScroll(scrollState)
                                 .padding(bottom = 88.dp),
                         ) {
-                            ImageGalleryCard(product = product)
+                            ImageGalleryCard(product = product, selectedVariant = selectedVariant)
                             ProductInfoBlock(
                                 product = product,
                                 selectedVariant = selectedVariant,
@@ -434,11 +435,12 @@ private fun DetailToolbar(
 }
 
 @Composable
-private fun ImageGalleryCard(product: Product) {
-    val effectiveImages = (product.images ?: emptyList()).ifEmpty {
-        listOf(ProductImage(id = 0, imageUrl = "", sortOrder = 0, createdAt = ""))
-    }
+private fun ImageGalleryCard(product: Product, selectedVariant: ProductVariant?) {
+    val effectiveImages = galleryImagesForDetail(product, selectedVariant)
     val pagerState = rememberPagerState(pageCount = { effectiveImages.size })
+    LaunchedEffect(selectedVariant?.id, effectiveImages.size) {
+        pagerState.scrollToPage(0)
+    }
 
     Card(
         modifier = Modifier

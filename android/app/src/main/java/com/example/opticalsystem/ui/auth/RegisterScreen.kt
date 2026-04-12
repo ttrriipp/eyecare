@@ -7,25 +7,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
@@ -51,9 +53,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.opticalsystem.R
+import com.example.opticalsystem.util.RegistrationEmailValidator
+import com.example.opticalsystem.util.RegistrationPhoneValidator
 import com.example.opticalsystem.util.Resource
 
 @Composable
@@ -91,31 +96,40 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(gradient)
+            .background(gradient),
+    ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars)
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(20.dp),
+            .imePadding(),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(20.dp))
             AuthRemoteLogo(
                 logoUrl = logoUrl,
                 modifier = Modifier.size(72.dp),
             )
-            Spacer(Modifier.height(14.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
+        }
+        Surface(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 22.dp, vertical = 20.dp),
             ) {
-                Column(Modifier.padding(18.dp)) {
                     Text(
                         text = stringResource(R.string.register_title),
                         style = MaterialTheme.typography.headlineSmall,
@@ -150,6 +164,7 @@ fun RegisterScreen(
                             .padding(top = 10.dp),
                         label = { Text(stringResource(R.string.email)) },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_email_24),
@@ -168,6 +183,14 @@ fun RegisterScreen(
                             .padding(top = 10.dp),
                         label = { Text(stringResource(R.string.phone)) },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        supportingText = {
+                            Text(
+                                text = stringResource(R.string.phone_hint_registration),
+                                fontSize = 11.sp,
+                                color = colorResource(R.color.login_hint),
+                            )
+                        },
                         shape = RoundedCornerShape(10.dp),
                         colors = authFieldColors(),
                     )
@@ -250,20 +273,38 @@ fun RegisterScreen(
                             val ph = phone.trim().ifEmpty { null }
                             val p = password.trim()
                             val c = confirmPassword.trim()
-                            if (n.isEmpty() || e.isEmpty() || p.isEmpty() || c.isEmpty()) {
+                            if (n.isEmpty() || p.isEmpty() || c.isEmpty()) {
                                 Toast.makeText(
                                     context,
                                     "Please fill in all required fields",
                                     Toast.LENGTH_SHORT,
                                 ).show()
-                            } else if (p != c) {
-                                Toast.makeText(
-                                    context,
-                                    "Passwords do not match",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
                             } else {
-                                viewModel.register(n, e, ph, p, c)
+                                val emailError = RegistrationEmailValidator.validationMessageRes(email)
+                                if (emailError != null) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(emailError),
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                                } else {
+                                    val phoneError = RegistrationPhoneValidator.validationMessageRes(phone)
+                                    if (phoneError != null) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(phoneError),
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+                                    } else if (p != c) {
+                                        Toast.makeText(
+                                            context,
+                                            "Passwords do not match",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    } else {
+                                        viewModel.register(n, e, ph, p, c)
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier
@@ -333,8 +374,8 @@ fun RegisterScreen(
                             },
                         )
                     }
-                }
             }
         }
+    }
     }
 }

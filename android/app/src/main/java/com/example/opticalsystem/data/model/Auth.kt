@@ -26,6 +26,19 @@ data class ProfileResponse(
     val user: User,
 )
 
+data class UpdateProfileRequest(
+    val name: String,
+    val phone: String,
+    @SerializedName("date_of_birth")
+    val dateOfBirth: String?,
+    val address: String?,
+)
+
+data class UpdateProfileResponse(
+    val message: String,
+    val user: User,
+)
+
 data class User(
     val id: Int,
     val name: String,
@@ -34,6 +47,9 @@ data class User(
     val phone: String?,
     @SerializedName("avatar_url")
     val avatarUrl: String?,
+    @SerializedName("date_of_birth")
+    val dateOfBirth: String?,
+    val address: String?,
     @SerializedName("email_verified_at")
     val emailVerifiedAt: String?,
     @SerializedName("created_at")

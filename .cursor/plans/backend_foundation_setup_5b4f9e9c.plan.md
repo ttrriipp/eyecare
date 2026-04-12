@@ -42,7 +42,11 @@ isProject: false
 
 > **Implementation update (2026-04-09):** `ar_model_url` is stored on **`product_variants`**, not on `products`, so each sellable variant can have its own `.glb`/`.usdz` URL. Migration: `2026_04_09_160000_move_ar_model_url_to_product_variants` (copies existing product URLs onto all variants of each product, then drops `products.ar_model_url`). The API still accepts `ar_model_url` on product create/update for convenience; `ProductService` applies it to the **default variant** via `applyArModelToDefaultVariant`. `ProductVariantResource` exposes `ar_model_url`; admin Livewire flows edit AR per variant. Listing UIs treat “AR available” as **any variant** with a URL when the category has `has_ar_support`.
 >
-> **Schema update (products):** There is **no `suppliers` table** — vendor contact info is out of scope. **`cost_per_unit`** lives on **`product_variants`** (not `products`) so margin differs per material/color/SKU. **`product_images`** has optional **`product_variant_id`**: `NULL` = shared gallery for the whole product; set = image shown when that variant is selected (e.g. red vs blue frame). If migrating from `products.cost_per_unit`, copy values onto each variant (or default variant only) then drop the product column.
+> **Implementation update (2026-04-12, clients):** Android **catalog** supports pull-to-refresh (reloads the current product list with the same filters/sort). Android **product detail** gallery prefers **`ProductVariant.images`** when the API returns any for the selected variant; otherwise it falls back to product-wide shared images (`product_images` with `product_variant_id` null). Backend `ProductController@show` eager-loads `variants.images` for this.
+>
+> **Schema update (messaging):** Tables **`conversations`** and **`messages`** — migrations `2026_04_10_170000_create_conversations_table`, `2026_04_10_170001_create_messages_table`; follow-up `2026_04_12_120000_drop_subject_and_status_from_conversations` removes legacy `subject` / `status` so one row per customer (`user_id` unique when set). See ERD below.
+>
+> **Schema update (products):** There is **no `suppliers` table** — vendor contact info is out of scope. **`cost_per_unit`** lives on **`product_variants`** (not `products`) so margin differs per material/color/SKU. **`product_images`** rows always have **required `product_id`** (parent product for FK integrity, queries, and cascade) and **nullable `product_variant_id`**: `NULL` = shared gallery for the whole product; non-null = image belongs to that variant only (e.g. red vs blue frame). If migrating from `products.cost_per_unit`, copy values onto each variant (or default variant only) then drop the product column.
 >
 > **Schema update (variants):** `product_variants` now has dedicated **`power`** and **`duration`** fields for contact-lens style options. `duration` is constrained to enum values (`Daily`, `Bi-weekly`, `Monthly`, `Quarterly`, `Yearly`). Legacy `base_curve` / `diameter` columns still exist for backward compatibility, but new forms and validation use `power` / `duration`.
 
@@ -142,6 +146,9 @@ app/
 erDiagram
     User ||--o{ Order : places
     User ||--o{ Feedback : writes
+    User ||--o| Conversation : customer_thread
+    User ||--o{ Message : sends
+    Conversation ||--o{ Message : contains
     User {
         bigint id PK
         string name
@@ -171,6 +178,8 @@ erDiagram
         text description
         string brand
         boolean is_active
+        timestamp created_at
+        timestamp updated_at
         timestamp deleted_at
     }
 
@@ -186,10 +195,13 @@ erDiagram
         enum duration_nullable
         string base_curve
         string diameter
-        decimal cost_per_unit
+        decimal cost_per_unit_nullable
         decimal price
         boolean is_default
+        boolean is_active
         string ar_model_url_nullable
+        timestamp created_at
+        timestamp updated_at
     }
 
     ProductCategory {
@@ -216,6 +228,8 @@ erDiagram
         bigint product_variant_id FK_nullable
         string image_url
         integer sort_order
+        timestamp created_at
+        timestamp updated_at
     }
 
     Order ||--o{ OrderItem : contains
@@ -293,9 +307,12 @@ erDiagram
         integer quantity
         integer reorder_level
         integer reorder_quantity
-        string batch_number
-        date expires_at
+        string batch_number_nullable
+        date expires_at_nullable
+        string storage_location_nullable
         text notes
+        timestamp created_at
+        timestamp updated_at
     }
 
     Inventory ||--o{ InventoryAdjustment : tracks
@@ -322,13 +339,33 @@ erDiagram
         bigint moderated_by FK_nullable
         timestamp moderated_at
     }
+
+    Conversation {
+        bigint id PK
+        bigint user_id FK_nullable UK
+        timestamp last_message_at_nullable
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    Message {
+        bigint id PK
+        bigint conversation_id FK
+        bigint sender_id FK
+        text body
+        boolean is_read
+        timestamp read_at_nullable
+        timestamp created_at
+        timestamp updated_at
+    }
 ```
 
 
 
 ## Module Behavior Summary
 
-**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). **Selling price is stored per variant** (`product_variants.price`) so different colors/sizes/SKUs can have their own price; `products` holds shared metadata (name, brand, category, description, active flag). **Cost per unit** is stored on each **product variant** (`product_variants.cost_per_unit`) so margin can differ by material/color/SKU. **Images** attach to a product; optional **`product_variant_id`** on `product_images` means `NULL` = shared gallery for the whole product, non-null = image shown when that variant is selected (e.g. frame color). Each product has one or more **product variants** (sku, color, frame size, material, lens type, power, duration — fields nullable when not applicable to the category). `duration` is enum-constrained (`Daily`, `Bi-weekly`, `Monthly`, `Quarterly`, `Yearly`). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
+**Products** -- Optical catalog for a local PH optical clinic. Categories: Eyeglass Frames, Prescription Lenses, Contact Lenses, Sunglasses, Accessories (cases, cleaning solutions, cloths, etc.). **Selling price is stored per variant** (`product_variants.price`) so different colors/sizes/SKUs can have their own price; `products` holds shared metadata (name, brand, category, description, active flag). **Cost per unit** is stored on each **product variant** (`product_variants.cost_per_unit`, nullable) so margin can differ by material/color/SKU. **Images** live in `product_images` with **required `product_id`** and **nullable `product_variant_id`**: `NULL` = shared gallery for the whole product; non-null = variant-only image (e.g. frame color). Clients should prefer variant-specific rows when a variant is selected. Each product has one or more **product variants** (sku, color, frame size, material, lens type, power, duration — fields nullable when not applicable to the category). **`is_active` on `product_variants`** allows hiding a SKU without deleting it. `duration` is enum-constrained (`Daily`, `Bi-weekly`, `Monthly`, `Quarterly`, `Yearly`). **AR virtual try-on** uses an optional **`ar_model_url` per variant** (see implementation update above). Creating a product without defining extra variants still yields an internal **default variant** used for stock and simple ordering. Admin has full CRUD. Staff and customers can view only.
 
 **Ordering** -- In-store pickup model. No prescription data, no delivery/shipping. Cart is managed client-side (Android app stores items locally). At checkout, one API call creates the order with all items. System validates stock availability before accepting -- order is blocked if any item is out of stock. Staff can also create orders for registered customers (phone orders) or walk-ins; `processed_by` tracks which staff member processed the order. Lifecycle: Pending -> Confirmed -> Ready for Pickup -> Completed (or Cancelled). Customers can cancel before Ready for Pickup; after that, only staff/admin can cancel. Staff can optionally record a manual `discount_amount` (e.g., "Senior Citizen 20%", "PWD discount") which is deducted from the order total before billing. A bill is auto-generated with each order. Status changes are written to `order_status_histories` (who changed it, from/to status, and when) for timeline/audit.
 
@@ -336,7 +373,7 @@ erDiagram
 
 **Scheduling** -- Time-slot based with predefined service types and named schedule templates. Admin manages service types (Eye Examination, Contact Lens Fitting, Frame Adjustment/Repair, Follow-up Consultation) with default durations and fees. Admin creates named schedule templates (e.g., "Regular Hours Mon-Fri", "Saturday Hours") and the system generates time slots for a date range based on those templates; each time slot retains a `schedule_template_id` link back to the template that generated it. Admin can override individual slots (mark unavailable, adjust capacity). Customers pick a service type + open time slot to book. `staff_id` records which optometrist/staff handles the appointment. Appointments with a fee (e.g., standalone eye exam PHP 300) auto-generate a bill. Free appointments do not. Cancelled appointments free up the slot capacity. SMS notifications for customers (event/listener structure, actual SMS integration later).
 
-**Direct Messaging** -- Polling-based team inbox (no WebSockets). Customer starts a conversation with the shop. Conversations have a `status` (open / closed) so staff can mark resolved threads as closed. Any staff/admin can view and respond to open conversations. Messages have read tracking (`is_read`, `read_at`). Clients poll the unread-count endpoint on a short interval (e.g. 10 s) and fetch new messages on demand. Pure REST — no persistent connections, no extra server processes.
+**Direct Messaging** -- Team inbox backed by **`conversations`** (one row per registered customer when they start chatting, keyed by `user_id`) and **`messages`** (each row is one bubble; `sender_id` is customer or staff). Read state per message (`is_read`, `read_at`). Staff/admin see all threads; customers see their own. Delivery can be REST polling and/or real-time (e.g. Reverb) depending on deployment; see app wiring.
 
 **Inventory** -- Stock tracker keyed per **product variant** (default variant covers single-SKU products) with quantity, reorder level, reorder quantity, optional batch number, and optional expiry date. Category-level `requires_expiry_tracking` controls whether `expires_at` is required. Every quantity change writes an `inventory_adjustments` audit row (`before`, `after`, `delta`, `type`, `reason`, `adjusted_by`). Admin adjusts levels. Staff views only. Stock is validated when orders are placed (order blocked if out of stock). Stock is not auto-decremented on order confirmation (manual adjustment for now, can be automated later via events).
 
@@ -359,9 +396,9 @@ erDiagram
 - **Expiry enforcement**: `requires_expiry_tracking` on `product_categories` controls whether inventory `expires_at` is mandatory for products in that category (e.g., contact lens solutions), while durable products (e.g., frames) can keep `expires_at` nullable.
 - **SKU**: Stored on **`product_variants`** (one unique code per sellable variant). Auto-generated on variant create when not provided (format `PRD-` + 8 random alphanumeric characters). The `Product` model exposes `sku` as the **default variant’s** SKU for convenience in lists and legacy views. Not mass-assignable; searchable via product search and variant records.
 - **Cost per unit**: Stored on **`product_variants`** so profit margin reflects each sellable SKU (e.g. titanium vs acetate). Not on `products`.
-- **Product images**: `product_images.product_variant_id` is nullable. Shared gallery when `NULL`; when set, the image is variant-specific and clients should prefer it when that variant is selected.
+- **Product images**: Every row has **`product_id`** (required) and optional **`product_variant_id`**. Shared gallery when `product_variant_id` is `NULL`; when set, the image is variant-specific. Mobile/detail UIs should show variant images when the selected variant has any; otherwise fall back to shared product images.
 - **Inventory audit trail**: `inventory_adjustments` stores each stock quantity change with actor and reason for accountability.
-- **Messaging delivery**: REST polling — no WebSockets, no Reverb, no broadcasting setup. Clients call `GET /api/v1/conversations/{id}/messages` and `GET /api/v1/conversations/unread-count` on a short interval. Keeps deployment simple (no persistent ws process).
+- **Messaging delivery**: REST endpoints (`GET /api/v1/conversations/{id}/messages`, unread-count, etc.) are always available; optional WebSockets (e.g. Laravel Reverb + broadcasting) can push new messages when enabled in the environment.
 - **Walk-in support**: `user_id` is nullable on orders and appointments. Walk-in customers identified by `walk_in_name` + `walk_in_phone` fields instead.
 - **Staff attribution**: `orders.processed_by` tracks which staff member processed the transaction. (For scheduling, staff attribution fields will be finalized when the appointments module ships.)
 - **Discount tracking**: `discount_amount` on orders lets staff manually apply SC/PWD or promotional discounts without an automated discount engine.
@@ -371,7 +408,7 @@ erDiagram
 - **Order cancellation**: Customers can cancel before "Ready for Pickup." After that, only staff/admin. Bill is voided (if unpaid) or refunded (if partially/fully paid).
 - **Schedule templates**: Admin defines named weekly templates (day, start/end time, slot duration, capacity). System batch-generates time slots for a date range. Each generated time slot keeps a `schedule_template_id` reference for traceability. Individual slots can be overridden.
 - **Appointment billing**: Paid appointments (fee > 0) auto-generate a bill. Free appointments do not. Bills support both orders and appointments via two nullable foreign keys.
-- **Conversation lifecycle**: Conversations have a simple `status` enum (open / closed) so staff can close resolved threads and filter the inbox.
+- **Conversation lifecycle**: Each customer maps to at most one **`conversations`** row (`user_id` unique when set). There is no separate open/closed column on the table after the 2026-04-12 migration; thread lifecycle is enforced in application logic or future columns if needed.
 
 ## Module Workflows: Mobile (Android) vs Web (Admin)
 
@@ -381,7 +418,7 @@ Every module shares the same backend services — the Android app and the web ad
 
 | | Android App | Web Admin (Livewire) |
 |---|---|---|
-| **Customer** | Browse catalog with filters (category, brand, price). View product details, images, variant options. Tap "Try On" for AR-enabled variants. | N/A — customers don't use web admin. |
+| **Customer** | Browse catalog with filters (category, brand, price); pull-to-refresh reloads the list. View product details, images (variant-specific when configured), variant options. Tap "Try On" for AR-enabled variants. | N/A — customers don't use web admin. |
 | **Staff** | Same browsing as customer. Can look up products to assist walk-ins. | View product list. Cannot create, edit, or delete. |
 | **Admin** | Same browsing as customer (rarely used). | Full product CRUD: create/edit products, manage variants (color, size, material, lens type), set **`cost_per_unit` per variant**, upload shared and variant-specific images (`product_variant_id`), set prices, toggle `is_active` per variant. Category settings: toggle `has_ar_support` and `requires_expiry_tracking`. |
 
@@ -532,7 +569,7 @@ Each follows the same pattern -- migration, model, service, controller, requests
 - **Module 4: Billing** -- `PaymentStatus` enum, bills table (linked to orders and later appointments), partial/full payment tracking (`amount_paid`, `balance_due`), void/refund logic
 - **Module 5: Feedbacks and Ratings** -- feedbacks table, one review per customer per product, rating (1-5) + comment
 - **Module 6: Scheduling** -- `AppointmentStatus` enum, service_types, schedule_templates, time_slots, appointments tables, slot generation logic, appointment billing
-- **Module 7: Direct Messaging** -- conversations, messages tables, REST CRUD endpoints, unread-count endpoint, `is_read`/`read_at` tracking, open/closed conversation status
+- **Module 7: Direct Messaging** -- `conversations`, `messages` tables (see ERD), REST CRUD endpoints, unread-count endpoint, `is_read`/`read_at` tracking
 - **Module 8: Virtual Try-On AR** -- AR model URLs per **variant** (and/or upload/storage workflow); serve URLs via API (`ProductVariantResource`); rendering stays Android-side
 
 ## Scope and Limitations (for Capstone Paper)

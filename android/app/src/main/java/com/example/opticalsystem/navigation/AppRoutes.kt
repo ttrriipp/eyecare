@@ -14,6 +14,7 @@ object AppRoutes {
     const val SCHEDULE = "schedule"
     const val CHAT = "chat"
     const val PROFILE = "profile"
+    const val EDIT_PROFILE = "edit_profile"
 
     const val NOTIFICATIONS = "notifications"
     const val PRODUCT = "product/{productId}"

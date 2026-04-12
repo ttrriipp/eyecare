@@ -35,6 +35,8 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
@@ -115,6 +117,7 @@ fun ProductListScreen(
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
     var lastSuccessRows by remember { mutableStateOf<List<ProductCatalogRows.RowModel>>(emptyList()) }
+    val pullRefreshState = rememberPullToRefreshState()
     LaunchedEffect(productsResult) {
         when (val r = productsResult) {
             is Resource.Success ->
@@ -301,44 +304,44 @@ fun ProductListScreen(
                 .fillMaxWidth(),
         ) {
             val initialLoading = productsResult is Resource.Loading && rows.isEmpty()
+            val listRefreshing = productsResult is Resource.Loading && rows.isNotEmpty()
             if (initialLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                PullToRefreshBox(
+                    isRefreshing = listRefreshing,
+                    onRefresh = { viewModel.refreshProducts() },
+                    state = pullRefreshState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 10.dp,
-                        vertical = 8.dp,
-                    ),
                 ) {
-                    items(
-                        items = rows,
-                        key = { ProductCatalogRows.rowKey(it) },
-                        span = { item ->
-                            when (item) {
-                                is ProductCatalogRows.RowModel.GridProduct -> GridItemSpan(1)
-                                else -> GridItemSpan(2)
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = 10.dp,
+                            vertical = 8.dp,
+                        ),
+                    ) {
+                        items(
+                            items = rows,
+                            key = { ProductCatalogRows.rowKey(it) },
+                            span = { item ->
+                                when (item) {
+                                    is ProductCatalogRows.RowModel.GridProduct -> GridItemSpan(1)
+                                    else -> GridItemSpan(2)
+                                }
+                            },
+                        ) { row ->
+                            when (row) {
+                                is ProductCatalogRows.RowModel.Header -> SectionHeader(row.title)
+                                is ProductCatalogRows.RowModel.GridProduct ->
+                                    ProductGridCard(row.product, onOpenProduct)
+                                is ProductCatalogRows.RowModel.ListProduct ->
+                                    ProductListRowCard(row.product, onOpenProduct)
                             }
-                        },
-                    ) { row ->
-                        when (row) {
-                            is ProductCatalogRows.RowModel.Header -> SectionHeader(row.title)
-                            is ProductCatalogRows.RowModel.GridProduct ->
-                                ProductGridCard(row.product, onOpenProduct)
-                            is ProductCatalogRows.RowModel.ListProduct ->
-                                ProductListRowCard(row.product, onOpenProduct)
                         }
                     }
                 }
-            }
-            if (productsResult is Resource.Loading && rows.isNotEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
-                        .size(28.dp),
-                )
             }
         }
     }

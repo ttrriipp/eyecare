@@ -3,6 +3,7 @@ import android.util.Log
 import com.example.opticalsystem.data.api.AuthApi
 import com.example.opticalsystem.data.model.LoginRequest
 import com.example.opticalsystem.data.model.RegisterRequest
+import com.example.opticalsystem.data.model.UpdateProfileRequest
 import com.example.opticalsystem.data.model.User
 import com.example.opticalsystem.util.Resource
 import com.example.opticalsystem.util.TokenManager
@@ -93,6 +94,37 @@ class AuthRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "profile failed", e)
+            Resource.Error(networkError(e, fallback = "Network error"))
+        }
+    }
+
+    suspend fun updateProfile(
+        name: String,
+        phone: String,
+        dateOfBirth: String?,
+        address: String?,
+    ): Resource<User> {
+        return try {
+            val body = UpdateProfileRequest(
+                name = name.trim(),
+                phone = phone.trim(),
+                dateOfBirth = dateOfBirth?.trim()?.ifBlank { null },
+                address = address?.trim()?.ifBlank { null },
+            )
+            val response = authApi.updateProfile(body)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!.user)
+            } else {
+                Resource.Error(
+                    parseError(
+                        response.code(),
+                        response.errorBody()?.string(),
+                        "Failed to update profile",
+                    ),
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "updateProfile failed", e)
             Resource.Error(networkError(e, fallback = "Network error"))
         }
     }

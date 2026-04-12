@@ -43,7 +43,8 @@ fun EyeCareApp(
         DisposableEffect(navController, fragmentManager, lifecycleOwner) {
             val listener = FragmentResultListener { _, bundle ->
                 val id = bundle.getInt(FragmentNavBridge.KEY_CONVERSATION_ID, 0)
-                if (id > 0) {
+                // 0 = no conversation yet (e.g. new registrant); thread screen creates on first send.
+                if (id >= 0) {
                     navController.navigate(AppRoutes.conversation(id)) {
                         popUpTo(AppRoutes.CHAT) { inclusive = false }
                     }

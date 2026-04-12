@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
@@ -48,6 +49,18 @@ class ConversationThreadFragment : Fragment() {
         setupRecyclerView()
         setupInputBar()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // adjustResize + edge-to-edge often fails to lift AndroidFragment inside Compose; use
+        // SOFT_INPUT_ADJUST_NOTHING here so NavHost imePadding() is the sole IME inset source.
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+    }
+
+    override fun onPause() {
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        super.onPause()
     }
 
     override fun onStart() {

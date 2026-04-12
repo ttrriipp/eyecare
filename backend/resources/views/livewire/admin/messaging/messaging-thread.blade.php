@@ -1,4 +1,8 @@
-<div class="flex min-h-0 flex-1 flex-col bg-zinc-50/50 dark:bg-zinc-900/50">
+<div
+    id="admin-messaging-thread"
+    wire:poll.4s="pollMessages"
+    class="flex h-full min-h-0 min-w-0 flex-1 flex-col bg-zinc-50/50 dark:bg-zinc-900/50"
+>
 
     {{-- Messages list --}}
     <div
@@ -89,23 +93,48 @@
 
     @script
     <script>
-        const scrollContainer = document.getElementById('messages-container');
+        function messagesScrollEl() {
+            return document.getElementById('messages-container');
+        }
 
         // Auto-scroll on initial load
-        if (scrollContainer) {
-            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        const initial = messagesScrollEl();
+        if (initial) {
+            initial.scrollTop = initial.scrollHeight;
         }
 
         // Auto-scroll after sending a message
         $wire.on('scroll-to-bottom', () => {
             setTimeout(() => {
-                if (scrollContainer) {
-                    scrollContainer.scrollTo({
-                        top: scrollContainer.scrollHeight,
+                const sc = messagesScrollEl();
+                if (sc) {
+                    sc.scrollTo({
+                        top: sc.scrollHeight,
                         behavior: 'smooth'
                     });
                 }
             }, 50);
+        });
+
+        // After Livewire poll / morph: follow new messages if user was already near the bottom
+        let afterMorphScrollTimer;
+        document.addEventListener('livewire:init', () => {
+            Livewire.hook('morph.updated', () => {
+                clearTimeout(afterMorphScrollTimer);
+                afterMorphScrollTimer = setTimeout(() => {
+                    const root = document.getElementById('admin-messaging-thread');
+                    const sc = messagesScrollEl();
+                    if (!root || !sc || !root.contains(sc)) {
+                        return;
+                    }
+                    const threshold = 120;
+                    const nearBottom =
+                        sc.scrollHeight - sc.scrollTop - sc.clientHeight < threshold;
+                    if (nearBottom) {
+                        sc.scrollTop = sc.scrollHeight;
+                    }
+                }, 40);
+            });
         });
     </script>
     @endscript

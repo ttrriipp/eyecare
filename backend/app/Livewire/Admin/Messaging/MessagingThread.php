@@ -12,7 +12,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
-use Livewire\Attributes\Poll;
 use Livewire\Component;
 
 class MessagingThread extends Component
@@ -22,9 +21,9 @@ class MessagingThread extends Component
 
     public string $body = '';
 
-    // ── Polling ────────────────────────────────────────────────────────────
+    // ── Polling (scheduled from Blade via wire:poll — see messaging-thread.blade.php) ───
 
-    #[Poll(6000)]
+    /** Refetches messages for the open thread (new bubbles without a manual reload). */
     public function pollMessages(): void
     {
         unset($this->threadMessages);

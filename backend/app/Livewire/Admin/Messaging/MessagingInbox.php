@@ -11,7 +11,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Poll;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -30,18 +29,14 @@ class MessagingInbox extends Component
             ->getUnreadCount(auth()->user());
     }
 
-    // ── Polling ───────────────────────────────────────────────────────────────
+    // ── Polling (scheduled from Blade via wire:poll — see messaging-inbox.blade.php) ──
 
-    #[Poll(10000)]
-    public function pollUnreadCount(): void
+    /** Refreshes the inbox list so new conversations and previews appear without a full page reload. */
+    public function pollInbox(): void
     {
         $count = app(ConversationService::class)->getUnreadCount(auth()->user());
-
-        if ($count !== $this->lastUnreadCount) {
-            $this->lastUnreadCount = $count;
-            // Silently refresh the conversation list without flicker.
-            unset($this->conversations);
-        }
+        $this->lastUnreadCount = $count;
+        unset($this->conversations);
     }
 
     // ── Computed ─────────────────────────────────────────────────────────────

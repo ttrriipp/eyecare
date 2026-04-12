@@ -23,9 +23,20 @@ class ProfileViewModel @Inject constructor(
     val profile: LiveData<Resource<User>> = _profile
 
     fun loadProfile() {
-        _profile.value = Resource.Loading
+        val hadData = _profile.value is Resource.Success
+        if (!hadData) {
+            _profile.value = Resource.Loading
+        }
         viewModelScope.launch {
-            _profile.value = authRepository.getProfile()
+            when (val r = authRepository.getProfile()) {
+                is Resource.Success -> _profile.value = r
+                is Resource.Error -> {
+                    if (!hadData) {
+                        _profile.value = r
+                    }
+                }
+                is Resource.Loading -> {}
+            }
         }
     }
 
