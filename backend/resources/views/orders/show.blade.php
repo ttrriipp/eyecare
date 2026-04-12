@@ -359,17 +359,6 @@
                     {{ __('View full history for this order') }}
                     <span aria-hidden="true">→</span>
                 </a>
-                @if(auth()->user()?->isAdmin())
-                    <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                        <a
-                            href="{{ route('orders.status-history.index', ['search' => $order->order_number]) }}"
-                            class="font-medium text-sky-600 underline decoration-sky-300 underline-offset-2 hover:text-sky-800 dark:text-sky-400"
-                            wire:navigate
-                        >
-                            {{ __('Search in global order status history') }}
-                        </a>
-                    </p>
-                @endif
             </div>
         @endif
     </div>

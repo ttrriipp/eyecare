@@ -9,6 +9,15 @@
             </div>
         @endif
 
+        @error('status')
+            <div
+                class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/50 dark:text-red-100"
+                role="alert"
+            >
+                {{ $message }}
+            </div>
+        @enderror
+
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
@@ -149,11 +158,18 @@
                                 <th class="px-4 py-3">{{ __('Status') }}</th>
                                 <th class="px-4 py-3 text-end">{{ __('Total') }}</th>
                                 <th class="px-4 py-3 hidden md:table-cell">{{ __('Placed') }}</th>
-                                <th class="px-4 py-3 text-center">{{ __('Actions') }}</th>
+                                <th class="px-3 py-3 text-center whitespace-nowrap">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             @foreach($orders as $order)
+                                @php
+                                    $orderNextStatuses = auth()->user()?->isAdminOrStaff()
+                                        ? collect(\App\Enums\OrderStatus::cases())->filter(
+                                            fn (\App\Enums\OrderStatus $st) => $order->status->canTransitionTo($st),
+                                        )
+                                        : collect();
+                                @endphp
                                 <tr class="bg-white transition-colors dark:bg-zinc-900">
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-zinc-900 dark:text-zinc-100">
@@ -208,24 +224,101 @@
                                             {{ $order->created_at->format('M j, Y g:i A') }}
                                         </time>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex justify-center">
+                                    <td class="px-3 py-3 align-middle text-center">
+                                        <flux:dropdown position="bottom" align="end">
                                             <flux:button
-                                                size="sm"
+                                                type="button"
                                                 variant="ghost"
-                                                icon="eye"
-                                                :href="route('orders.show', $order)"
-                                                wire:navigate
+                                                size="sm"
+                                                icon="ellipsis-vertical"
+                                                class="shrink-0"
+                                                title="{{ __('Actions') }}"
                                             >
-                                                <span class="sr-only">{{ __('View') }}</span>
+                                                <span class="sr-only">{{ __('Actions') }}</span>
                                             </flux:button>
-                                        </div>
+
+                                            <flux:menu>
+                                                <flux:menu.item
+                                                    :href="route('orders.show', $order)"
+                                                    icon="eye"
+                                                    wire:navigate
+                                                >
+                                                    {{ __('View') }}
+                                                </flux:menu.item>
+                                                @if($orderNextStatuses->isNotEmpty())
+                                                    <flux:modal.trigger name="update-order-status-{{ $order->id }}">
+                                                        <flux:menu.item as="button" type="button" icon="arrow-path">
+                                                            {{ __('Update status') }}
+                                                        </flux:menu.item>
+                                                    </flux:modal.trigger>
+                                                @endif
+                                            </flux:menu>
+                                        </flux:dropdown>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                @if(auth()->user()?->isAdminOrStaff())
+                    @foreach($orders as $order)
+                        @php
+                            $nextStatuses = collect(\App\Enums\OrderStatus::cases())->filter(
+                                fn (\App\Enums\OrderStatus $st) => $order->status->canTransitionTo($st),
+                            );
+                        @endphp
+                        @if($nextStatuses->isNotEmpty())
+                            <flux:modal name="update-order-status-{{ $order->id }}" focusable class="max-w-xl">
+                                <form
+                                    method="POST"
+                                    action="{{ route('orders.status.update', $order) }}"
+                                    class="order-status-update-form space-y-4"
+                                    data-cancel-prompt="{{ e(__('Cancel this order? Unpaid bills will be voided and paid bills refunded when applicable.')) }}"
+                                >
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="pr-8">
+                                        <flux:heading size="lg">{{ __('Update status') }}</flux:heading>
+                                        <flux:subheading class="mt-1">
+                                            {{ $order->order_number }}
+                                        </flux:subheading>
+                                        <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                            {{ __('Move the order through pickup, or cancel when needed.') }}
+                                        </flux:text>
+                                    </div>
+                                    <div>
+                                        <label
+                                            for="order-status-{{ $order->id }}"
+                                            class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                                        >
+                                            {{ __('New status') }}
+                                        </label>
+                                        <select
+                                            id="order-status-{{ $order->id }}"
+                                            name="status"
+                                            required
+                                            class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                                        >
+                                            @foreach($nextStatuses as $st)
+                                                <option value="{{ $st->value }}">{{ $st->label() }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('status')
+                                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                        <flux:modal.close>
+                                            <flux:button variant="ghost" type="button">{{ __('Cancel') }}</flux:button>
+                                        </flux:modal.close>
+                                        <flux:button type="submit" variant="primary">{{ __('Apply') }}</flux:button>
+                                    </div>
+                                </form>
+                            </flux:modal>
+                        @endif
+                    @endforeach
+                @endif
 
                 <div class="border-t border-zinc-200 px-4 py-3 text-sm dark:border-zinc-700">
                     {{ $orders->withQueryString()->links() }}
@@ -234,6 +327,19 @@
         </div>
     </div>
     <script>
+        document.querySelectorAll('form.order-status-update-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                const sel = form.querySelector('select[name="status"]');
+                if (!sel || sel.value !== @json(\App\Enums\OrderStatus::Cancelled->value)) {
+                    return;
+                }
+                const msg = form.getAttribute('data-cancel-prompt') || '';
+                if (!window.confirm(msg)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
         (() => {
             const inputId = sessionStorage.getItem('preserveFocusInput');
             if (!inputId) return;
