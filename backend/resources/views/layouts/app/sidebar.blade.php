@@ -128,6 +128,7 @@
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
+                                    <flux:text class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ __(auth()->user()->role->label()) }}</flux:text>
                                     <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
                                 </div>
                             </div>
