@@ -76,9 +76,8 @@ Route::prefix('v1')->group(function () {
             Route::put('product-categories/{category}', [ProductCategoryController::class, 'update']);
             Route::delete('product-categories/{category}', [ProductCategoryController::class, 'destroy']);
 
-            // Bill void and refund (admin only)
+            // Bill void (admin only)
             Route::put('bills/{bill}/void', [BillingController::class, 'void']);
-            Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
 
             // Direct Messaging — reopen (admin only)
             Route::patch('conversations/{conversation}/reopen', [ConversationController::class, 'reopen']);
@@ -93,9 +92,10 @@ Route::prefix('v1')->group(function () {
             // Order status management
             Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']);
 
-            // Bill payment
+            // Bill payment and refund (staff/admin)
             Route::put('bills/{bill}/pay', [BillingController::class, 'markAsPaid']);
             Route::put('bills/{bill}/official-receipt', [BillingController::class, 'updateOfficialReceipt']);
+            Route::put('bills/{bill}/refund', [BillingController::class, 'refund']);
 
             // Direct Messaging — close (staff or admin)
             Route::patch('conversations/{conversation}/close', [ConversationController::class, 'close']);

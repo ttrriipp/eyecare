@@ -59,7 +59,7 @@ class BillingService
     public function listPaymentHistory(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
         $query = BillingPaymentHistory::query()
-            ->with(['bill.order', 'actor', 'authorizer'])
+            ->with(['bill.order', 'actor'])
             ->orderByDesc('created_at');
 
         if (! empty($filters['search'])) {
@@ -191,7 +191,6 @@ class BillingService
                 $fromStatus,
                 $bill->payment_status,
                 null,
-                null,
             );
         }
 
@@ -242,14 +241,13 @@ class BillingService
             $fromStatus,
             PaymentStatus::Voided,
             null,
-            null,
         );
 
         return $bill;
     }
 
     /**
-     * Record a physical refund (partial or full). Creates a billing_payment_histories row with amount, method, and authorizer.
+     * Record a physical refund (partial or full). Creates a billing_payment_histories row with amount, method, and actor.
      * Full reversal → Refunded; restocking-style partial → PartiallyRefunded until net amount_paid reaches zero.
      */
     public function refund(
@@ -257,7 +255,6 @@ class BillingService
         ?User $actor,
         float $refundAmount,
         PaymentMethod $refundMethod,
-        ?int $authorizedByUserId,
         ?string $note,
     ): Bill {
         if (! in_array($bill->payment_status, [
@@ -285,15 +282,6 @@ class BillingService
             ]);
         }
 
-        if ($authorizedByUserId !== null) {
-            $authorizer = User::query()->find($authorizedByUserId);
-            if (! $authorizer?->isAdminOrStaff()) {
-                throw ValidationException::withMessages([
-                    'authorized_by_user_id' => __('Authorizer must be an admin or staff member.'),
-                ]);
-            }
-        }
-
         $fromStatus = $bill->payment_status;
         $newAmountPaid = round($amountPaid - $refundAmount, 2);
         $toStatus = $newAmountPaid <= 0 ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded;
@@ -316,7 +304,6 @@ class BillingService
             $fromStatus,
             $toStatus,
             $note,
-            $authorizedByUserId,
         );
 
         return $bill;
@@ -353,7 +340,6 @@ class BillingService
                     $fromStatus,
                     $bill->payment_status,
                     __('Bill updated because the order was cancelled.'),
-                    null,
                 );
             }
 
@@ -371,7 +357,6 @@ class BillingService
                 $actor,
                 $paid,
                 PaymentMethod::BankTransfer,
-                ($actor !== null && $actor->isAdminOrStaff()) ? $actor->id : null,
                 __('Full refund recorded because the order was cancelled.'),
             );
         }
@@ -406,13 +391,11 @@ class BillingService
         ?PaymentMethod $paymentMethod,
         PaymentStatus $fromStatus,
         PaymentStatus $toStatus,
-        ?string $note,
-        ?int $authorizedByUserId = null,
+        ?string $note = null,
     ): void {
         BillingPaymentHistory::query()->create([
             'bill_id' => $bill->id,
             'actor_user_id' => $actor?->id,
-            'authorized_by_user_id' => $authorizedByUserId,
             'action' => $action,
             'amount' => $amount !== null ? round($amount, 2) : null,
             'payment_method' => $paymentMethod?->value,

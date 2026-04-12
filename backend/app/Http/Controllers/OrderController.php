@@ -6,6 +6,7 @@ use App\Enums\AppointmentStatus;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreStaffOrderRequest;
+use App\Http\Requests\UpdateOrderNotesRequest;
 use App\Http\Requests\UpdateWebOrderStatusRequest;
 use App\Models\Appointment;
 use App\Models\Order;
@@ -152,6 +153,18 @@ class OrderController extends Controller
      * Update lifecycle status (staff/admin) or cancel when allowed (customer or staff).
      * Cancelled uses OrderService::cancel() so bills are voided/refunded per plan.
      */
+    /**
+     * Staff/admin: update internal order notes.
+     */
+    public function updateNotes(UpdateOrderNotesRequest $request, Order $order): RedirectResponse
+    {
+        $this->orderService->updateNotes($order, $request->validated('notes'));
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('status', __('Order notes saved.'));
+    }
+
     public function updateStatus(UpdateWebOrderStatusRequest $request, Order $order): RedirectResponse
     {
         $user = $request->user();

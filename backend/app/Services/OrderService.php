@@ -224,6 +224,19 @@ class OrderService
     }
 
     /**
+     * Update internal order notes (staff/admin).
+     */
+    public function updateNotes(Order $order, ?string $notes): Order
+    {
+        $trimmed = $notes !== null ? trim($notes) : null;
+        $order->update([
+            'notes' => ($trimmed === '' || $trimmed === null) ? null : $trimmed,
+        ]);
+
+        return $order->fresh($this->orderRelations(includeProductImages: true));
+    }
+
+    /**
      * Cancel an order with role-based permission check.
      */
     public function cancel(Order $order, User $user): Order

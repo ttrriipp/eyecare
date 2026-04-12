@@ -83,6 +83,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('billing/{bill}/refund', [BillingController::class, 'refund'])
         ->name('orders.billing.refund');
 
+    Route::put('orders/{order}/notes', [OrderController::class, 'updateNotes'])
+        ->name('orders.notes.update');
     Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->name('orders.status.update');
     Route::get('orders/{order}/status-history', [OrderStatusHistoryController::class, 'forOrder'])

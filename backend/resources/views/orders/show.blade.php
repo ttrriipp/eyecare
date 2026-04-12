@@ -220,7 +220,15 @@
                     <dl class="space-y-2 text-sm">
                         <div>
                             <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Invoice number') }}</dt>
-                            <dd class="font-mono text-zinc-900 dark:text-zinc-100">{{ $order->bill->invoice_number }}</dd>
+                            <dd class="font-mono">
+                                <a
+                                    href="{{ route('orders.billing.show', $order->bill) }}"
+                                    wire:navigate
+                                    class="text-sky-600 underline decoration-sky-300 underline-offset-2 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                                >
+                                    {{ $order->bill->invoice_number }}
+                                </a>
+                            </dd>
                         </div>
                         @if(filled($order->bill->official_receipt_number))
                             <div>
@@ -289,10 +297,39 @@
             <flux:heading size="lg" class="mb-2 text-zinc-900 dark:text-zinc-50">
                 {{ __('Notes') }}
             </flux:heading>
-            @if(filled($order->notes))
-                <p class="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">{{ $order->notes }}</p>
+            @if(auth()->user()?->isAdminOrStaff())
+                @php
+                    $notesFieldClass = 'block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100';
+                @endphp
+                <form method="POST" action="{{ route('orders.notes.update', $order) }}" class="space-y-3">
+                    @csrf
+                    @method('PUT')
+                    <div>
+                        <label for="order-notes" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            {{ __('Internal notes') }}
+                        </label>
+                        <textarea
+                            id="order-notes"
+                            name="notes"
+                            rows="5"
+                            maxlength="1000"
+                            class="{{ $notesFieldClass }}"
+                            placeholder="{{ __('Internal notes for staff…') }}"
+                        >{{ old('notes', $order->notes) }}</textarea>
+                        @error('notes')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <flux:button type="submit" variant="primary" size="sm">
+                        {{ __('Save notes') }}
+                    </flux:button>
+                </form>
             @else
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No notes on this order.') }}</p>
+                @if(filled($order->notes))
+                    <p class="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">{{ $order->notes }}</p>
+                @else
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No notes on this order.') }}</p>
+                @endif
             @endif
         </div>
 

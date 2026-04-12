@@ -130,6 +130,7 @@
                             <th class="px-4 py-3">{{ __('Invoice') }}</th>
                             <th class="px-4 py-3 hidden sm:table-cell">{{ __('Order') }}</th>
                             <th class="px-4 py-3">{{ __('Activity') }}</th>
+                            <th class="px-4 py-3 hidden md:table-cell">{{ __('Method') }}</th>
                             <th class="px-4 py-3 text-end hidden md:table-cell">{{ __('Amount') }}</th>
                             <th class="px-4 py-3 hidden lg:table-cell">{{ __('From') }}</th>
                             <th class="px-4 py-3 hidden lg:table-cell">{{ __('To') }}</th>
@@ -182,16 +183,6 @@
                                             @break
                                         @case(\App\Models\BillingPaymentHistory::ACTION_REFUNDED)
                                             {{ __('Recorded refund') }}
-                                            @if($row->payment_method)
-                                                <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                    {{ __('Method: :m', ['m' => $row->payment_method->label()]) }}
-                                                </div>
-                                            @endif
-                                            @if($row->authorizer)
-                                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                                                    {{ __('Authorized by: :name', ['name' => $row->authorizer->name]) }}
-                                                </div>
-                                            @endif
                                             @break
                                         @case(\App\Models\BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION)
                                             {{ __('Updated from order cancellation') }}
@@ -202,6 +193,9 @@
                                     @if($row->note)
                                         <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">{{ $row->note }}</div>
                                     @endif
+                                </td>
+                                <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300 hidden md:table-cell">
+                                    {{ $row->payment_method?->label() ?? '—' }}
                                 </td>
                                 <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100 hidden md:table-cell">
                                     @if($row->amount !== null)
@@ -219,7 +213,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                                <td colspan="9" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
                                     {{ __('No billing activity recorded yet.') }}
                                 </td>
                             </tr>

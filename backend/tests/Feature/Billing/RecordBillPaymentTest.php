@@ -66,7 +66,6 @@ class RecordBillPaymentTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('bill_id');
             $table->unsignedBigInteger('actor_user_id')->nullable();
-            $table->unsignedBigInteger('authorized_by_user_id')->nullable();
             $table->string('action', 48);
             $table->decimal('amount', 12, 2)->nullable();
             $table->string('payment_method', 32)->nullable();
@@ -202,7 +201,6 @@ class RecordBillPaymentTest extends TestCase
             $admin,
             800,
             PaymentMethod::GCash,
-            $admin->id,
             'Customer return',
         );
 
@@ -216,7 +214,7 @@ class RecordBillPaymentTest extends TestCase
             'action' => BillingPaymentHistory::ACTION_REFUNDED,
             'amount' => '800.00',
             'payment_method' => PaymentMethod::GCash->value,
-            'authorized_by_user_id' => $admin->id,
+            'actor_user_id' => $admin->id,
             'to_payment_status' => PaymentStatus::Refunded->value,
         ]);
     }
@@ -239,7 +237,6 @@ class RecordBillPaymentTest extends TestCase
             $admin,
             250,
             PaymentMethod::Cash,
-            $admin->id,
             'Restocking fee retained',
         );
 
@@ -267,8 +264,8 @@ class RecordBillPaymentTest extends TestCase
 
         $bill = $this->createPaidBill(600);
         $service = app(BillingService::class);
-        $service->refund($bill, $admin, 200, PaymentMethod::Cash, $admin->id, 'First');
-        $final = $service->refund($bill->fresh(), $admin, 400, PaymentMethod::Maya, $admin->id, 'Second');
+        $service->refund($bill, $admin, 200, PaymentMethod::Cash, 'First');
+        $final = $service->refund($bill->fresh(), $admin, 400, PaymentMethod::Maya, 'Second');
 
         $this->assertSame(PaymentStatus::Refunded, $final->payment_status);
         $this->assertSame('0.00', $final->amount_paid);

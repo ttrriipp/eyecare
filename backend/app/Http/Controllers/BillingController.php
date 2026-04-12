@@ -60,7 +60,7 @@ class BillingController extends Controller
         }
 
         if ($user->isAdminOrStaff()) {
-            $bill->load(['paymentHistories.actor', 'paymentHistories.authorizer']);
+            $bill->load(['paymentHistories.actor']);
         }
 
         return view('billing.show', [
@@ -140,7 +140,7 @@ class BillingController extends Controller
     }
 
     /**
-     * Admin only: record a refund (partial or full) with audit trail.
+     * Staff/admin: record a refund (partial or full) with audit trail.
      */
     public function refund(RefundBillRequest $request, Bill $bill): RedirectResponse
     {
@@ -151,7 +151,6 @@ class BillingController extends Controller
             $request->user(),
             (float) $validated['refund_amount'],
             PaymentMethod::from($validated['refund_method']),
-            (int) $request->user()->id,
             $validated['note'] ?? null,
         );
 

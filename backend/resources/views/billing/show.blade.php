@@ -311,58 +311,59 @@
             </div>
         @endif
 
-        @if(auth()->user()?->isAdmin())
+        @if(auth()->user()?->isAdmin() && $ps === \App\Enums\PaymentStatus::Unpaid)
             <div class="flex flex-wrap gap-3">
-                @if($ps === \App\Enums\PaymentStatus::Unpaid)
-                    @php
-                        $voidDialogId = 'void-invoice-dialog-' . $bill->id;
-                    @endphp
-                    {{-- Native <dialog> + showModal(): reliable after wire:navigate (Flux modal registry can miss new DOM). --}}
-                    <div class="inline-flex">
-                        <button
-                            type="button"
-                            class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-offset-zinc-900"
-                            onclick="document.getElementById({{ json_encode($voidDialogId) }})?.showModal()"
-                        >
-                            {{ __('Void invoice') }}
-                        </button>
-                        <dialog
-                            id="{{ $voidDialogId }}"
-                            class="w-[calc(100%-2rem)] max-w-lg rounded-xl border border-zinc-200 bg-white p-6 text-left shadow-2xl backdrop:bg-zinc-950/60 dark:border-zinc-700 dark:bg-zinc-900"
-                            onclick="if (event.target === this) this.close()"
-                        >
-                            <div class="space-y-2">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                                    {{ __('Void this invoice?') }}
-                                </h2>
-                                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                    {{ __('It will be marked voided and will no longer be collectible. This cannot be undone from the UI.') }}
-                                </p>
-                            </div>
-                            <div class="mt-6 flex justify-end gap-2">
-                                <form method="dialog">
-                                    <button
-                                        type="submit"
-                                        class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900"
-                                    >
-                                        {{ __('Cancel') }}
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ route('orders.billing.void', $bill) }}" class="inline">
-                                    @csrf
-                                    @method('PUT')
-                                    <button
-                                        type="submit"
-                                        class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-offset-zinc-900"
-                                    >
-                                        {{ __('Void invoice') }}
-                                    </button>
-                                </form>
-                            </div>
-                        </dialog>
-                    </div>
-                @endif
-                @if(in_array($ps, [\App\Enums\PaymentStatus::PartiallyPaid, \App\Enums\PaymentStatus::Paid, \App\Enums\PaymentStatus::PartiallyRefunded], true))
+                @php
+                    $voidDialogId = 'void-invoice-dialog-' . $bill->id;
+                @endphp
+                {{-- Native <dialog> + showModal(): reliable after wire:navigate (Flux modal registry can miss new DOM). --}}
+                <div class="inline-flex">
+                    <button
+                        type="button"
+                        class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-offset-zinc-900"
+                        onclick="document.getElementById({{ json_encode($voidDialogId) }})?.showModal()"
+                    >
+                        {{ __('Void invoice') }}
+                    </button>
+                    <dialog
+                        id="{{ $voidDialogId }}"
+                        class="w-[calc(100%-2rem)] max-w-lg rounded-xl border border-zinc-200 bg-white p-6 text-left shadow-2xl backdrop:bg-zinc-950/60 dark:border-zinc-700 dark:bg-zinc-900"
+                        onclick="if (event.target === this) this.close()"
+                    >
+                        <div class="space-y-2">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                                {{ __('Void this invoice?') }}
+                            </h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                {{ __('It will be marked voided and will no longer be collectible. This cannot be undone from the UI.') }}
+                            </p>
+                        </div>
+                        <div class="mt-6 flex justify-end gap-2">
+                            <form method="dialog">
+                                <button
+                                    type="submit"
+                                    class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900"
+                                >
+                                    {{ __('Cancel') }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('orders.billing.void', $bill) }}" class="inline">
+                                @csrf
+                                @method('PUT')
+                                <button
+                                    type="submit"
+                                    class="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-offset-zinc-900"
+                                >
+                                    {{ __('Void invoice') }}
+                                </button>
+                            </form>
+                        </div>
+                    </dialog>
+                </div>
+            </div>
+        @endif
+
+        @if(auth()->user()?->isAdminOrStaff() && in_array($ps, [\App\Enums\PaymentStatus::PartiallyPaid, \App\Enums\PaymentStatus::Paid, \App\Enums\PaymentStatus::PartiallyRefunded], true))
                     <div
                         class="w-full rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none"
                     >
@@ -370,7 +371,7 @@
                             {{ __('Record refund') }}
                         </flux:heading>
                         <flux:text class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                            {{ __('Log the amount returned to the customer and how it was refunded. You are recorded as the authorizer. Partial refunds are supported (e.g. restocking fee). Net amount paid on the bill is reduced by the refund amount.') }}
+                            {{ __('Log the amount returned to the customer and how it was refunded. Partial refunds are supported (e.g. restocking fee). Net amount paid on the bill is reduced by the refund amount.') }}
                         </flux:text>
                             @php
                                 $refundFieldClass = 'box-border block h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100';
@@ -460,7 +461,7 @@
                                         {{ __('Submit this refund?') }}
                                     </h2>
                                     <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                        {{ __('The refund amount, method, optional note, and your user as authorizer will be saved to the invoice and billing history.') }}
+                                        {{ __('The refund amount, method, and optional note will be saved to the invoice and billing history.') }}
                                     </p>
                                 </div>
                                 <div class="mt-6 flex justify-end gap-2">
@@ -483,8 +484,6 @@
                                 </div>
                             </dialog>
                     </div>
-                @endif
-            </div>
         @endif
 
         @if(auth()->user()?->isAdminOrStaff())
@@ -496,7 +495,7 @@
                         {{ __('Billing payment history') }}
                     </flux:heading>
                     <flux:text class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                        {{ __('Payments, refunds (with method and authorizer), voids, and updates for this invoice.') }}
+                        {{ __('Payments, refunds (with method), voids, and updates for this invoice.') }}
                     </flux:text>
                     @if(auth()->user()->isAdmin())
                         <a
@@ -520,6 +519,7 @@
                                     <th class="px-4 py-3">{{ __('When') }}</th>
                                     <th class="px-4 py-3">{{ __('Actor') }}</th>
                                     <th class="px-4 py-3">{{ __('Activity') }}</th>
+                                    <th class="px-4 py-3 hidden md:table-cell">{{ __('Method') }}</th>
                                     <th class="px-4 py-3 text-end hidden md:table-cell">{{ __('Amount') }}</th>
                                     <th class="px-4 py-3 hidden lg:table-cell">{{ __('From') }}</th>
                                     <th class="px-4 py-3 hidden lg:table-cell">{{ __('To') }}</th>
@@ -546,16 +546,6 @@
                                                     @break
                                                 @case(\App\Models\BillingPaymentHistory::ACTION_REFUNDED)
                                                     {{ __('Recorded refund') }}
-                                                    @if($row->payment_method)
-                                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                            {{ __('Method: :m', ['m' => $row->payment_method->label()]) }}
-                                                        </div>
-                                                    @endif
-                                                    @if($row->authorizer)
-                                                        <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                                                            {{ __('Authorized by: :name', ['name' => $row->authorizer->name]) }}
-                                                        </div>
-                                                    @endif
                                                     @break
                                                 @case(\App\Models\BillingPaymentHistory::ACTION_UPDATED_FROM_ORDER_CANCELLATION)
                                                     {{ __('Updated from order cancellation') }}
@@ -566,6 +556,9 @@
                                             @if($row->note)
                                                 <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">{{ $row->note }}</div>
                                             @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300 hidden md:table-cell">
+                                            {{ $row->payment_method?->label() ?? '—' }}
                                         </td>
                                         <td class="px-4 py-3 text-end tabular-nums text-zinc-900 dark:text-zinc-100 hidden md:table-cell">
                                             @if($row->amount !== null)

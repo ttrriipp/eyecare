@@ -112,7 +112,7 @@ class BillingController extends Controller
     }
 
     /**
-     * Record a refund (admin only).
+     * Record a refund (staff/admin).
      */
     public function refund(RefundBillRequest $request, Bill $bill): JsonResponse
     {
@@ -123,7 +123,6 @@ class BillingController extends Controller
             $request->user(),
             (float) $validated['refund_amount'],
             PaymentMethod::from($validated['refund_method']),
-            (int) $request->user()->id,
             $validated['note'] ?? null,
         );
 

@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Bill;
+use App\Models\BillingPaymentHistory;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -116,6 +117,7 @@ class OrderSeeder extends Seeder
                 'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::Maya,
                 'collected_by' => $staff?->id,
+                'split_payment_history' => true,
             ],
         ];
 
@@ -170,7 +172,7 @@ class OrderSeeder extends Seeder
             // Create bill
             $isPaid = $orderData['bill_status'] === PaymentStatus::Paid;
 
-            Bill::create([
+            $bill = Bill::create([
                 'order_id' => $order->id,
                 'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($invoiceSeq, 5, '0', STR_PAD_LEFT),
                 'amount' => $finalAmount,
@@ -181,6 +183,49 @@ class OrderSeeder extends Seeder
                 'collected_by' => $orderData['collected_by'] ?? null,
                 'paid_at' => $isPaid ? now() : null,
             ]);
+
+            if ($isPaid && $finalAmount > 0) {
+                $actorId = $orderData['collected_by'] ?? $staff?->id;
+                $method = $orderData['payment_method'] ?? PaymentMethod::Cash;
+
+                if (! empty($orderData['split_payment_history'])) {
+                    $first = round($finalAmount * 0.4, 2);
+                    $second = round($finalAmount - $first, 2);
+
+                    BillingPaymentHistory::query()->create([
+                        'bill_id' => $bill->id,
+                        'actor_user_id' => $actorId,
+                        'action' => BillingPaymentHistory::ACTION_PAYMENT_RECORDED,
+                        'amount' => $first,
+                        'payment_method' => $method,
+                        'from_payment_status' => PaymentStatus::Unpaid,
+                        'to_payment_status' => PaymentStatus::PartiallyPaid,
+                        'note' => null,
+                    ]);
+
+                    BillingPaymentHistory::query()->create([
+                        'bill_id' => $bill->id,
+                        'actor_user_id' => $actorId,
+                        'action' => BillingPaymentHistory::ACTION_PAYMENT_RECORDED,
+                        'amount' => $second,
+                        'payment_method' => $method,
+                        'from_payment_status' => PaymentStatus::PartiallyPaid,
+                        'to_payment_status' => PaymentStatus::Paid,
+                        'note' => null,
+                    ]);
+                } else {
+                    BillingPaymentHistory::query()->create([
+                        'bill_id' => $bill->id,
+                        'actor_user_id' => $actorId,
+                        'action' => BillingPaymentHistory::ACTION_PAYMENT_RECORDED,
+                        'amount' => $finalAmount,
+                        'payment_method' => $method,
+                        'from_payment_status' => PaymentStatus::Unpaid,
+                        'to_payment_status' => PaymentStatus::Paid,
+                        'note' => null,
+                    ]);
+                }
+            }
 
             $orderSeq++;
             $invoiceSeq++;
