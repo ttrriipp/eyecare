@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.opticalsystem.data.local.CartItem
 import com.example.opticalsystem.data.local.CartManager
-import com.example.opticalsystem.data.local.WishlistManager
 import com.example.opticalsystem.data.model.Feedback
 import com.example.opticalsystem.data.model.FeedbackListResponse
 import com.example.opticalsystem.data.repository.FeedbackRepository
@@ -34,7 +33,6 @@ class ProductDetailViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val feedbackRepository: FeedbackRepository,
     private val cartManager: CartManager,
-    private val wishlistManager: WishlistManager,
 ) : ViewModel() {
     val cartItemCount: StateFlow<Int> = cartManager.cartItems
         .map { items -> items.sumOf { it.quantity } }
@@ -73,22 +71,10 @@ class ProductDetailViewModel @Inject constructor(
     private val _canReview = MutableLiveData(false)
     val canReview: LiveData<Boolean> = _canReview
 
-    private val _isInWishlist = MutableLiveData<Boolean>()
-    val isInWishlist: LiveData<Boolean> = _isInWishlist
-
     private val _detailRefreshing = MutableStateFlow(false)
     val detailRefreshing: StateFlow<Boolean> = _detailRefreshing.asStateFlow()
 
     private var currentProductId: Int? = null
-
-    init {
-        viewModelScope.launch {
-            wishlistManager.wishlistIds.collect { ids ->
-                val id = currentProductId
-                _isInWishlist.postValue(id != null && ids.contains(id))
-            }
-        }
-    }
 
     fun loadProduct(id: Int) {
         _product.value = Resource.Loading
@@ -236,12 +222,6 @@ class ProductDetailViewModel @Inject constructor(
             } else {
                 "$q × ${product.name} added to order"
             }
-        }
-    }
-
-    fun toggleWishlist(product: Product) {
-        viewModelScope.launch {
-            wishlistManager.toggle(product.id)
         }
     }
 }

@@ -108,7 +108,6 @@ fun ProductDetailScreen(
     val deleteReview by viewModel.deleteReview.observeAsState()
     val myFeedback by viewModel.myFeedback.observeAsState()
     val canReview by viewModel.canReview.observeAsState(initial = false)
-    val isInWishlist by viewModel.isInWishlist.observeAsState(initial = false)
     val cartCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
 
     LaunchedEffect(productId) {
@@ -206,16 +205,7 @@ fun ProductDetailScreen(
         ) {
             DetailToolbar(
                 onBack = onBack,
-                onWishlist = {
-                    val p = (productResult as? Resource.Success)?.data ?: return@DetailToolbar
-                    viewModel.toggleWishlist(p)
-                    val msgRes = if (isInWishlist) R.string.wishlist_removed else R.string.wishlist_added
-                    scope.launch {
-                        snackbarHostState.showSnackbar(context.getString(msgRes))
-                    }
-                },
                 onCart = onOpenCart,
-                wishlistFilled = isInWishlist,
                 cartCount = cartCount,
             )
 
@@ -408,9 +398,7 @@ fun ProductDetailScreen(
 @Composable
 private fun DetailToolbar(
     onBack: () -> Unit,
-    onWishlist: () -> Unit,
     onCart: () -> Unit,
-    wishlistFilled: Boolean,
     cartCount: Int,
 ) {
     Row(
@@ -436,17 +424,6 @@ private fun DetailToolbar(
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             maxLines = 1,
         )
-        IconButton(onClick = onWishlist, modifier = Modifier.size(40.dp)) {
-            Icon(
-                painter = painterResource(
-                    if (wishlistFilled) R.drawable.ic_heart_filled_24 else R.drawable.ic_heart_24,
-                ),
-                contentDescription = stringResource(
-                    if (wishlistFilled) R.string.remove_from_wishlist else R.string.save_to_wishlist,
-                ),
-                tint = colorResource(R.color.on_primary),
-            )
-        }
         CartIconWithBadge(
             cartCount = cartCount,
             onClick = onCart,
