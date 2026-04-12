@@ -765,6 +765,10 @@
                             <span class="text-center text-xs text-zinc-500 dark:text-zinc-400">{{ __('PNG, JPG, WebP or GIF · max 4 MB') }}</span>
                             <input id="input-shared-image" type="file" name="image" accept="image/*" required class="sr-only">
                         </label>
+                        <div id="shared-image-preview-container" class="mt-3 hidden rounded-xl border border-zinc-200 bg-zinc-100/80 p-3 dark:border-zinc-600 dark:bg-zinc-800/80">
+                            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Preview') }}</p>
+                            <img id="shared-image-preview" src="" alt="" class="max-h-56 max-w-full rounded-lg object-contain shadow-sm">
+                        </div>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
                             <flux:button type="submit" size="sm" variant="primary" icon="arrow-up-tray">{{ __('Upload shared image') }}</flux:button>
                             <span id="shared-file-label" class="hidden text-xs text-zinc-600 dark:text-zinc-400"></span>
@@ -859,6 +863,10 @@
                             <span class="text-center text-xs text-zinc-500 dark:text-zinc-400">{{ __('PNG, JPG, WebP or GIF · max 4 MB') }}</span>
                             <input id="input-variant-image" type="file" name="image" accept="image/*" required class="sr-only">
                         </label>
+                        <div id="variant-image-preview-container" class="mt-3 hidden rounded-xl border border-zinc-200 bg-zinc-100/80 p-3 dark:border-zinc-600 dark:bg-zinc-800/80">
+                            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Preview') }}</p>
+                            <img id="variant-image-preview" src="" alt="" class="max-h-56 max-w-full rounded-lg object-contain shadow-sm">
+                        </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <flux:button type="submit" size="sm" variant="primary" icon="arrow-up-tray">{{ __('Upload for selected SKU') }}</flux:button>
                             <span id="variant-file-label" class="hidden text-xs text-zinc-600 dark:text-zinc-400"></span>
@@ -1183,16 +1191,54 @@
         })();
 
         (function () {
-            function bindDropZone(zoneId, inputId, labelId) {
+            function bindDropZone(zoneId, inputId, labelId, previewImgId, previewContainerId) {
                 const zone = document.getElementById(zoneId);
                 const input = document.getElementById(inputId);
                 const label = labelId ? document.getElementById(labelId) : null;
+                const previewImg = previewImgId ? document.getElementById(previewImgId) : null;
+                const previewContainer = previewContainerId ? document.getElementById(previewContainerId) : null;
                 if (!zone || !input) return;
 
+                let previewObjectUrl = null;
+
+                function clearPreview() {
+                    if (previewObjectUrl) {
+                        URL.revokeObjectURL(previewObjectUrl);
+                        previewObjectUrl = null;
+                    }
+                    if (previewImg) {
+                        previewImg.removeAttribute('src');
+                    }
+                    if (previewContainer) {
+                        previewContainer.classList.add('hidden');
+                    }
+                }
+
+                function updatePreview(file) {
+                    clearPreview();
+                    if (!file || !file.type.match(/^image\//) || !previewImg || !previewContainer) {
+                        return;
+                    }
+                    previewObjectUrl = URL.createObjectURL(file);
+                    previewImg.src = previewObjectUrl;
+                    previewContainer.classList.remove('hidden');
+                }
+
                 function showFileName() {
-                    if (label && input.files && input.files[0]) {
-                        label.textContent = input.files[0].name;
-                        label.classList.remove('hidden');
+                    if (label) {
+                        if (input.files && input.files[0]) {
+                            label.textContent = input.files[0].name;
+                            label.classList.remove('hidden');
+                            updatePreview(input.files[0]);
+                        } else {
+                            label.classList.add('hidden');
+                            label.textContent = '';
+                            clearPreview();
+                        }
+                    } else if (input.files && input.files[0]) {
+                        updatePreview(input.files[0]);
+                    } else {
+                        clearPreview();
                     }
                 }
 
@@ -1231,10 +1277,15 @@
                     }
                     showFileName();
                 });
+
+                const form = zone.closest('form');
+                if (form) {
+                    form.addEventListener('submit', clearPreview);
+                }
             }
 
-            bindDropZone('dropzone-shared-image', 'input-shared-image', 'shared-file-label');
-            bindDropZone('dropzone-variant-image', 'input-variant-image', 'variant-file-label');
+            bindDropZone('dropzone-shared-image', 'input-shared-image', 'shared-file-label', 'shared-image-preview', 'shared-image-preview-container');
+            bindDropZone('dropzone-variant-image', 'input-variant-image', 'variant-file-label', 'variant-image-preview', 'variant-image-preview-container');
         })();
 
         function productSwapMainImage(btn, url) {

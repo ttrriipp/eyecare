@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -51,10 +52,32 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return result
     }
 
-    private fun resolveDateLabel(isoDate: String): String {
+    /**
+     * Laravel [toISOString] is UTC with `Z` and may include fractional seconds (e.g. microseconds).
+     * Parse as UTC, then format/compare in the device local zone for display.
+     */
+    private fun parseMessageInstant(isoDate: String): Date? {
+        val trimmed = isoDate.trim()
+        if (trimmed.isEmpty()) return null
         return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-            val date = sdf.parse(isoDate) ?: return isoDate
+            val withoutZ = when {
+                trimmed.endsWith("Z", ignoreCase = true) -> trimmed.dropLast(1)
+                else -> trimmed
+            }
+            // Strip sub-second fraction; SimpleDateFormat only handles ms reliably for our minSdk path.
+            val upToSeconds = withoutZ.substringBefore('.')
+            val utcParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            utcParser.parse(upToSeconds)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun resolveDateLabel(isoDate: String): String {
+        val date = parseMessageInstant(isoDate) ?: return isoDate.take(10).ifBlank { isoDate }
+        return try {
             val cal = Calendar.getInstance().apply { time = date }
             val today = Calendar.getInstance()
             val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
@@ -63,7 +86,7 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 isSameDay(cal, yesterday) -> "Yesterday"
                 else -> SimpleDateFormat("MMMM d", Locale.getDefault()).format(date)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             isoDate.take(10)
         }
     }
@@ -73,13 +96,8 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
 
     private fun formatTime(isoDate: String): String {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-            val date: Date = sdf.parse(isoDate) ?: return ""
-            SimpleDateFormat("h:mm a", Locale.getDefault()).format(date)
-        } catch (e: Exception) {
-            ""
-        }
+        val date = parseMessageInstant(isoDate) ?: return ""
+        return SimpleDateFormat("h:mm a", Locale.getDefault()).format(date)
     }
 
     override fun getItemCount() = items.size

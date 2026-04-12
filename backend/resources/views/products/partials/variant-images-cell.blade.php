@@ -41,7 +41,10 @@
             class="sr-only variant-images-input"
         >
     </label>
-    <div class="variant-images-preview mt-2 flex flex-wrap gap-1" aria-live="polite"></div>
+    <div class="variant-images-preview-wrap mt-2 hidden">
+        <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Preview') }}</p>
+        <div class="variant-images-preview flex flex-wrap gap-1.5" aria-live="polite"></div>
+    </div>
 
     @error('variants.'.$idx.'.images')
         <p class="mt-1 text-[10px] text-red-600 dark:text-red-400">{{ $message }}</p>
