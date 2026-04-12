@@ -245,6 +245,11 @@
     <!-- Profile Menu -->
     <string name="profile_my_orders">My Orders</string>
     <string name="profile_my_bills">My Bills</string>
+    <string name="logout">Logout</string>
+    <string name="profile_avatar">Profile avatar</string>
+    <string name="cd_orders_menu">Orders</string>
+    <string name="cd_bills_menu">Bills</string>
+    <string name="cd_go">Go</string>
     
     <!-- Direct Messaging -->
     <string name="messages_intro_title">Chat with the clinic</string>

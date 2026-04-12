@@ -11,6 +11,14 @@ import java.util.TimeZone
 
 object StatusHelper {
 
+    /** ARGB colors for Compose: [textColor, backgroundColor]. */
+    fun orderStatusBadgeColors(context: Context, status: String): Pair<Int, Int> =
+        getOrderStatusColors(context, status)
+
+    /** ARGB colors for Compose: [textColor, backgroundColor]. */
+    fun paymentStatusBadgeColors(context: Context, status: String): Pair<Int, Int> =
+        getPaymentStatusColors(context, status)
+
     fun applyOrderStatusBadge(textView: TextView, status: String, label: String) {
         val context = textView.context
         val (textColor, bgColor) = getOrderStatusColors(context, status)
