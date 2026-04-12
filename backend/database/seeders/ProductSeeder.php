@@ -34,22 +34,6 @@ class ProductSeeder extends Seeder
                 'has_duration' => false,
             ],
             [
-                'slug' => 'prescription-lenses',
-                'name' => 'Prescription Lenses',
-                'description' => 'Single vision, bifocal, and progressive lenses with various coatings.',
-                'has_ar_support' => false,
-                'requires_expiry_tracking' => false,
-                'requires_prescription' => true,
-                'stock_unit' => 'pairs',
-                'is_system' => true,
-                'has_frame_size' => false,
-                'has_color' => false,
-                'has_material' => true,
-                'has_lens_type' => true,
-                'has_power_field' => false,
-                'has_duration' => false,
-            ],
-            [
                 'slug' => 'contact-lenses',
                 'name' => 'Contact Lenses',
                 'description' => 'Daily, monthly, and colored contact lenses. Expiry date required.',
@@ -106,12 +90,11 @@ class ProductSeeder extends Seeder
         }
 
         $frames = ProductCategory::where('slug', 'eyeglass-frames')->first();
-        $lenses = ProductCategory::where('slug', 'prescription-lenses')->first();
         $contacts = ProductCategory::where('slug', 'contact-lenses')->first();
         $sunglasses = ProductCategory::where('slug', 'sunglasses')->first();
         $accessories = ProductCategory::where('slug', 'accessories')->first();
 
-        // Five sample products — default_variant fields must match category flags (admin forms).
+        // Four sample products — default_variant fields must match category flags (admin forms).
         $products = [
 
             // 1. Eyeglass frame: color, frame size, material, lens type (+ optional AR)
@@ -135,25 +118,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // 2. Prescription lens: material + lens type (category has no color / frame size)
-            [
-                'product' => [
-                    'category_id' => $lenses->id,
-                    'name' => 'Single Vision Anti-Radiation Lens',
-                    'description' => 'Single vision CR-39 lens with anti-radiation and blue-light blocking coating. '
-                        .'Includes hard coat and UV400 protection.',
-                    'price' => 800.00,
-                    'brand' => 'LabOptix',
-                    'is_active' => true,
-                ],
-                'default_variant' => [
-                    'material' => 'Polycarbonate',
-                    'lens_type' => 'Single Vision',
-                    'cost_per_unit' => 250.00,
-                ],
-            ],
-
-            // 3. Contacts: power + duration (mapped to category behavior flags)
+            // 2. Contacts: power + duration (mapped to category behavior flags)
             [
                 'product' => [
                     'category_id' => $contacts->id,
@@ -171,7 +136,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // 4. Sunglasses: same shape as frames + sunglass lens options
+            // 3. Sunglasses: same shape as frames + sunglass lens options
             [
                 'product' => [
                     'category_id' => $sunglasses->id,
@@ -192,7 +157,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // 5. Accessory: color only for this category
+            // 4. Accessory: color only for this category
             [
                 'product' => [
                     'category_id' => $accessories->id,

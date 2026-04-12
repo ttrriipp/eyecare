@@ -22,7 +22,7 @@ class OrderSeeder extends Seeder
         $products = Product::where('is_active', true)
             ->with('defaultVariant')
             ->orderBy('id')
-            ->take(5)
+            ->take(4)
             ->get();
 
         if (! $customer || $products->isEmpty()) {
@@ -63,7 +63,7 @@ class OrderSeeder extends Seeder
                 'discount_amount' => 0.00,
                 'notes' => null,
                 'items' => [
-                    ['product_index' => 2, 'quantity' => 1],
+                    ['product_index' => 1, 'quantity' => 1],
                 ],
                 'bill_status' => PaymentStatus::Unpaid,
                 'payment_method' => null,
@@ -78,7 +78,7 @@ class OrderSeeder extends Seeder
                 'notes' => 'SC discount applied — 20% on frame.',
                 'items' => [
                     ['product_index' => 0, 'quantity' => 1],
-                    ['product_index' => 3, 'quantity' => 1],
+                    ['product_index' => 2, 'quantity' => 1],
                 ],
                 'bill_status' => PaymentStatus::Unpaid,
                 'payment_method' => null,
@@ -95,7 +95,7 @@ class OrderSeeder extends Seeder
                 'notes' => 'Walk-in customer — accessory ready for pickup.',
                 'ready_at' => now()->subDay(),
                 'items' => [
-                    ['product_index' => 4, 'quantity' => 1],
+                    ['product_index' => 3, 'quantity' => 1],
                 ],
                 'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::GCash,
@@ -112,7 +112,7 @@ class OrderSeeder extends Seeder
                 'completed_at' => now()->subDays(2),
                 'ready_at' => now()->subDays(3),
                 'items' => [
-                    ['product_index' => 3, 'quantity' => 1],
+                    ['product_index' => 2, 'quantity' => 1],
                 ],
                 'bill_status' => PaymentStatus::Paid,
                 'payment_method' => PaymentMethod::Maya,

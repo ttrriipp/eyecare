@@ -14,7 +14,7 @@ class FeedbackSeeder extends Seeder
         $customer = User::where('role', 'customer')->first();
         $admin = User::where('role', 'admin')->first();
 
-        $products = Product::where('is_active', true)->orderBy('id')->take(5)->get();
+        $products = Product::where('is_active', true)->orderBy('id')->take(4)->get();
 
         if (! $customer || $products->isEmpty()) {
             $this->command->warn('FeedbackSeeder skipped: no customer or products found.');
@@ -22,8 +22,8 @@ class FeedbackSeeder extends Seeder
             return;
         }
 
-        // Indices follow ProductSeeder order: frame, lens, contacts, sunglasses, accessory.
-        // Indices 0–1 align with the first completed order (frame + lens) for verified purchases.
+        // Indices follow ProductSeeder order: frame, contacts, sunglasses, accessory.
+        // Indices 0–1 align with the first completed order (frame + contacts) for verified purchases.
         $reviews = [
             [
                 'product_index' => 0,
@@ -37,27 +37,20 @@ class FeedbackSeeder extends Seeder
             ],
             [
                 'product_index' => 1,
-                'rating' => 4,
-                'comment' => 'Clear vision and the anti-radiation coating seems to help with screen time. Lab turnaround was quick.',
+                'rating' => 3,
+                'comment' => 'Comfortable dailies; took a few days to get used to insertion. Stock was fresh.',
                 'is_verified_purchase' => true,
                 'is_visible' => true,
             ],
             [
                 'product_index' => 2,
-                'rating' => 3,
-                'comment' => 'Comfortable dailies; took a few days to get used to insertion. Stock was fresh.',
-                'is_verified_purchase' => false,
-                'is_visible' => true,
-            ],
-            [
-                'product_index' => 3,
                 'rating' => 5,
                 'comment' => null,
                 'is_verified_purchase' => false,
                 'is_visible' => true,
             ],
             [
-                'product_index' => 4,
+                'product_index' => 3,
                 'rating' => 4,
                 'comment' => 'Soft cloth, no streaks on my lenses. Good size for my bag.',
                 'is_verified_purchase' => false,

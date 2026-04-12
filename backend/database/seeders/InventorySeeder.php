@@ -29,11 +29,6 @@ class InventorySeeder extends Seeder
                 'reorder_quantity' => 20,
                 'notes' => 'Popular frame; restock monthly.',
             ],
-            'Single Vision Anti-Radiation Lens' => [
-                'quantity' => 60,
-                'reorder_level' => 15,
-                'reorder_quantity' => 30,
-            ],
             'Daily Disposable Clear Contacts' => [
                 'quantity' => 80,
                 'reorder_level' => 20,
