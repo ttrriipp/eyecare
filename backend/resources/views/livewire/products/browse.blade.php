@@ -320,6 +320,24 @@
                         $showArBadge = ($product->category?->has_ar_support ?? false)
                             && $variantsForCatalog->contains(fn ($v) => filled($v->ar_model_url));
                         $reviewCount = (int) ($product->reviews_count ?? 0);
+                        $totalStockGrid = (int) $variantsForCatalog->sum(fn ($v) => $v->inventory?->quantity ?? 0);
+                        $hasLowVariantGrid = $variantsForCatalog->contains(function ($v) {
+                            $inv = $v->inventory;
+                            $q = (int) ($inv?->quantity ?? 0);
+                            $rl = (int) ($inv?->reorder_level ?? 5);
+
+                            return $q > 0 && $q <= $rl;
+                        });
+                        $stockIsOutGrid = $totalStockGrid === 0;
+                        $stockIsLowGrid = ! $stockIsOutGrid && $hasLowVariantGrid;
+                        $stockIsHealthyGrid = ! $stockIsOutGrid && ! $stockIsLowGrid;
+                        $reorderMaxGrid = $variantCount > 0
+                            ? max(1, $variantsForCatalog->map(fn ($v) => (int) ($v->inventory?->reorder_level ?? 5))->max())
+                            : 5;
+                        $stockBarMaxRefGrid = max(50, $reorderMaxGrid * 3);
+                        $stockBarPctGrid = $stockIsOutGrid
+                            ? 8
+                            : min(100, (int) round(($totalStockGrid / $stockBarMaxRefGrid) * 100));
                     @endphp
                     <a
                         wire:key="grid-product-{{ $product->id }}"
@@ -389,6 +407,35 @@
                                     <span class="text-zinc-400 dark:text-zinc-500">{{ __('No reviews yet') }}</span>
                                 @endif
                             </div>
+
+                            @if(auth()->user()?->isAdminOrStaff())
+                                <div
+                                    class="mt-2 flex items-center gap-2"
+                                    title="{{ __('Total quantity across variants') }}"
+                                >
+                                    <div class="h-2 w-14 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                        @if($stockIsOutGrid)
+                                            <div class="h-full w-[12%] rounded-full bg-red-500 dark:bg-red-500"></div>
+                                        @elseif($stockIsLowGrid)
+                                            <div
+                                                class="h-full rounded-full bg-amber-400 dark:bg-amber-500"
+                                                style="width: {{ max(18, $stockBarPctGrid) }}%"
+                                            ></div>
+                                        @else
+                                            <div class="h-full w-full rounded-full bg-emerald-600 dark:bg-emerald-500"></div>
+                                        @endif
+                                    </div>
+                                    <span
+                                        @class([
+                                            'text-xs font-semibold tabular-nums',
+                                            'text-red-600 dark:text-red-400' => $stockIsOutGrid,
+                                            'text-amber-600 dark:text-amber-400' => $stockIsLowGrid,
+                                            'text-zinc-800 dark:text-zinc-200' => $stockIsHealthyGrid,
+                                        ])
+                                    >{{ number_format($totalStockGrid) }}</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Stock') }}</span>
+                                </div>
+                            @endif
 
                             <div class="mt-auto flex items-end justify-between gap-3 pt-3">
                                 <span class="text-base font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
