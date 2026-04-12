@@ -61,7 +61,7 @@ class OrderController extends Controller
         $order = $this->orderService->find($order->id);
         $order->loadMissing('bill');
 
-        if ($user->isStaff()) {
+        if ($user->isAdminOrStaff()) {
             $order->load(['statusHistories.actor']);
         }
 
