@@ -16,7 +16,8 @@ class UpdateFeedbackRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rating' => ['sometimes', 'integer', 'min:1', 'max:5'],
+            // Always send the full star value on update so the DB rating cannot stay stale (e.g. client omitted key).
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:2000'],
         ];
     }

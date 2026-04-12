@@ -45,6 +45,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -217,166 +219,185 @@ fun ProductDetailScreen(
                 cartCount = cartCount,
             )
 
-            when (val result = productResult) {
-                is Resource.Loading -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is Resource.Error -> {
-                    LaunchedEffect(result) {
-                        Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = result.message, color = colorResource(R.color.text_secondary))
-                    }
-                }
-                is Resource.Success -> {
-                    val product = result.data
-                    var selectedVariant by remember(product.id, product.updatedAt) {
-                        val variants = product.selectableVariants()
-                        val hasSwatches = hasColorVariants(product, variants)
-                        val inStock = variants.filter { (it.stockQuantity ?: 0) > 0 }
-                        val initial = when {
-                            !hasSwatches -> product.defaultVariant ?: variants.firstOrNull()
-                            inStock.size == 1 -> inStock.first()
-                            else -> null
-                        }
-                        mutableStateOf(initial)
-                    }
+            val pullRefreshState = rememberPullToRefreshState()
+            val detailRefreshing by viewModel.detailRefreshing.collectAsStateWithLifecycle()
 
-                    var writeRating by remember(myFeedback?.id, myFeedback?.rating) {
-                        mutableStateOf(myFeedback?.rating ?: 0)
-                    }
-                    var reviewComment by remember(myFeedback?.id, myFeedback?.comment) {
-                        mutableStateOf(myFeedback?.comment.orEmpty())
-                    }
-
-                    LaunchedEffect(myFeedback) {
-                        writeRating = myFeedback?.rating ?: 0
-                        reviewComment = myFeedback?.comment.orEmpty()
-                    }
-
-                    // Pin CTA to bottom; scroll only the content above it (avoids a tall empty column).
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                    ) {
-                        val scrollState = rememberScrollState()
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(scrollState)
-                                .padding(bottom = 88.dp),
-                        ) {
-                            ImageGalleryCard(product = product, selectedVariant = selectedVariant)
-                            ProductInfoBlock(
-                                product = product,
-                                selectedVariant = selectedVariant,
-                                onVariantSelected = { selectedVariant = it },
-                            )
-                            SpecCard(
-                                product = product,
-                                chosenVariant = selectedVariant,
-                            )
-                            ReviewsCard(
-                                feedbacksResult = feedbacksResult,
-                                canReview = canReview == true,
-                                myFeedback = myFeedback,
-                                writeRating = writeRating,
-                                onWriteRatingChange = { writeRating = it },
-                                reviewComment = reviewComment,
-                                onReviewCommentChange = { reviewComment = it },
-                                submitLoading = submitFeedback is Resource.Loading,
-                                deleteLoading = deleteReview is Resource.Loading,
-                                onSubmitReview = {
-                                    if (canReview != true) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.review_requires_completed_order),
-                                            Toast.LENGTH_LONG,
-                                        ).show()
-                                        return@ReviewsCard
-                                    }
-                                    if (writeRating < 1) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.review_pick_rating_first),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                        return@ReviewsCard
-                                    }
-                                    val c = reviewComment.trim().takeIf { it.isNotBlank() }
-                                    pendingUpdateReview = myFeedback != null
-                                    viewModel.saveReview(productId, writeRating, c)
-                                },
-                                onRequestDelete = { showDeleteDialog = true },
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-
-                        val addEnabled = addToCartEnabled(product, selectedVariant)
-                        val footerBg = colorResource(R.color.background)
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .background(footerBg),
-                        ) {
-                            HorizontalDivider(
-                                thickness = 1.dp,
-                                color = colorResource(R.color.divider),
-                            )
-                            OutlinedButton(
-                                onClick = {
-                                    if (requiresColorSelection(product) && selectedVariant == null) {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                context.getString(R.string.select_in_stock_color_first),
-                                            )
-                                        }
-                                        return@OutlinedButton
-                                    }
-                                    viewModel.addToCart(product, 1, selectedVariant)
-                                },
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                PullToRefreshBox(
+                    isRefreshing = detailRefreshing,
+                    onRefresh = { viewModel.refreshProductDetail(productId) },
+                    state = pullRefreshState,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    when (val result = productResult) {
+                        is Resource.Loading -> {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp)
-                                    .height(52.dp),
-                                enabled = addEnabled,
-                                shape = RoundedCornerShape(26.dp),
-                                border = BorderStroke(1.5.dp, colorResource(R.color.primary)),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = footerBg,
-                                    disabledContainerColor = footerBg,
-                                    contentColor = colorResource(R.color.primary),
-                                    disabledContentColor = colorResource(R.color.text_secondary),
-                                ),
+                                    .fillMaxSize()
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Text(stringResource(R.string.add_to_order))
+                                CircularProgressIndicator()
                             }
                         }
-                    }
-                }
-                null -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
+                        is Resource.Error -> {
+                            LaunchedEffect(result) {
+                                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = result.message,
+                                    color = colorResource(R.color.text_secondary),
+                                )
+                            }
+                        }
+                        is Resource.Success -> {
+                            val product = result.data
+                            var selectedVariant by remember(product.id, product.updatedAt) {
+                                val variants = product.selectableVariants()
+                                val hasSwatches = hasColorVariants(product, variants)
+                                val inStock = variants.filter { (it.stockQuantity ?: 0) > 0 }
+                                val initial = when {
+                                    !hasSwatches -> product.defaultVariant ?: variants.firstOrNull()
+                                    inStock.size == 1 -> inStock.first()
+                                    else -> null
+                                }
+                                mutableStateOf(initial)
+                            }
+
+                            var writeRating by remember(myFeedback?.id, myFeedback?.rating) {
+                                mutableStateOf(myFeedback?.rating ?: 0)
+                            }
+                            var reviewComment by remember(myFeedback?.id, myFeedback?.comment) {
+                                mutableStateOf(myFeedback?.comment.orEmpty())
+                            }
+
+                            LaunchedEffect(myFeedback) {
+                                writeRating = myFeedback?.rating ?: 0
+                                reviewComment = myFeedback?.comment.orEmpty()
+                            }
+
+                            // Pin CTA to bottom; scroll only the content above it (avoids a tall empty column).
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .fillMaxWidth(),
+                            ) {
+                                val scrollState = rememberScrollState()
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollState)
+                                        .padding(bottom = 88.dp),
+                                ) {
+                                    ImageGalleryCard(product = product, selectedVariant = selectedVariant)
+                                    ProductInfoBlock(
+                                        product = product,
+                                        selectedVariant = selectedVariant,
+                                        onVariantSelected = { selectedVariant = it },
+                                    )
+                                    SpecCard(
+                                        product = product,
+                                        chosenVariant = selectedVariant,
+                                    )
+                                    ReviewsCard(
+                                        feedbacksResult = feedbacksResult,
+                                        canReview = canReview == true,
+                                        myFeedback = myFeedback,
+                                        writeRating = writeRating,
+                                        onWriteRatingChange = { writeRating = it },
+                                        reviewComment = reviewComment,
+                                        onReviewCommentChange = { reviewComment = it },
+                                        submitLoading = submitFeedback is Resource.Loading,
+                                        deleteLoading = deleteReview is Resource.Loading,
+                                        onSubmitReview = {
+                                            if (canReview != true) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.review_requires_completed_order),
+                                                    Toast.LENGTH_LONG,
+                                                ).show()
+                                                return@ReviewsCard
+                                            }
+                                            if (writeRating < 1) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.review_pick_rating_first),
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                                return@ReviewsCard
+                                            }
+                                            val c = reviewComment.trim().takeIf { it.isNotBlank() }
+                                            pendingUpdateReview = myFeedback != null
+                                            viewModel.saveReview(productId, writeRating, c)
+                                        },
+                                        onRequestDelete = { showDeleteDialog = true },
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+
+                                val addEnabled = addToCartEnabled(product, selectedVariant)
+                                val footerBg = colorResource(R.color.background)
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .background(footerBg),
+                                ) {
+                                    HorizontalDivider(
+                                        thickness = 1.dp,
+                                        color = colorResource(R.color.divider),
+                                    )
+                                    OutlinedButton(
+                                        onClick = {
+                                            if (requiresColorSelection(product) && selectedVariant == null) {
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        context.getString(R.string.select_in_stock_color_first),
+                                                    )
+                                                }
+                                                return@OutlinedButton
+                                            }
+                                            viewModel.addToCart(product, 1, selectedVariant)
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp)
+                                            .height(52.dp),
+                                        enabled = addEnabled,
+                                        shape = RoundedCornerShape(26.dp),
+                                        border = BorderStroke(1.5.dp, colorResource(R.color.primary)),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            containerColor = footerBg,
+                                            disabledContainerColor = footerBg,
+                                            contentColor = colorResource(R.color.primary),
+                                            disabledContentColor = colorResource(R.color.text_secondary),
+                                        ),
+                                    ) {
+                                        Text(stringResource(R.string.add_to_order))
+                                    }
+                                }
+                            }
+                        }
+                        null -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
                     }
                 }
             }

@@ -18,8 +18,12 @@ import com.example.opticalsystem.data.model.selectableVariants
 import com.example.opticalsystem.data.repository.ProductRepository
 import com.example.opticalsystem.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -72,6 +76,9 @@ class ProductDetailViewModel @Inject constructor(
     private val _isInWishlist = MutableLiveData<Boolean>()
     val isInWishlist: LiveData<Boolean> = _isInWishlist
 
+    private val _detailRefreshing = MutableStateFlow(false)
+    val detailRefreshing: StateFlow<Boolean> = _detailRefreshing.asStateFlow()
+
     private var currentProductId: Int? = null
 
     init {
@@ -94,21 +101,50 @@ class ProductDetailViewModel @Inject constructor(
     fun loadFeedbacks(productId: Int, perPage: Int = 15) {
         _feedbacks.value = Resource.Loading
         viewModelScope.launch {
-            when (val result = feedbackRepository.getFeedbacks(
+            val result = feedbackRepository.getFeedbacks(
                 productId = productId,
                 page = 1,
                 perPage = perPage,
-            )) {
-                is Resource.Success -> {
-                    _feedbacks.value = result
-                    _canReview.value = result.data.canReview == true
-                    _myFeedback.value = result.data.myFeedback
+            )
+            applyFeedbacksResult(result)
+        }
+    }
+
+    private fun applyFeedbacksResult(result: Resource<FeedbackListResponse>) {
+        when (result) {
+            is Resource.Success -> {
+                _feedbacks.value = result
+                _canReview.value = result.data.canReview == true
+                _myFeedback.value = result.data.myFeedback
+            }
+            else -> {
+                _feedbacks.value = result
+                _canReview.value = false
+                _myFeedback.value = null
+            }
+        }
+    }
+
+    /** Reloads product and reviews without clearing the screen (pull-to-refresh). */
+    fun refreshProductDetail(productId: Int) {
+        if (_detailRefreshing.value) return
+        viewModelScope.launch {
+            _detailRefreshing.value = true
+            try {
+                coroutineScope {
+                    val productDeferred = async { productRepository.getProduct(productId) }
+                    val feedbacksDeferred = async {
+                        feedbackRepository.getFeedbacks(
+                            productId = productId,
+                            page = 1,
+                            perPage = 15,
+                        )
+                    }
+                    _product.value = productDeferred.await()
+                    applyFeedbacksResult(feedbacksDeferred.await())
                 }
-                else -> {
-                    _feedbacks.value = result
-                    _canReview.value = false
-                    _myFeedback.value = null
-                }
+            } finally {
+                _detailRefreshing.value = false
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarHalf
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +49,8 @@ fun DiscreteRatingStarsRow(
         ) {
             repeat(5) { index ->
                 val starIndex = index + 1
-                val icon = if (starIndex <= clamped) Icons.Filled.Star else Icons.Outlined.Star
+                // Match review editor (StarBorder) so empty stars read clearly as unfilled.
+                val icon = if (starIndex <= clamped) Icons.Filled.Star else Icons.Outlined.StarBorder
                 Icon(
                     imageVector = icon,
                     contentDescription = null,

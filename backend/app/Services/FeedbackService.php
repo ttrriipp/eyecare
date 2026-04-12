@@ -207,7 +207,13 @@ class FeedbackService
             }
         }
 
-        $payload = collect($data)->only(['rating', 'comment'])->filter(fn ($v) => $v !== null)->all();
+        $payload = [];
+        foreach (['rating', 'comment'] as $key) {
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            $payload[$key] = $data[$key];
+        }
 
         $feedback->update(array_merge($payload, [
             'approval_status' => FeedbackApprovalStatus::Approved,
