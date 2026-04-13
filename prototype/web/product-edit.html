@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Product edit</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="products.html">← Products</a> · <strong>Product + variants</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Product</h1>
+    <form action="#" onsubmit="return false">
+      <fieldset>
+        <legend>products</legend>
+        <label>category_id</label><input value="1" />
+        <label>supplier_id</label><input placeholder="nullable" />
+        <label>name</label><input value="Ray-Ban RB5154" />
+        <label>description</label><textarea rows="2"></textarea>
+        <label>price</label><input value="5500" />
+        <label>cost_per_unit</label><input value="3200" />
+        <label>brand</label><input value="Ray-Ban" />
+        <label>ar_model_url</label><input placeholder="/storage/models/rb5154.glb" />
+        <label>is_active</label><select><option>true</option><option>false</option></select>
+      </fieldset>
+      <fieldset>
+        <legend>product_variants (repeat)</legend>
+        <table>
+          <thead><tr><th>sku</th><th>color</th><th>frame_size</th><th>price_adjustment</th><th>is_default</th></tr></thead>
+          <tbody>
+            <tr><td>PRD-AB12CD34</td><td>Tortoise</td><td>Medium</td><td>0</td><td>yes</td></tr>
+            <tr><td>PRD-XY99ZZ11</td><td>Black</td><td>Medium</td><td>0</td><td>no</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Contact lens variants: base_curve, diameter, lens_type on variant row.</p>
+      </fieldset>
+      <p><button type="button">Save (no API)</button></p>
+    </form>
+  </main>
+</body>
+</html>

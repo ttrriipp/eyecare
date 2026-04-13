@@ -1,3 +1,296 @@
 <resources>
-    <string name="app_name">Optical System</string>
+    <string name="app_name">EyeCare</string>
+
+    <string name="login_title">Login</string>
+    <string name="login_subtitle">Welcome back</string>
+    <string name="email">Email</string>
+    <string name="email_error_required">Please enter your email address.</string>
+    <string name="email_error_invalid">Enter a valid email address.</string>
+    <string name="email_error_too_long">Email address is too long.</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="login_tagline">When elegance meets convenience</string>
+
+    <!-- Registration -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join us today</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone">Phone (optional)</string>
+    <string name="phone_hint_registration">Optional. Use at least 10 digits (e.g. 09XX XXX XXXX or +63 9XX XXX XXXX).</string>
+    <string name="phone_error_too_short">Enter a complete phone number (at least 10 digits).</string>
+    <string name="phone_error_too_long">Phone number is too long (max 20 characters, up to 15 digits).</string>
+    <string name="phone_error_invalid_chars">Phone can only include digits, spaces, and + - ( ) .</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="register">Create Account</string>
+    <string name="have_account">Already have an account?</string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_catalog">Catalog</string>
+    <string name="nav_book">Book</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_orders">Orders</string>
+    <string name="nav_messages">Chat</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Welcome back,</string>
+    <string name="home_subtitle">What would you like to do today?</string>
+    <string name="back">Back</string>
+
+    <!-- Backend root serving /public assets (logo/images). Example: http://10.0.2.2:8000/ -->
+    <string name="backend_root_url">http://192.168.1.16:6969/</string>
+    <!-- Relative path inside backend public folder -->
+    <string name="login_logo_public_path">images/logo-no-bg.png</string>
+
+    <!-- Catalog / Product List -->
+    <string name="products_count_format">%d products available</string>
+    <string name="search_hint">Search frames, lenses, accessories…</string>
+    <string name="category_all">All</string>
+    <string name="popular_picks">Featured</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_by_label_format">Sort by %1$s ▾</string>
+    <string name="sort_popular">Popular</string>
+    <string name="sort_price_low_high">Price: Low to High</string>
+    <string name="sort_price_high_low">Price: High to Low</string>
+    <string name="sort_name_az">Name: A to Z</string>
+    <string name="sort_name_za">Name: Z to A</string>
+    <string name="product_image">Product image</string>
+    <string name="no_reviews">No reviews</string>
+    <string name="reviews_count_format">(%d)</string>
+    <string name="price_from_format">from %1$s</string>
+
+    <!-- Product Detail -->
+    <string name="product_detail_title">Product Detail</string>
+    <string name="ar_try_on">● AR Try-On</string>
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="add_to_order">Add to Order</string>
+    <string name="select_color_to_see_price">Select a color to see price</string>
+    <string name="rating_reviews_line">%1$.1f (%2$d reviews)</string>
+    <string name="select_in_stock_color_first">Select an in-stock color first</string>
+    <string name="cd_decrease_quantity">Decrease quantity</string>
+    <string name="cd_increase_quantity">Increase quantity</string>
+    <string name="specifications">Specifications</string>
+    <string name="spec_color">Color</string>
+    <string name="spec_frame_size">Frame size</string>
+    <string name="spec_material">Material</string>
+    <string name="spec_lens_type">Lens type</string>
+    <string name="spec_power">Power</string>
+    <string name="spec_duration">Duration</string>
+    <string name="spec_base_curve">Base curve</string>
+    <string name="spec_diameter">Diameter</string>
+    <string name="spec_na">N/A</string>
+    <string name="coming_soon">Coming soon</string>
+
+    <!-- Reviews -->
+    <string name="ratings_and_reviews">Ratings &amp; Reviews</string>
+    <string name="write_a_review">Write a review</string>
+    <string name="review_comment_optional">Comment (optional)</string>
+    <string name="submit_review">Submit Review</string>
+    <string name="update_review">Update Review</string>
+    <string name="review_submit_success">Review submitted successfully</string>
+    <string name="review_update_success">Review updated successfully</string>
+    <string name="review_pick_rating_first">Please pick a rating first</string>
+    <string name="review_requires_completed_order">You can review this product after you complete an order that includes it.</string>
+    <string name="clinic_reply">Clinic reply</string>
+    <string name="review_status_pending">Pending staff approval</string>
+    <string name="review_status_rejected">Not approved. You can edit and resubmit.</string>
+    <string name="review_hidden_by_moderator">This review is hidden from the product page because it did not follow our community guidelines (for example, offensive language). You can still edit your review below.</string>
+    <string name="delete_review">Delete</string>
+    <string name="review_delete_confirm_title">Delete review?</string>
+    <string name="review_delete_confirm_message">Remove your review for this product?</string>
+    <string name="review_deleted">Review deleted</string>
+
+    <!-- Cart -->
+    <string name="nav_cart">Cart</string>
+    <string name="cart_title">My Cart</string>
+    <string name="cart_empty_title">Your cart is empty</string>
+    <string name="cart_empty_subtitle">Browse the Catalog page and add items to get started.</string>
+    <string name="cart_item_count_format">%d item(s)</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_proceed">Proceed to Checkout</string>
+    <string name="continue_label">Continue</string>
+    <string name="add_more_items">Add more items</string>
+    <string name="payment_due_visit_note">No payment is collected now. Payment is due at pickup or after your appointment.</string>
+    <string name="cart_clear">Clear Cart</string>
+    <string name="cart_removed_format">%s removed</string>
+    <string name="cart_cleared">Cart cleared</string>
+    <string name="cart_quantity_label">Qty: %d</string>
+    <string name="cart_price_each_format">%1$s each</string>
+    <string name="cart_remove_item_title">Remove item</string>
+    <string name="cart_remove_item_message">Remove %1$s from your cart?</string>
+    <string name="cart_clear_message">Remove all items from your cart?</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Checkout -->
+    <string name="checkout_title">Checkout</string>
+    <string name="checkout_order_summary">Order Summary</string>
+    <string name="checkout_notes_hint">Add notes (optional)</string>
+    <string name="checkout_place_order">Place Order</string>
+    <string name="checkout_placing_order">Placing Order…</string>
+    <string name="checkout_success_title">Order Placed!</string>
+    <string name="checkout_success_message">Your order %1$s has been placed successfully.</string>
+    <string name="checkout_items_format">%d item(s)</string>
+    <string name="order_details_title">Order details</string>
+    <string name="back_to_cart">Back</string>
+    <string name="almost_done">Almost done</string>
+    <string name="link_appointment_optional">Link to an upcoming appointment?</string>
+    <string name="link_appointment_optional_suffix">(optional)</string>
+    <string name="no_appointment_selected_note">No appointment selected. Staff will confirm your order shortly.</string>
+    <string name="order_notes_section">Notes for staff (optional)</string>
+    <string name="order_notes_placeholder">e.g. Please include anti-reflective coating on the lenses.</string>
+    <string name="contact_details">Contact details</string>
+    <string name="review_order">Review order</string>
+    <string name="confirm_order_title">Confirm order</string>
+    <string name="back_to_order_details">Back</string>
+    <string name="last_step">Last step</string>
+    <string name="items_label">Items</string>
+    <string name="appointment_label">Appointment</string>
+    <string name="notes_label">Notes</string>
+    <string name="none_label">None</string>
+    <string name="none_linked">None linked</string>
+    <string name="schedule_tbd">Schedule to be confirmed</string>
+    <string name="doctor_tbd">Doctor to be assigned</string>
+    <string name="edit_order">Edit order</string>
+    <string name="order_placed_title">Order placed</string>
+    <string name="order_submitted_title">Order submitted</string>
+    <string name="order_number_compact">Order #%1$s</string>
+    <string name="order_placed_message">Your order is pending staff confirmation.\nNo payment is due yet.</string>
+    <string name="timeline_order_submitted">Order submitted</string>
+    <string name="timeline_order_submitted_sub">Awaiting staff review</string>
+    <string name="timeline_staff_confirms">Staff confirms</string>
+    <string name="timeline_staff_confirms_sub">You\'ll be notified</string>
+    <string name="timeline_appointment_pickup">Appointment / pickup</string>
+    <string name="timeline_appointment_pickup_sub">Scheduled visit or pickup date</string>
+    <string name="timeline_payment_collected">Payment collected</string>
+    <string name="timeline_payment_due_format">₱%1$s due on visit</string>
+    <string name="view_order">View order</string>
+    <string name="back_to_catalog">Back to catalog</string>
+    <string name="not_provided">Not provided</string>
+
+    <!-- Orders -->
+    <string name="orders_title">My Orders</string>
+    <string name="orders_empty_title">No orders yet</string>
+    <string name="orders_empty_subtitle">Your order history will appear here.</string>
+    <string name="order_number_format">Order #%1$s</string>
+    <string name="order_items_count_format">%d item(s)</string>
+    <string name="order_cancel_title">Cancel Order</string>
+    <string name="order_cancel_message">Are you sure you want to cancel order #%1$s?</string>
+    <string name="order_cancel_button">Cancel Order</string>
+    <string name="order_cancelled_success">Order cancelled successfully.</string>
+    <string name="order_view_bill">View Bill</string>
+    <string name="order_status_all">All</string>
+    <string name="order_status_pending">Pending</string>
+    <string name="order_status_confirmed">Confirmed</string>
+    <string name="order_status_ready">Ready</string>
+    <string name="order_status_completed">Completed</string>
+    <string name="order_status_cancelled">Cancelled</string>
+    <string name="order_detail_title">Order Details</string>
+    <string name="order_detail_status">Status</string>
+    <string name="order_detail_date">Date</string>
+    <string name="order_detail_items">Items</string>
+    <string name="order_detail_notes">Notes</string>
+    <string name="order_detail_total">Total</string>
+    <string name="order_tab_active">Active</string>
+    <string name="order_tab_past">Past</string>
+    <string name="order_progress_title">Order Progress</string>
+    <string name="order_step_processing">Processing</string>
+    <string name="order_step_confirmed">Confirmed</string>
+    <string name="order_step_ready">Ready</string>
+    <string name="order_step_picked_up">Picked Up</string>
+    <string name="order_summary_title">Order Summary</string>
+    <string name="order_subtotal">Subtotal</string>
+    <string name="order_pickup_fee">Pickup Fee</string>
+    <string name="order_pickup_fee_free">FREE</string>
+    <string name="order_item_qty_format">×%d</string>
+    <string name="order_status_channel_name">Order status updates</string>
+    <string name="order_status_channel_description">Alerts when your order status changes</string>
+    <string name="order_status_changed_title">Order status updated</string>
+    <string name="order_status_changed_message">Your order %1$s is now %2$s.</string>
+    <string name="order_status_popup_title">Order Update</string>
+    <string name="order_status_popup_message">Order %1$s has been updated to %2$s.</string>
+    <string name="order_notifications_title">Notifications</string>
+    <string name="order_notifications_empty">No notifications yet.</string>
+    <string name="order_notifications_clear_all">Clear all</string>
+    <string name="order_notification_item_title">Order %1$s</string>
+    <string name="order_notification_item_message">Status changed to %1$s</string>
+
+    <!-- Bills -->
+    <string name="bills_title">My Bills</string>
+    <string name="bills_empty_title">No bills yet</string>
+    <string name="bills_empty_subtitle">Your billing history will appear here.</string>
+    <string name="bill_detail_title">Bill Details</string>
+    <string name="bill_invoice_number">Invoice Number</string>
+    <string name="bill_official_receipt">Official receipt (OR) #</string>
+    <string name="bill_amount">Amount</string>
+    <string name="bill_total_amount">Total Amount</string>
+    <string name="bill_amount_paid">Amount Paid</string>
+    <string name="bill_balance_due">Balance Due</string>
+    <string name="bill_payment_status">Payment Status</string>
+    <string name="bill_payment_method">Payment Method</string>
+    <string name="bill_paid_at">Paid At</string>
+    <string name="bill_linked_order">Linked Order</string>
+    <string name="bill_status_all">All</string>
+    <string name="bill_status_unpaid">Unpaid</string>
+    <string name="bill_status_partially_paid">Partially Paid</string>
+    <string name="bill_status_paid">Paid</string>
+    <string name="bill_status_refunded">Refunded</string>
+    <string name="bill_status_partially_refunded">Partially Refunded</string>
+    <string name="bill_status_voided">Voided</string>
+    <string name="bill_not_paid">Not yet paid</string>
+
+    <!-- Profile Menu -->
+    <string name="profile_section_account">Account</string>
+    <string name="profile_section_clinic">Clinic</string>
+    <string name="profile_section_shopping">Shopping</string>
+    <string name="profile_edit_profile">Edit profile</string>
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_edit_subtitle">Update the details we use for your orders and visits.</string>
+    <string name="profile_field_name">Full name</string>
+    <string name="profile_field_phone">Phone</string>
+    <string name="profile_field_dob">Date of birth</string>
+    <string name="profile_field_dob_hint">YYYY-MM-DD</string>
+    <string name="profile_field_address">Address</string>
+    <string name="profile_save">Save changes</string>
+    <string name="profile_update_success">Profile updated</string>
+    <string name="profile_error_name_required">Please enter your name</string>
+    <string name="profile_member_since">Member since %1$s</string>
+    <string name="profile_notifications_sub">Order status alerts</string>
+    <string name="profile_browse_catalog">Browse catalog</string>
+    <string name="profile_browse_catalog_sub">Frames, lenses &amp; more</string>
+    <string name="profile_app_version">EyeCare v%1$s</string>
+    <string name="profile_my_orders">My Orders</string>
+    <string name="profile_my_bills">My Bills</string>
+    <string name="logout">Logout</string>
+    <string name="logout_confirm_title">Log out?</string>
+    <string name="logout_confirm_message">You will need to sign in again to use your account.</string>
+    <string name="logout_confirm_action">Log out</string>
+    <string name="profile_avatar">Profile avatar</string>
+    <string name="cd_orders_menu">Orders</string>
+    <string name="cd_bills_menu">Bills</string>
+    <string name="cd_go">Go</string>
+    
+    <!-- Direct Messaging -->
+    <string name="messages_intro_title">Chat with the clinic</string>
+    <string name="messages_intro_subtitle">Ask about orders, appointments, or eyewear — our team reads messages during business hours and will reply here.</string>
+    <string name="messages_open_chat">Open chat</string>
+    <plurals name="messages_intro_unread">
+        <item quantity="one">You have %d unread message</item>
+        <item quantity="other">You have %d unread messages</item>
+    </plurals>
+    <string name="conversation_closed">Conversation Closed</string>
+    <string name="conversation_closed_start_new">This conversation has been closed.</string>
+    <string name="start_new_conversation">Start New Conversation</string>
+    <string name="retry">Retry</string>
+    <string name="conversation_closed_banner">Marked resolved</string>
+    <string name="conversation_closed_banner_sub">You can still send messages here anytime.</string>
+    <string name="message_hint">Type a message...</string>
+    <string name="conversation_default_title">Chat</string>
+    <string name="conversation_empty_thread_hint">No messages yet. Type below to start a conversation — our team will reply during business hours.</string>
 </resources>

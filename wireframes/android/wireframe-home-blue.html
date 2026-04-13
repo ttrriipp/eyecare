@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+<title>EyeCare – Android App Wireframes (Blue)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --phone-w: 393px;
+    --phone-h: 852px;
+    --bg: #F0F4FF;
+    --surface: #FFFFFF;
+    --primary: #1A56DB;
+    --primary-light: #EBF5FF;
+    --accent: #F59E0B;
+    --text: #1A1A1A;
+    --text-mid: #5A5A5A;
+    --text-light: #9A9A9A;
+    --border: #DBEAFE;
+    --shadow: 0 2px 12px rgba(26,86,219,0.08);
+    --radius: 16px;
+    --radius-sm: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #2A2A2A;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 48px;
+    min-height: 100vh;
+    padding: 40px 24px;
+    color: var(--text);
+  }
+
+  h1.page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    color: #FFF;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 16px;
+    background: #2A2A2A;
+    z-index: 100;
+    letter-spacing: -0.5px;
+  }
+  h1.page-title span { color: var(--accent); }
+
+  .layout {
+    display: flex;
+    gap: 48px;
+    margin-top: 60px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ─── Phone frame ─── */
+  .phone-frame {
+    width: var(--phone-w);
+    height: var(--phone-h);
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 0 0 10px #1a1a1a, 0 24px 80px rgba(0,0,0,0.45);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 80px;
+    scroll-behavior: smooth;
+  }
+  .phone-scroll::-webkit-scrollbar { width: 0; }
+
+  /* ─── Status bar ─── */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .status-bar .icons svg { width: 16px; height: 16px; fill: var(--text); }
+
+  /* ─── Header ─── */
+  .header {
+    padding: 16px 24px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .greeting { font-size: 14px; color: var(--text-light); }
+  .header-left .user-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px;
+    color: var(--primary);
+    margin-top: 2px;
+    letter-spacing: -0.5px;
+  }
+  .header-right { display: flex; gap: 10px; }
+  .icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .icon-btn:hover { background: var(--primary-light); }
+  .icon-btn svg { width: 20px; height: 20px; stroke: var(--text); fill: none; stroke-width: 1.8; }
+  .badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 18px; height: 18px;
+    background: #E04040;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg);
+  }
+
+  /* ─── Search ─── */
+  .search-bar {
+    margin: 4px 24px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .search-bar:hover { border-color: var(--primary); }
+  .search-bar svg { width: 18px; height: 18px; stroke: var(--text-light); fill: none; stroke-width: 2; flex-shrink: 0; }
+  .search-bar span { font-size: 14px; color: var(--text-light); }
+
+  /* ─── Quick Actions ─── */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 0 24px 20px;
+  }
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .quick-action .qa-icon {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+  }
+  .quick-action:hover .qa-icon { transform: scale(1.08); }
+  .quick-action .qa-icon svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .quick-action span {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-mid);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .qa-shop { background: var(--primary-light); }
+  .qa-shop svg { stroke: var(--primary); fill: none; }
+  .qa-appt { background: #FEF3C7; }
+  .qa-appt svg { stroke: #D97706; fill: none; }
+  .qa-tryon { background: #F0FEFF; }
+  .qa-tryon svg { stroke: #0E7490; fill: none; }
+  .qa-orders { background: #EDE9FE; }
+  .qa-orders svg { stroke: #7C3AED; fill: none; }
+
+  /* ─── Section titles ─── */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px 12px;
+  }
+  .section-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-header a {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .section-header a:hover { text-decoration: underline; }
+
+  /* ─── Promo banner ─── */
+  .promo-banner {
+    margin: 0 24px 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, #1E40AF 100%);
+    border-radius: var(--radius);
+    padding: 20px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .promo-banner:hover { transform: scale(1.01); }
+  .promo-banner::after {
+    content: '';
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .promo-banner::before {
+    content: '';
+    position: absolute;
+    right: 30px; bottom: -20px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .promo-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #1E3A8A;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .promo-banner h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .promo-banner p {
+    font-size: 13px;
+    opacity: 0.8;
+    position: relative;
+  }
+
+  /* ─── Appointment card ─── */
+  .upcoming-appt {
+    margin: 0 24px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .upcoming-appt:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .appt-date {
+    width: 52px; height: 56px;
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .appt-date .day { font-size: 22px; font-weight: 700; line-height: 1; }
+  .appt-date .month { font-size: 11px; font-weight: 500; opacity: 0.8; text-transform: uppercase; }
+  .appt-info { flex: 1; }
+  .appt-info .appt-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .appt-info .appt-time { font-size: 12px; color: var(--text-light); }
+  .appt-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #DBEAFE;
+    color: #1D4ED8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* ─── Product cards (horizontal scroll) ─── */
+  .product-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 24px 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .product-scroll::-webkit-scrollbar { height: 0; }
+
+  .product-card {
+    flex-shrink: 0;
+    width: 155px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    scroll-snap-align: start;
+  }
+  .product-card:hover { border-color: var(--primary); box-shadow: var(--shadow); transform: translateY(-2px); }
+
+  .product-img {
+    width: 100%;
+    height: 130px;
+    background: #EDECEA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .product-img svg { width: 48px; height: 48px; stroke: var(--text-light); fill: none; stroke-width: 1.2; opacity: 0.5; }
+  .product-img .ar-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: #7E57C2;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .product-info { padding: 12px; }
+  .product-info .brand { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  .product-info .name { font-size: 13px; font-weight: 700; margin: 3px 0; line-height: 1.3; }
+  .product-info .price { font-size: 14px; font-weight: 700; color: var(--primary); }
+
+  /* ─── Category pills ─── */
+  .category-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 24px 18px;
+    scroll-snap-type: x mandatory;
+  }
+  .category-scroll::-webkit-scrollbar { height: 0; }
+  .cat-pill {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+    scroll-snap-align: start;
+  }
+  .cat-pill:hover, .cat-pill.active { background: var(--primary); border-color: var(--primary); }
+  .cat-pill:hover span, .cat-pill.active span { color: #fff; }
+  .cat-pill:hover svg, .cat-pill.active svg { stroke: #fff; }
+  .cat-pill svg { width: 18px; height: 18px; stroke: var(--text-mid); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+  .cat-pill span { font-size: 12px; font-weight: 600; color: var(--text-mid); white-space: nowrap; }
+
+  /* ─── Star ratings ─── */
+  .stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 4px;
+  }
+  .stars svg {
+    width: 12px; height: 12px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .stars svg.empty { fill: #D9D7D2; }
+  .stars .rating-text {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-left: 4px;
+    font-weight: 500;
+  }
+
+  /* ─── Top Rated row ─── */
+  .top-rated-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 24px 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .top-rated-scroll::-webkit-scrollbar { height: 0; }
+  .top-rated-card {
+    flex-shrink: 0;
+    width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    scroll-snap-align: start;
+  }
+  .top-rated-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .top-rated-card .tr-img {
+    width: 56px; height: 56px;
+    background: #EDECEA;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .top-rated-card .tr-img svg { width: 28px; height: 28px; stroke: var(--text-light); fill: none; stroke-width: 1.2; opacity: 0.5; }
+  .top-rated-card .tr-info { flex: 1; min-width: 0; }
+  .top-rated-card .tr-info .name { font-size: 12px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-rated-card .tr-info .price { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 2px; }
+  .top-rated-rank {
+    position: absolute;
+    top: -4px; left: -4px;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─── Reviews / Feedback ─── */
+  .review-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 24px 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .review-scroll::-webkit-scrollbar { height: 0; }
+  .review-card {
+    flex-shrink: 0;
+    width: 260px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    scroll-snap-align: start;
+  }
+  .review-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .review-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .review-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .review-meta { flex: 1; }
+  .review-meta .reviewer-name { font-size: 12px; font-weight: 700; }
+  .review-meta .review-date { font-size: 10px; color: var(--text-light); }
+  .review-product {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-light);
+    background: var(--bg);
+    padding: 5px 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .review-product svg { width: 12px; height: 12px; stroke: var(--text-light); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+  .review-product strong { color: var(--text-mid); font-weight: 600; }
+  .review-text {
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ─── Services section ─── */
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 24px 24px;
+  }
+  .service-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .service-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .service-card .svc-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .service-card .svc-icon svg { width: 22px; height: 22px; stroke-width: 1.6; fill: none; }
+  .service-card .svc-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .service-card .svc-desc { font-size: 11px; color: var(--text-light); line-height: 1.4; }
+
+  /* ─── Bottom nav ─── */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    z-index: 10;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: background 0.2s;
+  }
+  .nav-item:hover { background: var(--primary-light); }
+  .nav-item svg { width: 22px; height: 22px; stroke: var(--text-light); fill: none; stroke-width: 1.8; }
+  .nav-item span { font-size: 10px; color: var(--text-light); font-weight: 500; }
+  .nav-item.active svg { stroke: var(--primary); }
+  .nav-item.active span { color: var(--primary); font-weight: 700; }
+  .nav-item.active { background: var(--primary-light); }
+
+  /* ─── Annotations panel ─── */
+  .annotations {
+    max-width: 420px;
+    flex-shrink: 1;
+    margin-top: 0;
+  }
+  .annotations h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+  }
+  .annotation {
+    background: #353535;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  .annotation .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .annotation p {
+    font-size: 13px;
+    color: #ccc;
+    line-height: 1.6;
+  }
+  .annotation p strong { color: #fff; }
+
+  /* ─── Multi-screen gallery helpers ─── */
+  .phone-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .phone-caption {
+    font-family: 'Instrument Serif', serif;
+    font-size: 16px;
+    color: #fff;
+    letter-spacing: -0.3px;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .action-btn {
+    margin: 0 24px 20px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .action-btn.outline {
+    background: transparent;
+    box-shadow: none;
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+  }
+
+  .filter-chips {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 24px 12px;
+    scroll-snap-type: x mandatory;
+  }
+  .filter-chip {
+    flex-shrink: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    scroll-snap-align: start;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-mid);
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  /* ─── Catalog grid (Explore) ─── */
+  .catalog-grid {
+    padding: 0 24px 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .catalog-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .catalog-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
+  .catalog-img {
+    height: 96px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .catalog-img svg {
+    width: 40px;
+    height: 40px;
+    stroke: var(--text-light);
+    fill: none;
+    stroke-width: 1.4;
+    opacity: 0.55;
+  }
+  .catalog-info {
+    padding: 10px 12px 12px;
+  }
+  .catalog-brand {
+    font-size: 10px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .catalog-name {
+    font-size: 12px;
+    font-weight: 900;
+    margin-top: 4px;
+    line-height: 1.25;
+  }
+  .catalog-price {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--primary);
+    margin-top: 8px;
+  }
+
+  /* ─── Orders list ─── */
+  .orders-list {
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .order-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .order-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+  }
+  .order-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .order-id {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: 0.2px;
+  }
+  .order-meta {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .order-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .order-thumb svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--primary);
+    fill: none;
+    stroke-width: 1.6;
+    opacity: 0.65;
+  }
+  .order-item .order-item-name {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .order-progress {
+    height: 6px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .order-progress .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 6px;
+  }
+
+  .status-tag {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-tag.blue { background: #DBEAFE; color: #1D4ED8; }
+  .status-tag.amber { background: #FEF3C7; color: #D97706; }
+  .status-tag.green { background: #D1FAE5; color: #065F46; }
+  .status-tag.purple { background: #EDE9FE; color: #5B21B6; }
+
+  /* ─── Messages list ─── */
+  .messages-list {
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .msg-row:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .msg-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .msg-avatar.alt { background: #EBF5FF; color: #1E40AF; }
+  .msg-avatar.purple { background: #EDE9FE; color: #5B21B6; }
+  .msg-content { flex: 1; min-width: 0; }
+  .msg-title { font-size: 12px; font-weight: 900; color: var(--text); line-height: 1.2; }
+  .msg-sub {
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .msg-time {
+    font-size: 10px;
+    color: var(--text-light);
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .msg-unread {
+    margin-left: auto;
+    background: var(--primary);
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  /* ─── Notifications ─── */
+  .notifications-list {
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .notif-section-title {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin: 6px 0 2px;
+  }
+  .notif-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .notif-row:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .notif-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .notif-icon.amber { background: #FEF3C7; }
+  .notif-icon.purple { background: #EDE9FE; }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-title { font-size: 12px; font-weight: 900; color: var(--text); line-height: 1.2; }
+  .notif-desc { margin-top: 4px; font-size: 10px; color: var(--text-light); line-height: 1.4; }
+  .notif-time { margin-top: 7px; font-size: 10px; color: var(--primary); font-weight: 900; }
+
+  /* ─── Profile ─── */
+  .profile-hero {
+    margin: 0 24px 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, #1E40AF 100%);
+    border-radius: var(--radius);
+    padding: 18px 14px 20px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.14);
+    border: 3px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 900;
+  }
+  .profile-name { font-family: 'Instrument Serif', serif; font-size: 22px; font-weight: 800; }
+  .profile-email { font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 700; }
+  .profile-stats { display: flex; gap: 18px; margin-top: 6px; }
+  .profile-stat { text-align: center; }
+  .profile-stat .num { font-size: 18px; font-weight: 900; }
+  .profile-stat .lbl { font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 800; letter-spacing: 0.02em; }
+  .settings-list { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .setting-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .setting-row:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .setting-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .setting-icon.danger { background: #FEF3C7; }
+  .setting-text { flex: 1; min-width: 0; }
+  .setting-label { font-size: 12px; font-weight: 900; color: var(--text); }
+  .setting-desc { margin-top: 4px; font-size: 10px; color: var(--text-light); line-height: 1.3; }
+  .setting-arrow { font-size: 18px; color: var(--text-light); font-weight: 900; }
+
+  /* ─── AR Try-on screen ─── */
+  .ar-screen {
+    margin: 0 24px 24px;
+    background: linear-gradient(180deg, #0B1223 0%, #162040 100%);
+    border-radius: var(--radius);
+    border: 1px solid rgba(219,234,254,0.22);
+    padding: 18px;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ar-screen::after {
+    content: '';
+    position: absolute;
+    inset: -60px;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(26,86,219,0.45) 0%, transparent 55%),
+      radial-gradient(circle at 75% 60%, rgba(245,158,11,0.25) 0%, transparent 55%);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+  .ar-viewport {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 2px dashed rgba(255,255,255,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 86px;
+    position: relative;
+    z-index: 1;
+  }
+  .ar-instruction {
+    position: relative;
+    z-index: 1;
+    color: rgba(255,255,255,0.65);
+    font-size: 11px;
+    margin-top: 14px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .ar-frames {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .ar-frame {
+    text-align: center;
+  }
+  .ar-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 auto 6px;
+    color: rgba(255,255,255,0.7);
+  }
+  .ar-frame.active .ar-thumb {
+    background: var(--primary);
+    color: #fff;
+  }
+  .ar-frame .ar-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.55);
+  }
+  .ar-cta {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin-top: 18px;
+    background: linear-gradient(135deg, var(--primary), #1E40AF);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; align-items: center; }
+    .annotations { max-width: var(--phone-w); }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">EyeCare App — <span>All Modules Wireframe (Blue)</span></h1>
+
+<div class="layout">
+
+<!-- ━━━ PHONE MOCKUP ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">01 · Home</div>
+<div class="phone-frame">
+  <div class="phone-scroll">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="icons">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="greeting">Good morning,</div>
+        <div class="user-name">Maria Santos</div>
+      </div>
+      <div class="header-right">
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="badge">2</span>
+        </div>
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span class="badge">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search frames, lenses, accessories…</span>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="quick-action">
+        <div class="qa-icon qa-shop">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span>Shop</span>
+      </div>
+      <div class="quick-action">
+        <div class="qa-icon qa-appt">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span>Book Appt</span>
+      </div>
+      <div class="quick-action">
+        <div class="qa-icon qa-tryon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg>
+        </div>
+        <span>AR Try-On</span>
+      </div>
+      <div class="quick-action">
+        <div class="qa-icon qa-orders">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </div>
+        <span>My Orders</span>
+      </div>
+    </div>
+
+    <!-- Promo Banner -->
+    <div class="promo-banner">
+      <div class="promo-tag">New Collection</div>
+      <h2>Summer Frames<br/>Are Here</h2>
+      <p>Explore the latest styles from top brands</p>
+    </div>
+
+    <!-- ══════ PRODUCT CATEGORIES ══════ -->
+    <div class="section-header">
+      <h3>Shop by Category</h3>
+      <a>All</a>
+    </div>
+    <div class="category-scroll">
+      <div class="cat-pill active">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+        <span>Frames</span>
+      </div>
+      <div class="cat-pill">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/></svg>
+        <span>Lenses</span>
+      </div>
+      <div class="cat-pill">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Contact Lenses</span>
+      </div>
+      <div class="cat-pill">
+        <svg viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/><circle cx="12" cy="12" r="4"/></svg>
+        <span>Sunglasses</span>
+      </div>
+      <div class="cat-pill">
+        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span>Accessories</span>
+      </div>
+    </div>
+
+    <!-- ══════ FEATURED PRODUCTS (with ratings) ══════ -->
+    <div class="section-header">
+      <h3>Featured Products</h3>
+      <a>See All</a>
+    </div>
+    <div class="product-scroll">
+      <div class="product-card">
+        <div class="product-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/><path d="M2 14h0"/><path d="M22 14h0"/></svg>
+          <span class="ar-badge">AR</span>
+        </div>
+        <div class="product-info">
+          <div class="brand">Ray-Ban</div>
+          <div class="name">Wayfarer Classic</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">4.0</span>
+          </div>
+          <div class="price">₱8,990</div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/><path d="M2 14h0"/><path d="M22 14h0"/></svg>
+        </div>
+        <div class="product-info">
+          <div class="brand">Oakley</div>
+          <div class="name">Frogskins Range</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">5.0</span>
+          </div>
+          <div class="price">₱12,500</div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/><path d="M2 14h0"/><path d="M22 14h0"/></svg>
+          <span class="ar-badge">AR</span>
+        </div>
+        <div class="product-info">
+          <div class="brand">Cartier</div>
+          <div class="name">Panthère Optical</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">4.2</span>
+          </div>
+          <div class="price">₱24,800</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ UPCOMING APPOINTMENT ══════ -->
+    <div class="section-header">
+      <h3>Upcoming Appointment</h3>
+      <a>View All</a>
+    </div>
+    <div class="upcoming-appt">
+      <div class="appt-date">
+        <span class="day">18</span>
+        <span class="month">Mar</span>
+      </div>
+      <div class="appt-info">
+        <div class="appt-title">Eye Examination</div>
+        <div class="appt-time">10:30 AM — Dr. Reyes</div>
+      </div>
+      <span class="appt-status">Confirmed</span>
+    </div>
+
+    <!-- ══════ TOP RATED PRODUCTS ══════ -->
+    <div class="section-header">
+      <h3>Top Rated</h3>
+      <a>See All</a>
+    </div>
+    <div class="top-rated-scroll">
+      <div class="top-rated-card">
+        <div class="tr-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+        </div>
+        <div class="tr-info">
+          <div class="name">Oakley Frogskins</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">5.0 (28)</span>
+          </div>
+          <div class="price">₱12,500</div>
+        </div>
+      </div>
+      <div class="top-rated-card">
+        <div class="tr-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+        </div>
+        <div class="tr-info">
+          <div class="name">Ray-Ban Aviator</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">4.8 (42)</span>
+          </div>
+          <div class="price">₱9,450</div>
+        </div>
+      </div>
+      <div class="top-rated-card">
+        <div class="tr-img">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+        </div>
+        <div class="tr-info">
+          <div class="name">Gucci GG0036</div>
+          <div class="stars">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <span class="rating-text">4.6 (15)</span>
+          </div>
+          <div class="price">₱18,200</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ CUSTOMER REVIEWS ══════ -->
+    <div class="section-header">
+      <h3>Customer Reviews</h3>
+      <a>All Reviews</a>
+    </div>
+    <div class="review-scroll">
+      <div class="review-card">
+        <div class="review-top">
+          <div class="review-avatar">JD</div>
+          <div class="review-meta">
+            <div class="reviewer-name">Juan Dela Cruz</div>
+            <div class="review-date">2 days ago</div>
+          </div>
+          <div class="stars" style="margin-top:0;">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          </div>
+        </div>
+        <div class="review-product">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+          <strong>Oakley Frogskins Range</strong>
+        </div>
+        <div class="review-text">Excellent quality frames! Very comfortable to wear all day. The fit was perfect and the staff was so helpful during the fitting.</div>
+      </div>
+      <div class="review-card">
+        <div class="review-top">
+          <div class="review-avatar">AR</div>
+          <div class="review-meta">
+            <div class="reviewer-name">Ana Reyes</div>
+            <div class="review-date">5 days ago</div>
+          </div>
+          <div class="stars" style="margin-top:0;">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          </div>
+        </div>
+        <div class="review-product">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/></svg>
+          <strong>Eye Exam Service</strong>
+        </div>
+        <div class="review-text">Super thorough eye exam! Dr. Reyes was very patient explaining everything. Booking through the app was seamless.</div>
+      </div>
+      <div class="review-card">
+        <div class="review-top">
+          <div class="review-avatar">MG</div>
+          <div class="review-meta">
+            <div class="reviewer-name">Mark Garcia</div>
+            <div class="review-date">1 week ago</div>
+          </div>
+          <div class="stars" style="margin-top:0;">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          </div>
+        </div>
+        <div class="review-product">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+          <strong>Ray-Ban Wayfarer Classic</strong>
+        </div>
+        <div class="review-text">The AR try-on feature is amazing! I could see exactly how the frames looked on me before buying. Saved me a trip to the store.</div>
+      </div>
+    </div>
+
+    <!-- ══════ SERVICES ══════ -->
+    <div class="section-header">
+      <h3>Our Services</h3>
+      <a>View All</a>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="svc-icon" style="background: #EBF5FF;">
+          <svg viewBox="0 0 24 24" style="stroke: var(--primary);"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/></svg>
+        </div>
+        <div class="svc-name">Eye Exam</div>
+        <div class="svc-desc">Comprehensive eye check-up</div>
+      </div>
+      <div class="service-card">
+        <div class="svc-icon" style="background: #FEF3C7;">
+          <svg viewBox="0 0 24 24" style="stroke: #D97706;"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+        </div>
+        <div class="svc-name">Lens Fitting</div>
+        <div class="svc-desc">Contact lens consultation</div>
+      </div>
+      <div class="service-card">
+        <div class="svc-icon" style="background: #F0FEFF;">
+          <svg viewBox="0 0 24 24" style="stroke: #0E7490;"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="svc-name">Frame Adjust</div>
+        <div class="svc-desc">Free frame adjustments</div>
+      </div>
+      <div class="service-card">
+        <div class="svc-icon" style="background: #EDE9FE;">
+          <svg viewBox="0 0 24 24" style="stroke: #7C3AED;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="svc-name">Warranty</div>
+        <div class="svc-desc">Repair &amp; replacement</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Explore</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Schedule</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span>Orders</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ━━━ EXPLORE ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">02 · Explore</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Hi Maria,</div>
+          <div class="user-name" style="font-size:26px;">Explore</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M7 7h10v10H7z" style="opacity:.0"/></svg>
+          </div>
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search frames, lenses, accessories…</span>
+      </div>
+
+      <!-- Category / Filters -->
+      <div class="filter-chips">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Frames</div>
+        <div class="filter-chip">Lenses</div>
+        <div class="filter-chip">Contact Lenses</div>
+        <div class="filter-chip">Sunglasses</div>
+      </div>
+
+      <!-- Catalog -->
+      <div class="section-header">
+        <h3>Featured Catalog</h3>
+        <a>Sort</a>
+      </div>
+
+      <div class="catalog-grid">
+        <div class="catalog-card">
+          <div class="catalog-img">
+            <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+          </div>
+          <div class="catalog-info">
+            <div class="catalog-brand">Ray-Ban</div>
+            <div class="catalog-name">Wayfarer Classic</div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <span class="rating-text">4.0</span>
+            </div>
+            <div class="catalog-price">₱8,990</div>
+          </div>
+        </div>
+
+        <div class="catalog-card">
+          <div class="catalog-img">
+            <svg viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/><circle cx="12" cy="12" r="4"/></svg>
+          </div>
+          <div class="catalog-info">
+            <div class="catalog-brand">Oakley</div>
+            <div class="catalog-name">Frogskins Range</div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <span class="rating-text">4.8</span>
+            </div>
+            <div class="catalog-price">₱12,500</div>
+          </div>
+        </div>
+
+        <div class="catalog-card">
+          <div class="catalog-img">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="catalog-info">
+            <div class="catalog-brand">Zeiss</div>
+            <div class="catalog-name">Blue Light Lenses</div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <span class="rating-text">4.2</span>
+            </div>
+            <div class="catalog-price">₱3,799</div>
+          </div>
+        </div>
+
+        <div class="catalog-card">
+          <div class="catalog-img">
+            <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <div class="catalog-info">
+            <div class="catalog-brand">Cartier</div>
+            <div class="catalog-name">Panthère Optical</div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <svg viewBox="0 0 24 24" class="empty"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <span class="rating-text">4.6</span>
+            </div>
+            <div class="catalog-price">₱24,800</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ SCHEDULE ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">03 · Schedule</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Your</div>
+          <div class="user-name">Schedule</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-chips">
+        <div class="filter-chip active">Upcoming</div>
+        <div class="filter-chip">Past</div>
+        <div class="filter-chip">Cancelled</div>
+      </div>
+
+      <div class="upcoming-appt">
+        <div class="appt-date">
+          <span class="day">24</span>
+          <span class="month">Mar</span>
+        </div>
+        <div class="appt-info">
+          <div class="appt-title">Eye Examination</div>
+          <div class="appt-time">10:00 AM — Dr. Santos</div>
+        </div>
+        <span class="appt-status" style="background:#D1FAE5;color:#065F46;">Confirmed</span>
+      </div>
+
+      <div class="upcoming-appt">
+        <div class="appt-date">
+          <span class="day">28</span>
+          <span class="month">Mar</span>
+        </div>
+        <div class="appt-info">
+          <div class="appt-title">Lens Fitting</div>
+          <div class="appt-time">2:30 PM — Dr. Cruz</div>
+        </div>
+        <span class="appt-status" style="background:#FEF3C7;color:#D97706;">Pending</span>
+      </div>
+
+      <div class="upcoming-appt">
+        <div class="appt-date">
+          <span class="day">05</span>
+          <span class="month">Apr</span>
+        </div>
+        <div class="appt-info">
+          <div class="appt-title">Contact Lens Check</div>
+          <div class="appt-time">9:00 AM — Dr. Reyes</div>
+        </div>
+        <span class="appt-status" style="background:#EDE9FE;color:#5B21B6;">Scheduled</span>
+      </div>
+
+      <div class="action-btn">Book New Appointment</div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ ORDERS ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">04 · Orders</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Your</div>
+          <div class="user-name">Orders</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-chips">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Processing</div>
+        <div class="filter-chip">Ready</div>
+        <div class="filter-chip">Completed</div>
+      </div>
+
+      <div class="orders-list">
+        <div class="order-card">
+          <div class="order-top">
+            <div class="order-id">#ORD-2024-001</div>
+            <div class="status-tag green">Ready for Pickup</div>
+          </div>
+          <div class="order-meta">Mar 20, 2024 · ₱3,299</div>
+          <div class="order-item">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24"><circle cx="6" cy="14" r="4"/><circle cx="18" cy="14" r="4"/><path d="M10 14h4"/></svg>
+            </div>
+            <div class="order-item-name">Titanium Slim Frame × 1</div>
+          </div>
+          <div class="order-progress"><div class="fill" style="width:80%"></div></div>
+          <div style="font-size:10px;color:var(--text-light);margin-top:6px;font-weight:800;">Lenses being mounted</div>
+        </div>
+
+        <div class="order-card">
+          <div class="order-top">
+            <div class="order-id">#ORD-2024-002</div>
+            <div class="status-tag blue">Processing</div>
+          </div>
+          <div class="order-meta">Mar 18, 2024 · ₱1,299</div>
+          <div class="order-item">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/><circle cx="12" cy="12" r="4"/></svg>
+            </div>
+            <div class="order-item-name">Classic Frame × 1</div>
+          </div>
+          <div class="order-progress"><div class="fill" style="width:40%"></div></div>
+        </div>
+
+        <div class="order-card">
+          <div class="order-top">
+            <div class="order-id">#ORD-2024-003</div>
+            <div class="status-tag amber">Completed</div>
+          </div>
+          <div class="order-meta">Mar 10, 2024 · ₱2,499</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ PROFILE ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">05 · Profile</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Welcome,</div>
+          <div class="user-name">Maria</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 3h0"/><circle cx="12" cy="3.5" r="0.5"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-hero">
+        <div class="profile-avatar">M</div>
+        <div class="profile-name">Maria Dela Cruz</div>
+        <div class="profile-email">maria@eyecare.com</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="num">3</div><div class="lbl">Orders</div></div>
+          <div class="profile-stat"><div class="num">2</div><div class="lbl">Appts</div></div>
+          <div class="profile-stat"><div class="num">5★</div><div class="lbl">Rating</div></div>
+        </div>
+      </div>
+
+      <div class="settings-list">
+        <div class="setting-row">
+          <div class="setting-icon">👤</div>
+          <div class="setting-text">
+            <div class="setting-label">Personal Info</div>
+            <div class="setting-desc">Name, email, phone</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">👁</div>
+          <div class="setting-text">
+            <div class="setting-label">Prescription History</div>
+            <div class="setting-desc">View past prescriptions</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">🔔</div>
+          <div class="setting-text">
+            <div class="setting-label">Notifications</div>
+            <div class="setting-desc">Alerts and reminders</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon danger">🔒</div>
+          <div class="setting-text">
+            <div class="setting-label">Privacy &amp; Security</div>
+            <div class="setting-desc">Password, 2FA</div>
+          </div>
+          <div class="setting-arrow">›</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon danger">🚪</div>
+          <div class="setting-text">
+            <div class="setting-label" style="color:#DC2626;">Sign Out</div>
+            <div class="setting-desc">End your session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ MESSAGES ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">06 · Messages</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Support</div>
+          <div class="user-name">Messages</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search conversations…</span>
+      </div>
+
+      <div class="messages-list">
+        <div class="msg-row">
+          <div class="msg-avatar">DS</div>
+          <div class="msg-content">
+            <div class="msg-title">Dr. Santos</div>
+            <div class="msg-sub">Your prescription is ready 📋</div>
+          </div>
+          <div class="msg-time">10:32</div>
+          <div class="msg-unread">2</div>
+        </div>
+        <div class="msg-row">
+          <div class="msg-avatar alt">EC</div>
+          <div class="msg-content">
+            <div class="msg-title">EyeCare Support</div>
+            <div class="msg-sub">Your order #001 is ready…</div>
+          </div>
+          <div class="msg-time">9:15</div>
+        </div>
+        <div class="msg-row">
+          <div class="msg-avatar purple">RC</div>
+          <div class="msg-content">
+            <div class="msg-title">Dr. Cruz</div>
+            <div class="msg-sub">See you on March 28!</div>
+          </div>
+          <div class="msg-time">Yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ NOTIFICATIONS ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">07 · Notifications</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Updates</div>
+          <div class="user-name">Notifications</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="notifications-list">
+        <div class="notif-section-title">TODAY</div>
+
+        <div class="notif-row">
+          <div class="notif-icon">📦</div>
+          <div class="notif-body">
+            <div class="notif-title">Order Ready for Pickup</div>
+            <div class="notif-desc">Your order #ORD-2024-001 is ready to collect.</div>
+            <div class="notif-time">10:32 AM</div>
+          </div>
+        </div>
+
+        <div class="notif-row" style="background:var(--primary-light);border-color:var(--primary);">
+          <div class="notif-icon" style="background:var(--primary);color:#fff;">💬</div>
+          <div class="notif-body">
+            <div class="notif-title">New Message from Dr. Santos</div>
+            <div class="notif-desc">Your prescription is ready 📋</div>
+            <div class="notif-time">9:15 AM</div>
+          </div>
+        </div>
+
+        <div class="notif-section-title">YESTERDAY</div>
+
+        <div class="notif-row">
+          <div class="notif-icon amber">✨</div>
+          <div class="notif-body">
+            <div class="notif-title">Special Offer!</div>
+            <div class="notif-desc">20% off on all frames this week.</div>
+            <div class="notif-time">11:00 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━ AR TRY-ON ━━━ -->
+<div class="phone-block">
+  <div class="phone-caption">08 · AR Try-On</div>
+  <div class="phone-frame">
+    <div class="phone-scroll">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+        </div>
+      </div>
+
+      <div class="header">
+        <div class="header-left">
+          <div class="greeting">Virtual</div>
+          <div class="user-name">AR Try-On</div>
+        </div>
+        <div class="header-right">
+          <div class="icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="ar-screen">
+        <div class="ar-viewport">
+          😐
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.85;">👓</div>
+        </div>
+        <div class="ar-instruction">Position your face in the frame</div>
+
+        <div class="ar-frames">
+          <div class="ar-frame active">
+            <div class="ar-thumb">👓</div>
+            <div class="ar-label">Classic</div>
+          </div>
+          <div class="ar-frame">
+            <div class="ar-thumb">🕶</div>
+            <div class="ar-label" style="color:rgba(255,255,255,0.55);">Aviator</div>
+          </div>
+          <div class="ar-frame">
+            <div class="ar-thumb">🔭</div>
+            <div class="ar-label" style="color:rgba(255,255,255,0.55);">Round</div>
+          </div>
+        </div>
+
+        <div class="ar-cta">Add to Cart — ₱2,499</div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Orders</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ━━━ ANNOTATIONS ━━━ -->
+<div class="annotations">
+  <h2>Design Notes</h2>
+
+  <div class="annotation">
+    <div class="label">1 — Header</div>
+    <p><strong>Personalized greeting</strong> with the user's name. <strong>Notification bell</strong> shows unread count (order updates, appointment reminders). <strong>Message icon</strong> links to direct messaging with staff.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">2 — Search</div>
+    <p>Tapping opens a <strong>full-screen search</strong> with recent searches, category filters, and real-time product results. Searches frames, lenses, sunglasses, and accessories.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">3 — Quick Actions</div>
+    <p>Four primary entry points: <strong>Shop</strong> (product catalog), <strong>Book Appt</strong> (appointment scheduling), <strong>AR Try-On</strong> (virtual eyewear try-on with camera), <strong>My Orders</strong> (order history and pickup status).</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">4 — Promo Banner</div>
+    <p>Swipeable carousel for <strong>promotions and new arrivals</strong>. Auto-rotates every 5 seconds. Tapping navigates to the relevant collection.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">5 — Shop by Category</div>
+    <p>Horizontally scrollable <strong>category pills</strong>: Frames, Lenses, Contact Lenses, Sunglasses, Accessories. Tapping a pill filters the Featured Products below or navigates to a filtered catalog view. Active pill is highlighted in primary blue.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">6 — Featured Products</div>
+    <p>Horizontally scrollable product cards now showing <strong>brand, name, star rating (1–5), and price</strong>. <strong>"AR" badge</strong> on items with virtual try-on. Star ratings are the average from customer feedbacks. Tapping opens the product detail page.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">7 — Upcoming Appointment</div>
+    <p>Shows the <strong>next confirmed appointment</strong> at a glance. Tapping opens full details with reschedule/cancel options. Hidden when no upcoming appointments.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">8 — Top Rated</div>
+    <p>Compact horizontal cards showing <strong>highest-rated products</strong> sorted by average rating. Each card displays thumbnail, name, star rating with <strong>review count</strong> (e.g. "5.0 (28)"), and price. Drives social proof and helps users discover the best items quickly.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">9 — Customer Reviews</div>
+    <p>Horizontally scrollable <strong>review cards</strong> showing recent feedback. Each card includes: <strong>reviewer avatar + name, date, star rating, which product/service</strong> the review is for, and a <strong>comment excerpt</strong>. Reviews cover both products and services. "All Reviews" links to a dedicated reviews page. This builds trust and surfaces real customer experiences.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">10 — Services</div>
+    <p>2x2 grid of available services: <strong>Eye Exam, Lens Fitting, Frame Adjustment, Warranty</strong>. Each card links to the booking flow pre-filled with that service type.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">11 — Bottom Navigation</div>
+    <p>Five tabs: <strong>Home</strong>, <strong>Explore</strong> (full catalog with filters), <strong>Schedule</strong> (appointments), <strong>Orders</strong> (order history/pickup tracking), <strong>Profile</strong> (settings, submit feedback, logout).</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">12 — Explore</div>
+    <p>Shows a <strong>search bar</strong>, horizontally scrollable <strong>category filters</strong>, and a <strong>catalog grid</strong> of products that users can tap for details.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">13 — Schedule</div>
+    <p>Displays <strong>appointment status lists</strong> (Upcoming/Past/Cancelled) with clear date/time at-a-glance and color-coded confirmation states.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">14 — Orders</div>
+    <p>Provides order history with <strong>pickup status tags</strong> and a simple <strong>progress bar</strong> to communicate production or fulfillment stages.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">15 — Profile &amp; Settings</div>
+    <p>Includes a profile summary plus access to <strong>personal info</strong>, <strong>prescription history</strong>, <strong>notifications</strong>, <strong>privacy</strong>, and <strong>sign-out</strong>.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">16 — Messages</div>
+    <p>Conversation list UI for messaging with <strong>doctors and support</strong>, including searchable threads and an <strong>unread count badge</strong>.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">17 — Notifications</div>
+    <p>Grouped updates for key events (order ready, messages, reminders, and offers) presented as tappable rows.</p>
+  </div>
+
+  <div class="annotation">
+    <div class="label">18 — AR Try-On</div>
+    <p>A dedicated try-on view with a focused dark canvas, selectable frame styles, and a direct <strong>add-to-cart</strong> CTA.</p>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>

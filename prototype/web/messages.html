@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Messages</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Direct messaging</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Conversations</h1>
+    <p class="note">Entities: <code>conversations</code> (customer_id), <code>messages</code> (sender_id, body, read_at). Plan: Reverb + REST or REST-only polling.</p>
+    <table>
+      <thead><tr><th>id</th><th>customer</th><th>subject</th><th>last_message_at</th></tr></thead>
+      <tbody>
+        <tr><td>7</td><td>Juan (12)</td><td>Frame availability</td><td>2026-04-08 14:02</td></tr>
+      </tbody>
+    </table>
+    <h2>Thread #7</h2>
+    <table>
+      <thead><tr><th>sender</th><th>body</th><th>read_at</th></tr></thead>
+      <tbody>
+        <tr><td>customer 12</td><td>Do you have RB5154 in black?</td><td>2026-04-08 14:00</td></tr>
+        <tr><td>staff 2</td><td>Yes, medium size in stock.</td><td>null</td></tr>
+      </tbody>
+    </table>
+    <form action="#" onsubmit="return false">
+      <label>Reply</label><textarea rows="2"></textarea>
+      <p><button type="button">Send (no API)</button></p>
+    </form>
+  </main>
+</body>
+</html>

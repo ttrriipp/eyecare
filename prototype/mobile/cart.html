@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Cart</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="index.html">← Home</a> · Cart</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Cart (localStorage)</h1>
+      <div id="list"></div>
+      <p><strong>Total:</strong> <span id="tot">0</span></p>
+      <p><a href="checkout.html">Checkout →</a></p>
+      <p><button type="button" id="clear">Clear cart</button></p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html"><strong>Cart</strong></a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    function render() {
+      var items = EyeCareCart.get();
+      var el = document.getElementById("list");
+      if (!items.length) {
+        el.innerHTML = "<p class='note'>Empty. Add from product pages.</p>";
+      } else {
+        el.innerHTML =
+          "<table><thead><tr><th>variant</th><th>qty</th><th>price</th><th></th></tr></thead><tbody>" +
+          items
+            .map(function (i) {
+              return (
+                "<tr><td>" +
+                i.product_variant_id +
+                "<br/><small>" +
+                (i.name || "") +
+                "</small></td><td>" +
+                i.quantity +
+                "</td><td>" +
+                i.unit_price +
+                '</td><td><button type="button" data-v="' +
+                i.product_variant_id +
+                '">×</button></td></tr>'
+              );
+            })
+            .join("") +
+          "</tbody></table>";
+        el.querySelectorAll("button[data-v]").forEach(function (btn) {
+          btn.onclick = function () {
+            EyeCareCart.remove(Number(btn.getAttribute("data-v")));
+            render();
+          };
+        });
+      }
+      document.getElementById("tot").textContent = EyeCareCart.total();
+    }
+    document.getElementById("clear").onclick = function () {
+      EyeCareCart.clear();
+      render();
+    };
+    render();
+  </script>
+</body>
+</html>

@@ -65,7 +65,19 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Display timezone (staff / admin UI)
+    |--------------------------------------------------------------------------
+    |
+    | Wall-clock times in the admin (e.g. message inbox and thread) are shown in
+    | this timezone. Keeps APP_TIMEZONE=UTC for APIs/storage while staff see local time.
+    |
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Asia/Manila'),
 
     /*
     |--------------------------------------------------------------------------

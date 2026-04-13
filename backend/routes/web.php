@@ -1,13 +1,144 @@
 <?php
 
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BillingPaymentHistoryController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderStatusHistoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserManagementController;
+use App\Livewire\Admin\Inventory\AdjustmentHistory;
+use App\Livewire\Admin\Messaging\MessagingInbox;
+use App\Livewire\Admin\Settings\CategoryManager;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('products/create', [ProductController::class, 'create'])
+        ->name('products.create');
+    Route::post('products', [ProductController::class, 'store'])
+        ->name('products.store');
+    Route::get('products', [ProductController::class, 'index'])
+        ->name('products.index');
+    Route::get('products/{product}', [ProductController::class, 'show'])
+        ->name('products.show');
+    Route::get('products/{product}/edit', [ProductController::class, 'edit'])
+        ->name('products.edit');
+    Route::put('products/{product}', [ProductController::class, 'update'])
+        ->name('products.update');
+    Route::patch('products/{product}/deactivate', [ProductController::class, 'deactivate'])
+        ->name('products.deactivate');
+    Route::patch('products/{product}/activate', [ProductController::class, 'activate'])
+        ->name('products.activate');
+    Route::patch('products/{product}/variants/{variant}/deactivate', [ProductController::class, 'deactivateVariant'])
+        ->name('products.variants.deactivate');
+    Route::patch('products/{product}/variants/{variant}/activate', [ProductController::class, 'activateVariant'])
+        ->name('products.variants.activate');
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])
+        ->name('products.destroy');
+
+    Route::post('products/{product}/images', [ProductController::class, 'storeProductImage'])
+        ->name('products.images.store');
+    Route::patch('products/{product}/images/{productImage}', [ProductController::class, 'updateProductImage'])
+        ->name('products.images.update');
+    Route::patch('products/{product}/images/{productImage}/move', [ProductController::class, 'moveProductImage'])
+        ->name('products.images.move');
+    Route::delete('products/{product}/images/{productImage}', [ProductController::class, 'destroyProductImage'])
+        ->name('products.images.destroy');
+    Route::put('products/{product}/inventory/meta', [ProductController::class, 'updateProductInventoryMeta'])
+        ->name('products.inventory.meta.update');
+
+    Route::get('orders', [OrderController::class, 'index'])
+        ->name('orders.index');
+    Route::get('orders/create', [OrderController::class, 'create'])
+        ->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])
+        ->name('orders.store');
+
+    Route::get('orders/order-status-history', [OrderStatusHistoryController::class, 'index'])
+        ->middleware('role:admin')
+        ->name('orders.status-history.index');
+
+    Route::get('billing', [BillingController::class, 'index'])
+        ->name('orders.billing.index');
+    Route::get('billing/payment-history', [BillingPaymentHistoryController::class, 'index'])
+        ->middleware('role:admin')
+        ->name('orders.billing.payment-history.index');
+    Route::get('billing/{bill}', [BillingController::class, 'show'])
+        ->name('orders.billing.show');
+    Route::get('billing/{bill}/print', [BillingController::class, 'print'])
+        ->name('orders.billing.print');
+    Route::put('billing/{bill}/pay', [BillingController::class, 'pay'])
+        ->name('orders.billing.pay');
+    Route::put('billing/{bill}/official-receipt', [BillingController::class, 'updateOfficialReceipt'])
+        ->name('orders.billing.official-receipt');
+    Route::put('billing/{bill}/void', [BillingController::class, 'void'])
+        ->name('orders.billing.void');
+    Route::put('billing/{bill}/refund', [BillingController::class, 'refund'])
+        ->name('orders.billing.refund');
+
+    Route::put('orders/{order}/notes', [OrderController::class, 'updateNotes'])
+        ->name('orders.notes.update');
+    Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])
+        ->name('orders.status.update');
+    Route::get('orders/{order}/status-history', [OrderStatusHistoryController::class, 'forOrder'])
+        ->name('orders.status-history.order');
+    Route::get('orders/{order}', [OrderController::class, 'show'])
+        ->name('orders.show');
+
+    Route::get('inventory/{product}/edit', [InventoryController::class, 'edit'])
+        ->name('inventory.edit');
+    Route::put('inventory/{product}', [InventoryController::class, 'update'])
+        ->name('inventory.update');
+
+    Route::middleware('role:admin,staff')->group(function () {
+        Route::get('feedbacks', [FeedbackController::class, 'index'])
+            ->name('feedbacks.index');
+        Route::put('feedbacks/{feedback}/reply', [FeedbackController::class, 'respond'])
+            ->name('feedbacks.reply');
+        Route::put('feedbacks/{feedback}/visibility', [FeedbackController::class, 'setVisibility'])
+            ->name('feedbacks.visibility');
+
+        Route::middleware('role:admin')->group(function () {
+            Route::delete('feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
+                ->name('feedbacks.destroy');
+        });
+
+        Route::livewire('admin/inventory/adjustments', AdjustmentHistory::class)
+            ->name('admin.inventory.adjustments');
+
+        // Direct Messaging inbox (admin + staff)
+        Route::livewire('admin/messaging', MessagingInbox::class)
+            ->name('admin.messaging.inbox');
+    });
+
+    Route::middleware('role:admin')->group(function () {
+        Route::livewire('admin/settings/categories', CategoryManager::class)
+            ->name('admin.settings.categories');
+
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('staff', [UserManagementController::class, 'staffIndex'])->name('staff.index');
+            Route::get('staff/create', [UserManagementController::class, 'staffCreate'])->name('staff.create');
+            Route::post('staff', [UserManagementController::class, 'staffStore'])->name('staff.store');
+            Route::get('staff/{staff}/edit', [UserManagementController::class, 'staffEdit'])->name('staff.edit');
+            Route::put('staff/{staff}', [UserManagementController::class, 'staffUpdate'])->name('staff.update');
+            Route::delete('staff/{staff}', [UserManagementController::class, 'staffDestroy'])->name('staff.destroy');
+
+            Route::get('customers', [UserManagementController::class, 'customersIndex'])->name('customers.index');
+            Route::get('customers/{customer}', [UserManagementController::class, 'customersShow'])->name('customers.show');
+            Route::put('customers/{customer}', [UserManagementController::class, 'customersUpdate'])->name('customers.update');
+            Route::post('customers/{customer}/deactivate', [UserManagementController::class, 'customersDeactivate'])
+                ->name('customers.deactivate');
+            Route::post('customers/{customer}/restore', [UserManagementController::class, 'customersRestore'])
+                ->name('customers.restore');
+        });
+    });
+});
 
 require __DIR__.'/settings.php';

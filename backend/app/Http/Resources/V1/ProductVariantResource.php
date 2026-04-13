@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Http\Resources\V1;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class ProductVariantResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'product_id' => $this->product_id,
+            'sku' => $this->sku,
+            'color' => $this->color,
+            'frame_size' => $this->frame_size,
+            'material' => $this->material,
+            'lens_type' => $this->lens_type,
+            'power' => $this->power,
+            'duration' => $this->duration,
+            'base_curve' => $this->base_curve,
+            'diameter' => $this->diameter,
+            'price' => (float) $this->price,
+            'stock_quantity' => $this->when(
+                $this->relationLoaded('inventory'),
+                fn () => (int) ($this->inventory?->quantity ?? 0),
+            ),
+            'cost_per_unit' => $this->when($request->user()?->isAdminOrStaff(), $this->cost_per_unit),
+            'is_active' => $this->when($request->user()?->isAdminOrStaff(), (bool) $this->is_active),
+            'is_default' => $this->is_default,
+            'ar_model_url' => $this->ar_model_url,
+            'unit_price' => (float) $this->unitPrice(),
+            'images' => ProductImageResource::collection($this->whenLoaded('images')),
+            'product' => new ProductResource($this->whenLoaded('product')),
+        ];
+    }
+}

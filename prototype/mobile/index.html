@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Home</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="../index.html">← Hub</a> · <strong>Customer app</strong></header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.1rem;">EyeCare</h1>
+      <p class="note">Logged in as <strong>customer</strong> (Sanctum token in real app).</p>
+      <ul>
+        <li><a href="browse.html">Browse products</a> <span id="cartBadge"></span></li>
+        <li><a href="cart.html">Cart / checkout</a></li>
+        <li><a href="orders.html">My orders</a></li>
+        <li><a href="appointments.html">Appointments</a></li>
+        <li><a href="prescriptions.html">My prescriptions</a> <span class="badge">read-only</span></li>
+        <li><a href="bills.html">Bills</a></li>
+        <li><a href="messages.html">Messages</a></li>
+        <li><a href="profile.html">Profile</a></li>
+      </ul>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html">Me</a>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    EyeCareCart.renderBadge(document.getElementById("cartBadge"));
+  </script>
+</body>
+</html>

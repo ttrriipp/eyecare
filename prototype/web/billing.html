@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Billing</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Billing</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Bills</h1>
+    <p class="note"><code>bills</code>: <code>order_id</code> XOR-style with <code>appointment_id</code> (nullable both allowed in schema but business rule: one source). Partial: <code>amount_paid</code>, <code>balance_due</code>, <code>collected_by</code>.</p>
+    <table id="b1">
+      <thead>
+        <tr>
+          <th>invoice_number</th><th>source</th><th>amount</th><th>paid</th><th>balance</th><th>status</th><th>method</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>INV-2026-00901</td><td>order ORD-…142</td><td>13700</td><td>7000</td><td>6700</td><td>partially_paid</td><td>cash</td>
+        </tr>
+        <tr>
+          <td>INV-2026-00900</td><td>appointment APT-42</td><td>300</td><td>300</td><td>0</td><td>paid</td><td>gcash recorded</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Record payment</h2>
+    <form action="#" onsubmit="return false">
+      <label>bill id</label><input value="901" />
+      <label>add to amount_paid</label><input value="6700" />
+      <label>payment_method</label><input value="cash" />
+      <label>collected_by (user id)</label><input value="2" />
+      <p><button type="button">Apply payment (no API)</button></p>
+    </form>
+  </main>
+</body>
+</html>

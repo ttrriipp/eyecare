@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile — Profile</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <div class="mobile-frame">
+    <header><a href="index.html">← Home</a> · Profile</header>
+    <main style="padding:0.75rem;">
+      <h1 style="font-size:1.05rem;">Profile</h1>
+      <form action="#" onsubmit="return false">
+        <label>name</label><input value="Juan Dela Cruz" />
+        <label>email</label><input type="email" value="juan@example.com" />
+        <label>phone</label><input value="09171234567" />
+        <label>date_of_birth</label><input type="date" value="1990-05-12" />
+        <label>address</label><textarea rows="2">Quezon City</textarea>
+        <p class="note">customer_notes: staff-only in real app; not shown to customer.</p>
+        <p><button type="button">Save (no API)</button></p>
+      </form>
+      <p><a href="../web/prescriptions.html">Staff view of your Rx</a> (opens web prototype)</p>
+    </main>
+    <div class="mobile-nav">
+      <a href="browse.html">Shop</a>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="appointments.html">Book</a>
+      <a href="profile.html"><strong>Me</strong></a>
+    </div>
+  </div>
+</body>
+</html>

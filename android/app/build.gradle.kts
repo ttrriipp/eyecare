@@ -1,12 +1,24 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+// Physical device: set dev.backend.url to your PC's Wi‑Fi IP (see ipconfig). Emulator: 10.0.2.2 reaches the host machine.
+val devBackendUrl =
+    (localProperties.getProperty("dev.backend.url") ?: "http://10.0.2.2:6969").trim().trimEnd('/')
+val apiBaseUrl = "$devBackendUrl/api/v1/"
 
 android {
     namespace = "com.example.opticalsystem"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.opticalsystem"
@@ -27,18 +39,86 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
+// Pins the Java toolchain so JdkImageTransform gets javaCompiler.metadata.installationPath
+// (full JDK with jlink) instead of falling back to java.home from an IDE-managed JRE.
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
+    // Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.runtime.livedata)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.fragment.ktx)
+
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.fragment.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+
+    // Coroutines
+    implementation(libs.coroutines.android)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
+
+    // Images
+    implementation(libs.glide)
+
+    // Background work + Hilt worker integration
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+
+    // ViewPager2 (image carousel)
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
+    // SwipeRefreshLayout (pull to refresh)
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

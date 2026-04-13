@@ -2,4 +2,63 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- App-wide primary palette -->
+    <color name="primary">#3D6EA1</color>
+    <color name="primary_dark">#2F5E8C</color>
+    <color name="primary_light">#5B8FBF</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="background">#F5F7FA</color>
+    <color name="text_primary">#1F2A37</color>
+    <color name="text_secondary">#7A8A9A</color>
+    <color name="divider">#E5E9EF</color>
+
+    <!-- Bottom Navigation (matches Material-style bar: blue selected, gray unselected) -->
+    <color name="bottom_nav_bg">#FFFFFFFF</color>
+    <color name="bottom_nav_border">#E0E0E0</color>
+    <color name="bottom_nav_active">#1976D2</color>
+    <color name="bottom_nav_inactive">#757575</color>
+    <color name="nav_badge_background">#D32F2F</color>
+
+    <!-- Login screen -->
+    <!-- Matches web accent (Tailwind sky-600: #0284C7) -->
+    <color name="login_primary">#0284C7</color>
+    <color name="login_primary_dark">#0369A1</color>
+    <color name="login_link">#0284C7</color>
+    <color name="login_hint">#7A8A9A</color>
+    <color name="login_surface">#FFFFFFFF</color>
+    <color name="login_outline">#D7DDE4</color>
+    <color name="login_title">#1F2A37</color>
+
+    <!-- Product UI -->
+    <color name="star_color">#F59E0B</color>
+    <color name="ar_badge_bg">#3D6EA1</color>
+    <color name="spec_row_alt">#F8F9FA</color>
+    <color name="price_color">#3D6EA1</color>
+    <color name="category_label_color">#3D6EA1</color>
+
+    <!-- Order Status Colors -->
+    <color name="status_pending">#F59E0B</color>
+    <color name="status_pending_bg">#1AF59E0B</color>
+    <color name="status_confirmed">#3B82F6</color>
+    <color name="status_confirmed_bg">#1A3B82F6</color>
+    <color name="status_ready">#14B8A6</color>
+    <color name="status_ready_bg">#1A14B8A6</color>
+    <color name="status_completed">#22C55E</color>
+    <color name="status_completed_bg">#1A22C55E</color>
+    <color name="status_cancelled">#EF4444</color>
+    <color name="status_cancelled_bg">#1AEF4444</color>
+
+    <!-- Payment Status Colors -->
+    <color name="payment_unpaid">#F59E0B</color>
+    <color name="payment_unpaid_bg">#1AF59E0B</color>
+    <color name="payment_partially_paid">#0EA5E9</color>
+    <color name="payment_partially_paid_bg">#1A0EA5E9</color>
+    <color name="payment_paid">#22C55E</color>
+    <color name="payment_paid_bg">#1A22C55E</color>
+    <color name="payment_refunded">#F97316</color>
+    <color name="payment_refunded_bg">#1AF97316</color>
+    <color name="payment_voided">#9CA3AF</color>
+    <color name="payment_voided_bg">#1A9CA3AF</color>
 </resources>

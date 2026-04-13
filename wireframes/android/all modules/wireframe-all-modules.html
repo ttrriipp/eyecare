@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EyeCare – All Modules Wireframe</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0F1923;font-family:'DM Sans',sans-serif;color:#fff;padding:32px 16px}
+h1{text-align:center;font-size:28px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#3D6EA1,#D4A843);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:#8899AA;font-size:13px;margin-bottom:40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,320px);gap:36px;justify-content:center}
+.screen-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.screen-label{font-size:12px;font-weight:600;color:#8899AA;letter-spacing:.08em;text-transform:uppercase}
+.phone{width:320px;background:#1A3E6F;border-radius:40px;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.6);position:relative}
+.phone-inner{background:#F4F6FA;border-radius:30px;overflow:hidden;min-height:580px;position:relative;display:flex;flex-direction:column}
+.status-bar{background:#1A3E6F;padding:10px 20px 6px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.status-bar span{color:#fff;font-size:11px;font-weight:600}
+.screen-content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── Reusable atoms ── */
+.top-bar{background:#1A3E6F;padding:14px 20px 12px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.top-bar h2{font-size:16px;font-weight:700;flex:1}
+.top-bar .icon-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+.scroll{flex:1;padding:16px;overflow:hidden;display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.tag{display:inline-block;background:#EAF0FA;color:#3D6EA1;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.tag.gold{background:#FEF3DC;color:#C8892A}
+.tag.green{background:#E6F7EE;color:#2E8B57}
+.tag.red{background:#FDECEC;color:#C0392B}
+.tag.purple{background:#F0EAFA;color:#7E57C2}
+.btn{display:block;background:#3D6EA1;color:#fff;font-size:13px;font-weight:600;padding:11px;border-radius:12px;text-align:center;cursor:pointer}
+.btn.gold-btn{background:#D4A843}
+.btn.outline{background:transparent;border:1.5px solid #3D6EA1;color:#3D6EA1}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3D6EA1,#1A3E6F);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
+.row{display:flex;align-items:center;gap:10px}
+.divider{height:1px;background:#EAECF0;margin:4px 0}
+.stars{color:#D4A843;font-size:12px}
+
+/* ── Bottom Nav ── */
+.bottom-nav{background:#fff;border-top:1px solid #EAECF0;display:flex;justify-content:space-around;padding:8px 0 12px;flex-shrink:0}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:#8899AA;font-weight:600;cursor:pointer}
+.nav-item.active{color:#1A3E6F}
+.nav-icon{font-size:20px}
+
+/* ── Screen specific ── */
+.hero-banner{background:linear-gradient(135deg,#1A3E6F 0%,#3D6EA1 100%);padding:20px;color:#fff;border-radius:0 0 24px 24px;margin-bottom:-12px}
+.hero-banner h3{font-size:18px;font-weight:700}
+.hero-banner p{font-size:12px;opacity:.8;margin-top:4px}
+.product-img{width:100%;height:100px;background:linear-gradient(135deg,#DDE6F3,#B8CCEA);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:8px}
+.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.product-card{background:#fff;border-radius:14px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.product-card .price{color:#1A3E6F;font-size:13px;font-weight:700;margin-top:4px}
+.product-card .name{font-size:11px;color:#444;font-weight:600}
+.search-bar{background:#fff;border:1.5px solid #D7DDE4;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;color:#7A8A9A}
+.chip-row{display:flex;gap:8px;flex-wrap:nowrap;overflow:hidden}
+.chip{background:#EAF0FA;color:#3D6EA1;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;white-space:nowrap}
+.chip.active{background:#1A3E6F;color:#fff}
+.appt-card{background:#fff;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.appt-date{background:#EAF0FA;border-radius:10px;padding:8px;text-align:center;min-width:44px}
+.appt-date .day{font-size:18px;font-weight:700;color:#1A3E6F}
+.appt-date .mon{font-size:10px;color:#3D6EA1;font-weight:600}
+.order-card{background:#fff;border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.order-card .order-id{font-size:12px;font-weight:700;color:#1A3E6F}
+.order-meta{font-size:11px;color:#7A8A9A;margin-top:2px}
+.msg-row{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.msg-text{font-size:12px;color:#333;font-weight:500}
+.msg-sub{font-size:11px;color:#7A8A9A}
+.msg-time{font-size:10px;color:#7A8A9A;margin-left:auto;flex-shrink:0}
+.bubble{padding:10px 14px;border-radius:18px;font-size:12px;max-width:75%;line-height:1.4}
+.bubble.out{background:#1A3E6F;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.bubble.in{background:#fff;color:#333;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.chat-area{display:flex;flex-direction:column;gap:8px;padding:14px}
+.profile-hero{background:linear-gradient(135deg,#1A3E6F,#3D6EA1);padding:24px 16px 36px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#D4A843,#C8892A);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff}
+.setting-row{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.notif-item{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.notif-icon{width:36px;height:36px;border-radius:50%;background:#EAF0FA;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.input-field{background:#fff;border:1.5px solid #D7DDE4;border-radius:12px;padding:12px 14px;font-size:13px;color:#1F2A37;width:100%}
+.input-label{font-size:11px;font-weight:600;color:#7A8A9A;margin-bottom:4px}
+.logo-area{padding:30px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.logo-circle{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#1A3E6F,#3D6EA1);display:flex;align-items:center;justify-content:center;font-size:30px}
+.detail-img{width:100%;height:140px;background:linear-gradient(135deg,#DDE6F3,#B8CCEA);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:50px;margin-bottom:10px}
+.progress-bar{height:6px;background:#EAECF0;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3D6EA1,#D4A843);border-radius:4px}
+.ar-badge{background:linear-gradient(135deg,#7E57C2,#9C6FD6);color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.step-indicator{display:flex;justify-content:center;gap:6px;margin-bottom:8px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#D7DDE4}
+.step-dot.active{background:#3D6EA1;width:24px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>EyeCare — Android App</h1>
+<p class="subtitle">High-Fidelity Wireframe · All Modules · v1.0</p>
+
+<div class="grid">
+
+<!-- ═══ 1. LOGIN ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">01 · Login</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="logo-area">
+      <div class="logo-circle">👁</div>
+      <div style="font-size:22px;font-weight:700;color:#1A3E6F">EyeCare</div>
+      <div style="font-size:12px;color:#7A8A9A">Your Optical Management System</div>
+    </div>
+    <div class="scroll" style="padding-top:0">
+      <div class="card">
+        <div style="font-size:20px;font-weight:700;color:#1F2A37;margin-bottom:4px">Welcome back</div>
+        <div style="font-size:13px;color:#7A8A9A;margin-bottom:16px">Sign in to your account</div>
+        <div class="input-label">Email Address</div>
+        <div class="input-field" style="margin-bottom:12px;color:#7A8A9A">user@eyecare.com</div>
+        <div class="input-label">Password</div>
+        <div class="input-field" style="color:#1F2A37">••••••••</div>
+        <div style="text-align:right;font-size:12px;color:#3D6EA1;font-weight:600;margin:8px 0 16px">Forgot password?</div>
+        <div class="btn">Sign In</div>
+        <div style="text-align:center;font-size:12px;color:#7A8A9A;margin-top:12px">Don't have an account? <span style="color:#3D6EA1;font-weight:600">Register</span></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 2. HOME DASHBOARD ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">02 · Home Dashboard</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="hero-banner">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <div><div style="font-size:12px;opacity:.7">Good morning 👋</div><div style="font-size:18px;font-weight:700">Dr. Maria</div></div>
+        <div class="row" style="gap:8px"><div class="icon-btn">🔔</div><div class="icon-btn">💬</div></div>
+      </div>
+      <div class="search-bar" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7)">🔍 Search products, doctors...</div>
+    </div>
+    <div class="scroll" style="padding-top:20px">
+      <div class="chip-row"><div class="chip active">All</div><div class="chip">Frames</div><div class="chip">Lenses</div><div class="chip">Contacts</div></div>
+      <div style="font-size:13px;font-weight:700;color:#1A3E6F">Featured Products</div>
+      <div class="product-grid">
+        <div class="product-card"><div class="product-img">👓</div><div class="name">Classic Frames</div><div class="stars">★★★★★</div><div class="price">₱1,299</div></div>
+        <div class="product-card"><div class="product-img" style="font-size:30px">🕶</div><div class="name">UV Shield Pro</div><div class="stars">★★★★☆</div><div class="price">₱2,499</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#1A3E6F">Upcoming Appointment</div>
+      <div class="appt-card">
+        <div class="appt-date"><div class="day">24</div><div class="mon">MAR</div></div>
+        <div><div style="font-size:13px;font-weight:700;color:#1F2A37">Eye Examination</div><div style="font-size:11px;color:#7A8A9A">Dr. Santos · 10:00 AM</div><div class="tag" style="margin-top:4px">Confirmed</div></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 3. EXPLORE CATALOG ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">03 · Explore Catalog</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><h2>Explore</h2><div class="icon-btn">⚙️</div></div>
+    <div class="scroll">
+      <div class="search-bar">🔍  Search frames, lenses...</div>
+      <div class="chip-row"><div class="chip active">All</div><div class="chip">Frames</div><div class="chip">Lenses</div><div class="chip">Contacts</div><div class="chip">Accessories</div></div>
+      <div class="row" style="justify-content:space-between"><span style="font-size:13px;font-weight:700;color:#1A3E6F">124 Products</span><span style="font-size:12px;color:#3D6EA1">Sort ▾</span></div>
+      <div class="product-grid">
+        <div class="product-card"><div class="product-img">👓</div><div class="name">Titanium Slim</div><div class="stars">★★★★★</div><div class="price">₱3,299</div></div>
+        <div class="product-card"><div class="product-img" style="font-size:30px">🕶</div><div class="name">Aviator Pro</div><div class="stars">★★★★☆</div><div class="price">₱2,499</div></div>
+        <div class="product-card"><div class="product-img" style="font-size:28px">🔭</div><div class="name">Blue Light</div><div class="stars">★★★★★</div><div class="price">₱1,899</div></div>
+        <div class="product-card"><div class="product-img" style="font-size:28px">💎</div><div class="name">Crystal Frame</div><div class="stars">★★★☆☆</div><div class="price">₱4,999</div></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item active"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 4. PRODUCT DETAIL ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">04 · Product Detail</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><h2>Product Detail</h2><div class="icon-btn">♡</div></div>
+    <div class="scroll">
+      <div class="detail-img">👓</div>
+      <div class="row" style="justify-content:space-between"><div class="tag">Frames</div><div class="ar-badge">✨ AR Try-On</div></div>
+      <div style="font-size:18px;font-weight:700;color:#1F2A37;margin-top:6px">Titanium Slim Frame</div>
+      <div class="stars">★★★★★ <span style="color:#7A8A9A;font-size:11px">(128 reviews)</span></div>
+      <div style="font-size:22px;font-weight:700;color:#1A3E6F">₱3,299</div>
+      <div style="font-size:12px;color:#7A8A9A;line-height:1.6">Lightweight titanium construction with memory flex temples. Available in multiple colors and sizes for all face shapes.</div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Specifications</div>
+        <div class="row" style="justify-content:space-between;font-size:12px"><span style="color:#7A8A9A">Material</span><span style="font-weight:600;color:#1F2A37">Titanium</span></div>
+        <div class="divider"></div>
+        <div class="row" style="justify-content:space-between;font-size:12px"><span style="color:#7A8A9A">Frame Width</span><span style="font-weight:600;color:#1F2A37">140mm</span></div>
+      </div>
+      <div style="display:flex;gap:8px"><div class="btn outline" style="flex:1">Add to Cart</div><div class="btn" style="flex:1">Order Now</div></div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 5. AR TRY-ON ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">05 · AR Try-On</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div style="position:relative;flex:1;background:linear-gradient(180deg,#0F1923 0%,#1A2A3A 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+      <div class="icon-btn" style="position:absolute;top:14px;left:14px;font-size:18px">←</div>
+      <div style="position:absolute;top:14px;right:14px;display:flex;gap:8px"><div class="icon-btn">📸</div><div class="icon-btn">🔄</div></div>
+      <div style="width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.05);border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:80px;position:relative">
+        😐
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:90px;opacity:.8">👓</div>
+      </div>
+      <div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:16px">Position your face in the frame</div>
+      <div style="display:flex;gap:16px;margin-top:20px">
+        <div style="text-align:center"><div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px">👓</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Classic</div></div>
+        <div style="text-align:center"><div style="width:48px;height:48px;border-radius:12px;background:#3D6EA1;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px">🕶</div><div style="font-size:10px;color:#fff;font-weight:600">Aviator</div></div>
+        <div style="text-align:center"><div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px">🔭</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Round</div></div>
+      </div>
+      <div class="btn" style="margin-top:20px;width:100%;background:linear-gradient(135deg,#7E57C2,#9C6FD6)">Add to Cart — ₱2,499</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 6. SCHEDULE ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">06 · My Schedule</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><h2>Schedule</h2><div class="icon-btn">+</div></div>
+    <div class="scroll">
+      <div class="chip-row"><div class="chip active">Upcoming</div><div class="chip">Past</div><div class="chip">Cancelled</div></div>
+      <div class="appt-card">
+        <div class="appt-date"><div class="day">24</div><div class="mon">MAR</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1F2A37">Eye Examination</div><div style="font-size:11px;color:#7A8A9A">Dr. Santos · 10:00 AM</div><div class="row" style="gap:6px;margin-top:6px"><div class="tag green">Confirmed</div></div></div>
+      </div>
+      <div class="appt-card">
+        <div class="appt-date"><div class="day">28</div><div class="mon">MAR</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1F2A37">Lens Fitting</div><div style="font-size:11px;color:#7A8A9A">Dr. Cruz · 2:30 PM</div><div class="row" style="gap:6px;margin-top:6px"><div class="tag gold">Pending</div></div></div>
+      </div>
+      <div class="appt-card">
+        <div class="appt-date"><div class="day">05</div><div class="mon">APR</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1F2A37">Contact Lens Check</div><div style="font-size:11px;color:#7A8A9A">Dr. Reyes · 9:00 AM</div><div class="row" style="gap:6px;margin-top:6px"><div class="tag">Scheduled</div></div></div>
+      </div>
+      <div class="btn">Book New Appointment</div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item active"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 7. BOOK APPOINTMENT ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">07 · Book Appointment</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><h2>Book Appointment</h2></div>
+    <div class="scroll">
+      <div class="step-indicator"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+      <div style="font-size:14px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Step 1 · Choose Doctor</div>
+      <div class="card" style="border:2px solid #3D6EA1">
+        <div class="row"><div class="avatar">DS</div><div><div style="font-size:13px;font-weight:700">Dr. Santos</div><div style="font-size:11px;color:#7A8A9A">General Optometrist</div><div class="stars" style="font-size:11px">★★★★★</div></div></div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="avatar" style="background:linear-gradient(135deg,#D4A843,#C8892A)">RC</div><div><div style="font-size:13px;font-weight:700">Dr. Cruz</div><div style="font-size:11px;color:#7A8A9A">Pediatric Optometrist</div><div class="stars" style="font-size:11px">★★★★☆</div></div></div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Appointment Type</div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:600;color:#1A3E6F;margin-bottom:8px">Select Service</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap"><div class="tag" style="cursor:pointer">Eye Exam</div><div class="tag gold">Lens Fitting</div><div class="tag purple">Contact Check</div><div class="tag">Follow-up</div></div>
+      </div>
+      <div class="btn">Next: Choose Time →</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 8. ORDERS LIST ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">08 · Orders</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><h2>My Orders</h2><div class="icon-btn">🔍</div></div>
+    <div class="scroll">
+      <div class="chip-row"><div class="chip active">All</div><div class="chip">Processing</div><div class="chip">Ready</div><div class="chip">Completed</div></div>
+      <div class="order-card">
+        <div class="row" style="justify-content:space-between"><div class="order-id">#ORD-2024-001</div><div class="tag green">Ready for Pickup</div></div>
+        <div class="order-meta">Mar 20, 2024 · ₱3,299</div>
+        <div class="divider" style="margin:8px 0"></div>
+        <div class="row" style="font-size:12px"><span>👓</span><span style="color:#1F2A37;font-weight:600;margin-left:4px">Titanium Slim Frame × 1</span></div>
+        <div class="progress-bar" style="margin-top:10px"><div class="progress-fill" style="width:80%"></div></div>
+        <div style="font-size:10px;color:#7A8A9A;margin-top:4px">Lenses being mounted</div>
+      </div>
+      <div class="order-card">
+        <div class="row" style="justify-content:space-between"><div class="order-id">#ORD-2024-002</div><div class="tag">Processing</div></div>
+        <div class="order-meta">Mar 18, 2024 · ₱1,299</div>
+        <div class="divider" style="margin:8px 0"></div>
+        <div class="row" style="font-size:12px"><span>🕶</span><span style="color:#1F2A37;font-weight:600;margin-left:4px">Classic Frame × 1</span></div>
+        <div class="progress-bar" style="margin-top:10px"><div class="progress-fill" style="width:40%"></div></div>
+      </div>
+      <div class="order-card">
+        <div class="row" style="justify-content:space-between"><div class="order-id">#ORD-2024-003</div><div class="tag gold">Completed</div></div>
+        <div class="order-meta">Mar 10, 2024 · ₱2,499</div>
+        <div class="divider" style="margin:8px 0"></div>
+        <div class="row" style="font-size:12px"><span>💊</span><span style="color:#1F2A37;font-weight:600;margin-left:4px">Contact Lenses × 2</span></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item active"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 9. ORDER DETAIL ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">09 · Order Detail</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><h2>#ORD-2024-001</h2></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:#1F2A37">Order Status</div><div class="tag green">Ready for Pickup</div></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+        <div class="row" style="justify-content:space-between;margin-top:8px;font-size:10px;color:#7A8A9A"><span>Ordered</span><span>Processing</span><span>Ready</span><span>Picked Up</span></div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Items Ordered</div>
+        <div class="row" style="gap:10px"><div style="width:44px;height:44px;background:#EAF0FA;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">👓</div><div style="flex:1"><div style="font-size:12px;font-weight:600">Titanium Slim Frame</div><div style="font-size:11px;color:#7A8A9A">Prescription: OD -2.00 OS -1.75</div></div><div style="font-size:13px;font-weight:700;color:#1A3E6F">₱3,299</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Pickup Information</div>
+        <div style="font-size:12px;color:#7A8A9A">📍 EyeCare Main Branch<br>123 Optical St., Quezon City<br><br>⏰ Ready by: March 24, 2024</div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:#1A3E6F;margin-bottom:8px">Payment</div>
+        <div class="row" style="justify-content:space-between;font-size:12px"><span style="color:#7A8A9A">Subtotal</span><span>₱3,299</span></div>
+        <div class="row" style="justify-content:space-between;font-size:13px;font-weight:700;color:#1A3E6F;margin-top:6px"><span>Total</span><span>₱3,299</span></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 10. MESSAGES ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">10 · Messages</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><h2>Messages</h2><div class="icon-btn">✏️</div></div>
+    <div class="scroll">
+      <div class="search-bar">🔍  Search conversations...</div>
+      <div class="msg-row">
+        <div class="avatar">DS</div>
+        <div style="flex:1"><div class="msg-text">Dr. Santos</div><div class="msg-sub">Your prescription is ready 📋</div></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="msg-time">10:32</div><div style="background:#3D6EA1;color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div></div>
+      </div>
+      <div class="msg-row">
+        <div class="avatar" style="background:linear-gradient(135deg,#D4A843,#C8892A)">EC</div>
+        <div style="flex:1"><div class="msg-text">EyeCare Support</div><div class="msg-sub">Your order #001 is ready...</div></div>
+        <div class="msg-time">9:15</div>
+      </div>
+      <div class="msg-row">
+        <div class="avatar" style="background:linear-gradient(135deg,#7E57C2,#9C6FD6)">RC</div>
+        <div style="flex:1"><div class="msg-text">Dr. Cruz</div><div class="msg-sub">See you on March 28!</div></div>
+        <div class="msg-time">Yesterday</div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 11. CHAT ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">11 · Chat Thread</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><div class="avatar" style="width:30px;height:30px;font-size:12px">DS</div><div style="flex:1"><div style="font-size:13px;font-weight:700">Dr. Santos</div><div style="font-size:10px;opacity:.7">Online</div></div><div class="icon-btn">📞</div></div>
+    <div class="chat-area" style="flex:1;overflow:hidden">
+      <div style="text-align:center;font-size:10px;color:#7A8A9A">Today, 10:30 AM</div>
+      <div class="bubble in">Good morning! How can I help you today?</div>
+      <div class="bubble out">Hi Doc! I want to ask about my prescription.</div>
+      <div class="bubble in">Of course! Your latest prescription is OD -2.00, OS -1.75. I recommend single vision lenses.</div>
+      <div class="bubble out">Thank you! Should I get blue light filtering?</div>
+      <div class="bubble in">Yes, especially since you work on screens. I'll note that for your order. 😊</div>
+      <div class="bubble out">Perfect! Can I book a follow-up next week?</div>
+    </div>
+    <div style="padding:10px;background:#fff;display:flex;gap:8px;align-items:center;border-top:1px solid #EAECF0">
+      <div class="icon-btn" style="background:#EAF0FA">📎</div>
+      <div style="flex:1;background:#F4F6FA;border-radius:20px;padding:10px 14px;font-size:12px;color:#7A8A9A">Type a message...</div>
+      <div class="icon-btn" style="background:#3D6EA1;color:#fff">➤</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 12. PROFILE ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">12 · Profile &amp; Settings</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="profile-hero">
+      <div class="profile-avatar">M</div>
+      <div style="font-size:17px;font-weight:700">Maria Dela Cruz</div>
+      <div style="font-size:12px;opacity:.7">maria@eyecare.com</div>
+      <div class="row" style="gap:20px;margin-top:8px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700">3</div><div style="font-size:10px;opacity:.7">Orders</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700">2</div><div style="font-size:10px;opacity:.7">Appts</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700">5★</div><div style="font-size:10px;opacity:.7">Rating</div></div>
+      </div>
+    </div>
+    <div class="scroll" style="padding-top:20px">
+      <div class="setting-row"><span style="font-size:20px">👤</span><div style="flex:1"><div style="font-size:13px;font-weight:600">Personal Info</div><div style="font-size:11px;color:#7A8A9A">Name, email, phone</div></div><span style="color:#7A8A9A">›</span></div>
+      <div class="setting-row"><span style="font-size:20px">👁</span><div style="flex:1"><div style="font-size:13px;font-weight:600">Prescription History</div><div style="font-size:11px;color:#7A8A9A">View past prescriptions</div></div><span style="color:#7A8A9A">›</span></div>
+      <div class="setting-row"><span style="font-size:20px">🔔</span><div style="flex:1"><div style="font-size:13px;font-weight:600">Notifications</div><div style="font-size:11px;color:#7A8A9A">Alerts and reminders</div></div><span style="color:#7A8A9A">›</span></div>
+      <div class="setting-row"><span style="font-size:20px">🔒</span><div style="flex:1"><div style="font-size:13px;font-weight:600">Privacy &amp; Security</div><div style="font-size:11px;color:#7A8A9A">Password, 2FA</div></div><span style="color:#7A8A9A">›</span></div>
+      <div class="setting-row"><span style="font-size:20px">🚪</span><div style="flex:1;color:#C0392B"><div style="font-size:13px;font-weight:600">Sign Out</div></div></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+      <div class="nav-item"><div class="nav-icon">🔍</div>Explore</div>
+      <div class="nav-item"><div class="nav-icon">📅</div>Schedule</div>
+      <div class="nav-item"><div class="nav-icon">📦</div>Orders</div>
+      <div class="nav-item active"><div class="nav-icon">👤</div>Profile</div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 13. SEARCH ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">13 · Search</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><h2>Search</h2></div>
+    <div class="scroll">
+      <div class="search-bar" style="border-color:#3D6EA1;background:#EAF0FA">🔍 <span style="color:#1F2A37">titanium frames</span></div>
+      <div class="chip-row"><div class="chip active">All</div><div class="chip">Products</div><div class="chip">Doctors</div><div class="chip">Services</div></div>
+      <div style="font-size:12px;font-weight:600;color:#7A8A9A">3 results for "titanium frames"</div>
+      <div class="card">
+        <div class="row" style="gap:10px"><div style="width:48px;height:48px;background:#EAF0FA;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px">👓</div><div style="flex:1"><div style="font-size:13px;font-weight:600">Titanium Slim Frame</div><div class="stars" style="font-size:11px">★★★★★</div><div style="font-size:13px;font-weight:700;color:#1A3E6F">₱3,299</div></div></div>
+      </div>
+      <div class="card">
+        <div class="row" style="gap:10px"><div style="width:48px;height:48px;background:#EAF0FA;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px">🕶</div><div style="flex:1"><div style="font-size:13px;font-weight:600">Titanium Aviator</div><div class="stars" style="font-size:11px">★★★★☆</div><div style="font-size:13px;font-weight:700;color:#1A3E6F">₱4,199</div></div></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ═══ 14. NOTIFICATIONS ═══ -->
+<div class="screen-wrap">
+<div class="screen-label">14 · Notifications</div>
+<div class="phone"><div class="phone-inner">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="screen-content">
+    <div class="top-bar"><div class="icon-btn">←</div><h2>Notifications</h2><div class="icon-btn">✓</div></div>
+    <div class="scroll">
+      <div style="font-size:11px;font-weight:700;color:#7A8A9A;letter-spacing:.06em">TODAY</div>
+      <div class="notif-item"><div class="notif-icon">📦</div><div><div style="font-size:12px;font-weight:700;color:#1F2A37">Order Ready for Pickup</div><div style="font-size:11px;color:#7A8A9A">Your order #ORD-2024-001 is ready</div><div style="font-size:10px;color:#3D6EA1;margin-top:2px">10:32 AM</div></div></div>
+      <div class="notif-item" style="background:#EAF0FA"><div class="notif-icon" style="background:#3D6EA1;color:#fff">💬</div><div><div style="font-size:12px;font-weight:700;color:#1F2A37">New Message from Dr. Santos</div><div style="font-size:11px;color:#7A8A9A">Your prescription is ready 📋</div><div style="font-size:10px;color:#3D6EA1;margin-top:2px">9:15 AM</div></div></div>
+      <div style="font-size:11px;font-weight:700;color:#7A8A9A;letter-spacing:.06em;margin-top:4px">YESTERDAY</div>
+      <div class="notif-item"><div class="notif-icon">📅</div><div><div style="font-size:12px;font-weight:700;color:#1F2A37">Appointment Reminder</div><div style="font-size:11px;color:#7A8A9A">Eye exam tomorrow at 10:00 AM</div><div style="font-size:10px;color:#3D6EA1;margin-top:2px">5:00 PM</div></div></div>
+      <div class="notif-item"><div class="notif-icon" style="background:#F0EAFA">✨</div><div><div style="font-size:12px;font-weight:700;color:#1F2A37">New AR Feature Available!</div><div style="font-size:11px;color:#7A8A9A">Try on frames virtually now</div><div style="font-size:10px;color:#3D6EA1;margin-top:2px">2:30 PM</div></div></div>
+      <div class="notif-item"><div class="notif-icon" style="background:#FEF3DC">🏷</div><div><div style="font-size:12px;font-weight:700;color:#1F2A37">Special Offer!</div><div style="font-size:11px;color:#7A8A9A">20% off on all frames this week</div><div style="font-size:10px;color:#3D6EA1;margin-top:2px">11:00 AM</div></div></div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+</div>
+
+<!-- Legend -->
+<div style="margin-top:60px;padding:28px;background:#111A24;border-radius:20px;max-width:900px;margin-left:auto;margin-right:auto">
+<div style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center">Design System — Color Tokens</div>
+<div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center">
+  <div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;background:#1A3E6F;border-radius:6px"></div><span style="font-size:12px;color:#8899AA">Primary Navy #1A3E6F</span></div>
+  <div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;background:#3D6EA1;border-radius:6px"></div><span style="font-size:12px;color:#8899AA">Button Blue #3D6EA1</span></div>
+  <div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;background:#D4A843;border-radius:6px"></div><span style="font-size:12px;color:#8899AA">Accent Gold #D4A843</span></div>
+  <div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;background:#F4F6FA;border-radius:6px;border:1px solid #333"></div><span style="font-size:12px;color:#8899AA">Background #F4F6FA</span></div>
+  <div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;background:#7E57C2;border-radius:6px"></div><span style="font-size:12px;color:#8899AA">AR Purple #7E57C2</span></div>
+</div>
+</div>
+
+</body>
+</html>

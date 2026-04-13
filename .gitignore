@@ -1,0 +1,8 @@
+backend/public/images/**
+!backend/public/images/products/
+backend/public/images/products/*
+!backend/public/images/products/classic_full_rim_frame_black.webp
+!backend/public/images/products/contact_lens.jpg
+!backend/public/images/products/microfiber_cloth.jpg
+!backend/public/images/products/polarized_sunglasses.jpg
+schema/

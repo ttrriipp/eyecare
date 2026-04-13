@@ -1,34 +1,106 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen">
+        <flux:sidebar
+            sticky
+            collapsible="mobile"
+            class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+        >
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                <flux:sidebar.group :heading="__('Platform')">
+                    <flux:sidebar.item
+                        icon="home"
+                        :href="route('dashboard')"
+                        :current="request()->routeIs('dashboard')"
+                        wire:navigate
+                    >
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+
+
+                    <flux:sidebar.item
+                        icon="layout-grid"
+                        :href="route('products.index')"
+                        :current="request()->routeIs('products.*')"
+                        wire:navigate
+                    >
+                        {{ __('Products') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item
+                        icon="clipboard-document-list"
+                        :href="route('orders.index')"
+                        :current="request()->routeIs('orders.index', 'orders.create', 'orders.show', 'orders.status-history.index')"
+                        wire:navigate
+                    >
+                        {{ __('Orders') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item
+                        icon="banknotes"
+                        :href="route('orders.billing.index')"
+                        :current="request()->routeIs('orders.billing.index', 'orders.billing.show', 'orders.billing.payment-history.index')"
+                        wire:navigate
+                    >
+                        {{ __('Billing') }}
+                    </flux:sidebar.item>
+
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <flux:sidebar.item
+                            icon="star"
+                            :href="route('feedbacks.index')"
+                            :current="request()->routeIs('feedbacks.*')"
+                            wire:navigate
+                        >
+                            {{ __('Feedback') }}
+                        </flux:sidebar.item>
+                    @endif
+
+                    @if(auth()->user()?->isAdminOrStaff())
+                        <flux:sidebar.item
+                            icon="chat-bubble-left-right"
+                            :href="route('admin.messaging.inbox')"
+                            :current="request()->routeIs('admin.messaging.*')"
+                            wire:navigate
+                        >
+                            <div class="flex items-center justify-between w-full gap-2">
+                                <span>{{ __('Messages') }}</span>
+                                @php
+                                    $unread = \App\Services\ConversationService::class
+                                        ? app(\App\Services\ConversationService::class)->getUnreadCount(auth()->user())
+                                        : 0;
+                                @endphp
+                                @if($unread > 0)
+                                    <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-semibold text-white leading-none">
+                                        {{ $unread > 99 ? '99+' : $unread }}
+                                    </span>
+                                @endif
+                            </div>
+                        </flux:sidebar.item>
+                    @endif
+
+                    @if(auth()->user()?->isAdmin())
+                        <flux:sidebar.item
+                            icon="users"
+                            :href="route('users.staff.index')"
+                            :current="request()->routeIs('users.*')"
+                            wire:navigate
+                        >
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
@@ -56,6 +128,7 @@
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
+                                    <flux:text class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ __(auth()->user()->role->label()) }}</flux:text>
                                     <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
                                 </div>
                             </div>
@@ -72,23 +145,40 @@
 
                     <flux:menu.separator />
 
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
+                    <flux:modal.trigger name="confirm-logout">
                         <flux:menu.item
                             as="button"
-                            type="submit"
+                            type="button"
                             icon="arrow-right-start-on-rectangle"
                             class="w-full cursor-pointer"
                             data-test="logout-button"
                         >
                             {{ __('Log Out') }}
                         </flux:menu.item>
-                    </form>
+                    </flux:modal.trigger>
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
 
         {{ $slot }}
+
+        <flux:modal name="confirm-logout" focusable class="max-w-lg">
+            <div class="space-y-2">
+                <flux:heading size="lg">{{ __('Log out') }}</flux:heading>
+                <flux:subheading>
+                    {{ __('Do you want to log out?') }}
+                </flux:subheading>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <flux:button type="submit" variant="primary">{{ __('Log Out') }}</flux:button>
+                </form>
+            </div>
+        </flux:modal>
 
         @fluxScripts
     </body>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web — Dashboard</title>
+  <link rel="stylesheet" href="../css/prototype.css" />
+</head>
+<body>
+  <header><a href="../index.html">← Hub</a> · <strong>Web (admin/staff)</strong></header>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="customers.html">Customers</a>
+    <a href="prescriptions.html">Prescriptions</a>
+    <a href="appointments.html">Appointments</a>
+    <a href="products.html">Products</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="orders.html">Orders</a>
+    <a href="billing.html">Billing</a>
+    <a href="messages.html">Messages</a>
+    <a href="feedback.html">Feedback</a>
+  </nav>
+  <main>
+    <h1>Dashboard (sample data)</h1>
+    <p class="note">Staff: same screens except products/inventory write, refunds/voids restricted per plan.</p>
+    <h2>Today</h2>
+    <table>
+      <thead><tr><th>Area</th><th>Sample</th></tr></thead>
+      <tbody>
+        <tr><td>Appointments</td><td>6 booked · 2 walk-ins pending</td></tr>
+        <tr><td>Orders pending / ready</td><td>3 pending · 2 ready for pickup</td></tr>
+        <tr><td>Job orders (lab)</td><td>4 in processing</td></tr>
+        <tr><td>Unpaid bills</td><td>5 (partial: 2)</td></tr>
+      </tbody>
+    </table>
+    <h2>Quick links</h2>
+    <ul>
+      <li><a href="prescription-edit.html?id=new">New prescription</a> (after exam)</li>
+      <li><a href="order-edit.html?id=new">New order</a> (walk-in or customer)</li>
+      <li><a href="appointments.html">Slot overrides</a></li>
+    </ul>
+  </main>
+</body>
+</html>

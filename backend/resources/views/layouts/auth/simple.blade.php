@@ -1,19 +1,53 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-sm flex-col gap-2">
-                <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
-                    </span>
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
-                </a>
-                <div class="flex flex-col gap-6">
-                    {{ $slot }}
+    <body class="min-h-screen bg-[#A9D7FF] antialiased dark:bg-slate-950 dark:text-zinc-100">
+        <div class="flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
+            <div class="w-full max-w-7xl">
+                <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
+                    <div class="flex items-center justify-center px-4 py-6 sm:px-8 sm:py-10">
+                        <div class="w-full max-w-lg">
+                            <div class="flex flex-col gap-6">
+                                {{ $slot }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden h-full items-center justify-center md:flex">
+                        <div class="relative flex h-[360px] w-full max-w-xl items-center justify-center">
+                            <div class="absolute inset-0 rounded-3xl bg-[#A9D7FF] dark:bg-slate-900/80"></div>
+
+                            <div class="relative flex h-full w-full items-center justify-center gap-5">
+                                <div class="h-[320px] w-[230px] overflow-hidden rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:scale-[1.06]">
+                                    <img
+                                        src="{{ asset('images/eyeglass with human.jpg') }}"
+                                        alt="Person wearing eyeglasses"
+                                        class="h-full w-full object-cover"
+                                    />
+                                </div>
+
+                                <div class="flex h-full flex-col justify-between gap-5">
+                                    <div class="h-[170px] w-[260px] overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.28)] transition-transform duration-300 ease-out hover:scale-[1.06]">
+                                        <img
+                                            src="{{ asset('images/eyeglass.jpg') }}"
+                                            alt="Close-up of eyeglasses"
+                                            class="h-full w-full object-cover"
+                                        />
+                                    </div>
+
+                                    <div class="h-[170px] w-[260px] overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:scale-[1.06]">
+                                        <img
+                                            src="{{ asset('images/eyeglass2.jpg') }}"
+                                            alt="Eyeglass frame"
+                                            class="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
